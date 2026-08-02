@@ -4,6 +4,11 @@
 
 - `assets/generated/avatar-lineup.png` — original adult-only avatar lineup concept sheet.
 - `assets/generated/avatar-outfit-sheet.png` — original modular outfit and accessory concept sheet.
+- `assets/generated/avatar-hair-sheet.png` — original five-style hair catalog.
+- `assets/generated/avatar-accessories-footwear.png` — original accessories and footwear sheet.
+- `assets/generated/avatar-animation-poses.png` — original idle, walk, wave, and dance pose reference.
+- `assets/generated/avatar-material-swatches.png` — original fabric, metal, denim, and emissive color reference.
+- `assets/generated/avatar-ui-portraits.png` — original UI portrait-card reference sheet.
 - Generation direction: polished semi-real anime rendering, neon magenta/cyan nightlife lighting, four distinct adult women, fully clothed fashion, varied hair and silhouettes.
 
 ## Planned 3D conversions
