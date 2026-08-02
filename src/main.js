@@ -137,6 +137,7 @@ function startGame(role) {
   suite.visible = false;
 
   let mode = role === 'manager' ? 'hotel' : 'city';
+  let cameraMode = 'third';
   let currentRoom = null;
   let paused = false;
   let rep = 12;
@@ -345,6 +346,13 @@ function startGame(role) {
       marker.rotation.x = -Math.PI / 2;
       marker.position.y = 0.018;
       root.add(marker);
+      const playerLight = new THREE.PointLight(0x74e8f0, 2.4, 7, 2);
+      playerLight.position.set(0, 1.7, 0);
+      root.add(playerLight);
+      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(onlineProfile?.tag || 'YOU', '#7de3e5', '#111820'), transparent: true, depthTest: false }));
+      tag.scale.set(2.8, 0.46, 1);
+      tag.position.set(0, 3.05, 0);
+      root.add(tag);
     }
     return root;
   }
@@ -739,7 +747,10 @@ function startGame(role) {
     hotel.visible = true;
   } else {
     city.add(player);
-    player.position.set(-5, 0, 7);
+    player.position.set(-24, 0, -24);
+    player.rotation.y = Math.PI;
+    city.visible = true;
+    hotel.visible = false;
   }
 
   function showDistrict(name) {
@@ -1068,10 +1079,24 @@ function startGame(role) {
   }
 
   function updateCamera(delta) {
-    const roomScale = mode === 'room' ? 0.82 : 1;
-    targetCamera.set(player.position.x + 6.7 * roomScale, player.position.y + 5.2 * roomScale, player.position.z + 8.4 * roomScale);
+    const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y));
+    if (cameraMode === 'first') {
+      player.visible = false;
+      camera.fov = 74;
+      targetCamera.set(player.position.x, player.position.y + 1.62, player.position.z);
+      cameraLook.copy(player.position).addScaledVector(forward, 10);
+      cameraLook.y = player.position.y + 1.52;
+    } else {
+      player.visible = true;
+      camera.fov = 52;
+      const distance = mode === 'room' ? 4.8 : 7.4;
+      targetCamera.copy(player.position).addScaledVector(forward, -distance);
+      targetCamera.y = player.position.y + 4.25;
+      cameraLook.copy(player.position);
+      cameraLook.y = player.position.y + 1.28;
+    }
+    camera.updateProjectionMatrix();
     camera.position.lerp(targetCamera, 1 - Math.pow(0.0025, delta));
-    cameraLook.set(player.position.x, player.position.y + 1.25, player.position.z - 0.7);
     camera.lookAt(cameraLook);
   }
 
@@ -1124,6 +1149,10 @@ function startGame(role) {
   addEventListener('keydown', (event) => {
     keys[event.key.toLowerCase()] = true;
     if (event.key.toLowerCase() === 'e' && !event.repeat) interact();
+    if (event.key.toLowerCase() === 'v' && !event.repeat) {
+      cameraMode = cameraMode === 'third' ? 'first' : 'third';
+      showGlobalToast(cameraMode === 'first' ? 'FIRST-PERSON CAMERA' : 'THIRD-PERSON CAMERA');
+    }
     if (event.key.toLowerCase() === 'r' && !event.repeat && mode !== 'city') $('#room-panel').classList.toggle('open');
     if (event.key === 'Escape' && !event.repeat) {
       if ($('#room-panel').classList.contains('open')) $('#room-panel').classList.remove('open');
@@ -1144,6 +1173,7 @@ function startGame(role) {
     renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 1.7 : 1.25));
   });
 
+
   if (role === 'manager') {
     updateLocation('HOTEL LOBBY');
     setObjective('Complete the opening inspection · 0/3', 0.05, 'SHIFT 01');
@@ -1153,8 +1183,8 @@ function startGame(role) {
     setTimeout(() => showDistrict('STATION DISTRICT'), 900);
   }
 
-  camera.position.set(player.position.x + 7, 5.4, player.position.z + 8.5);
-  camera.lookAt(player.position.x, 1.2, player.position.z);
+  camera.position.set(player.position.x, player.position.y + 4.25, player.position.z + 7.4);
+  camera.lookAt(player.position.x, player.position.y + 1.2, player.position.z);
 
   function loop() {
     requestAnimationFrame(loop);
