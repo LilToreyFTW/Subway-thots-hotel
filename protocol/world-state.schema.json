@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Subway Thots Hotel world state",
+  "type": "object",
+  "required": ["regionId", "serverTick", "entities"],
+  "properties": {
+    "regionId": {"type": "string"},
+    "serverTick": {"type": "integer", "minimum": 0},
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "position"],
+        "properties": {
+          "id": {"type": "string"},
+          "kind": {"enum": ["player", "npc", "object", "vehicle"]},
+          "position": {"type": "object", "required": ["x", "y", "z"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}},
+          "rotationY": {"type": "number"},
+          "appearanceKey": {"type": "string"},
+          "roomId": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+server-python/.venv/
+server-python/.env
+server-python/*.db
+__pycache__/
+*.pyc
+.DS_Store
