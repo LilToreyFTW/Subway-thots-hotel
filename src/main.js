@@ -10,6 +10,74 @@ const ageGate = $('#age-gate');
 const roleCards = [...document.querySelectorAll('.role-card')];
 let selectedRole = 'guest';
 let started = false;
+let onlineProfile = JSON.parse(localStorage.getItem('sth-online-profile') || 'null');
+let creatorGender = 'female';
+const creatorSelection = { face: 'Face_01', arms: 'Arms_01', torso: 'Torso_01', legs: 'Legs_01' };
+const inventoryItems = [
+  { key: 'phone', icon: '▣', name: 'Phone', qty: 1 },
+  { key: 'water', icon: '♒', name: 'Water Bottle', qty: 2 },
+  { key: 'food', icon: '◆', name: 'Street Food', qty: 1 },
+  { key: 'radio', icon: '◉', name: 'Radio', qty: 1 },
+  { key: 'keys', icon: '⌁', name: 'Hotel Keys', qty: 1 },
+  null,
+];
+let selectedInventorySlot = 0;
+let friends = JSON.parse(localStorage.getItem('sth-online-friends') || '[]');
+let friendTab = 'online';
+
+function profileTag(name) {
+  const used = new Set(JSON.parse(localStorage.getItem('sth-used-gamertags') || '[]'));
+  let number;
+  do number = String(100000 + Math.floor(Math.random() * 900000)); while (used.has(`${name}#${number}`));
+  const tag = `${name}#${number}`;
+  used.add(tag);
+  localStorage.setItem('sth-used-gamertags', JSON.stringify([...used]));
+  return { name, number, tag };
+}
+async function reserveGamertag(name) {
+  try {
+    const protocol = location.protocol === 'https:' ? 'https' : 'http';
+    const base = window.STH_WORLD_URL ? window.STH_WORLD_URL.replace(/^ws/, 'http').replace(/\/$/, '') : `${protocol}://${location.hostname || '127.0.0.1'}:8000`;
+    const response = await fetch(`${base}/gamertag/allocate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: name }) });
+    const result = await response.json();
+    if (result.ok) return result;
+  } catch (_) { /* local fallback keeps the first-playable client usable offline */ }
+  return profileTag(name);
+}
+function showGlobalToast(message) { const el = $('#toast'); if (!el) return; el.textContent = message; el.classList.add('show'); clearTimeout(window.sthToastTimer); window.sthToastTimer = setTimeout(() => el.classList.remove('show'), 2400); }
+function openGamertagModal() { $('#gamertag-modal').hidden = false; $('#gamertag-input').focus(); }
+function creatorPrefix(category) { return creatorGender === 'male' ? `Male_${category[0].toUpperCase()}${category.slice(1)}` : category[0].toUpperCase() + category.slice(1); }
+function renderCreatorSlots() {
+  const root = $('#creator-slots'); root.innerHTML = '';
+  for (const category of ['face', 'arms', 'torso', 'legs']) {
+    const group = document.createElement('section'); group.className = 'creator-group';
+    const title = document.createElement('h3'); title.textContent = category.toUpperCase(); group.appendChild(title);
+    const grid = document.createElement('div'); grid.className = 'slot-grid';
+    const prefix = creatorPrefix(category);
+    for (let i = 1; i <= 10; i++) {
+      const key = `${prefix}_${String(i).padStart(2, '0')}`; const button = document.createElement('button'); button.textContent = key; button.dataset.category = category; button.dataset.key = key; button.classList.toggle('selected', creatorSelection[category] === key);
+      button.onclick = () => { creatorSelection[category] = key; renderCreatorSlots(); updateCreatorSummary(); };
+      grid.appendChild(button);
+    }
+    group.appendChild(grid); root.appendChild(group);
+  }
+  updateCreatorSummary();
+}
+function updateCreatorSummary() { $('#creator-selection-summary').textContent = `${creatorGender.toUpperCase()} · ${Object.values(creatorSelection).join(' · ')}`; }
+function openCreatorModal() { $('#creator-modal').hidden = false; $('#creator-tag').textContent = onlineProfile.tag; renderCreatorSlots(); }
+function closeOnlinePanels() { $('#friends-panel').hidden = true; $('#inventory-hotbar').hidden = true; }
+function toggleFriends(force) { const panel = $('#friends-panel'); panel.hidden = typeof force === 'boolean' ? !force : !panel.hidden; if (!panel.hidden) renderFriends(); }
+function toggleInventory(force) { const bar = $('#inventory-hotbar'); bar.hidden = typeof force === 'boolean' ? !force : !bar.hidden; if (!bar.hidden) renderHotbar(); }
+function renderHotbar() { const root = $('#hotbar-slots'); root.innerHTML = ''; inventoryItems.forEach((item, index) => { const slot = document.createElement('button'); slot.className = `hotbar-slot${selectedInventorySlot === index ? ' selected' : ''}`; slot.innerHTML = `<kbd>${index + 1}</kbd><span class="item-icon">${item?.icon || '·'}</span><strong>${item?.name || 'Empty'}</strong><small>${item?.qty ? `Qty ${item.qty}` : '—'}</small>`; slot.onclick = () => useInventorySlot(index); root.appendChild(slot); }); }
+function useInventorySlot(index) { selectedInventorySlot = index; const item = inventoryItems[index]; renderHotbar(); if (!item) return; if (item.key === 'water' || item.key === 'food') { if (item.qty > 0) item.qty -= 1; showGlobalToast(`${item.name} used · needs restored.`); } else if (item.key === 'radio') showGlobalToast('Radio menu ready.'); else if (item.key === 'phone') showGlobalToast('Phone opened.'); else if (item.key === 'keys') showGlobalToast('Hotel keys equipped.'); else showGlobalToast(`${item.name} equipped.`); renderHotbar(); }
+function renderFriends() {
+  const list = $('#friends-list'); list.innerHTML = '';
+  const visible = friends.filter((friend) => friendTab === 'pending' ? friend.status === 'Pending' : friend.status.toLowerCase().includes(friendTab === 'online' ? 'online' : 'offline'));
+  $('#friends-online-count').textContent = `${friends.filter((friend) => friend.status === 'Online').length} ONLINE`;
+  if (!visible.length) { list.innerHTML = '<p class="friend-empty">No players in this list yet.</p>'; return; }
+  visible.forEach((friend) => { const row = document.createElement('article'); row.className = 'friend-entry'; row.innerHTML = `<div class="friend-avatar">${friend.tag[0]}</div><div><strong>${friend.tag}</strong><small>${friend.status}</small></div><div class="friend-actions"><button data-action="invite">INVITE</button><button data-action="message">MESSAGE</button><button data-action="remove">REMOVE</button></div>`; row.querySelector('[data-action="remove"]').onclick = () => { friends = friends.filter((item) => item.tag !== friend.tag); localStorage.setItem('sth-online-friends', JSON.stringify(friends)); renderFriends(); }; list.appendChild(row); });
+}
+function addFriendRequest() { const input = $('#friend-search'); const tag = input.value.trim(); if (!/^[A-Za-z0-9._-]{3,16}#\d{6}$/.test(tag)) return showGlobalToast('Use a full Name#XXXXXX gamertag.'); if (friends.some((friend) => friend.tag === tag)) return showGlobalToast('That gamertag is already in your friends list.'); friends.push({ tag, status: 'Pending' }); localStorage.setItem('sth-online-friends', JSON.stringify(friends)); input.value = ''; friendTab = 'pending'; document.querySelectorAll('[data-friend-tab]').forEach((tab) => tab.classList.toggle('selected', tab.dataset.friendTab === friendTab)); renderFriends(); showGlobalToast(`Friend request queued for ${tag}.`); }
 
 roleCards.forEach((card) => {
   card.addEventListener('click', () => {
@@ -22,10 +90,15 @@ roleCards.forEach((card) => {
 
 $('#enter-btn').addEventListener('click', () => {
   if (started) return;
-  started = true;
-  ageGate.classList.add('hidden');
-  startGame(selectedRole);
+  if (onlineProfile) { started = true; ageGate.classList.add('hidden'); startGame(selectedRole); return; }
+  ageGate.classList.add('hidden'); openGamertagModal();
 });
+$('#gamertag-input').addEventListener('input', () => { const value = $('#gamertag-input').value.trim(); $('#gamertag-preview').innerHTML = `Your tag: <strong>${/^[A-Za-z0-9._-]{3,16}$/.test(value) ? `${value}#XXXXXX` : '—'}</strong>`; });
+$('#gamertag-submit').addEventListener('click', async () => { const name = $('#gamertag-input').value.trim(); if (!/^[A-Za-z0-9._-]{3,16}$/.test(name)) { $('#gamertag-error').textContent = 'Use 3–16 letters, numbers, dots, underscores, or hyphens.'; return; } const submit = $('#gamertag-submit'); submit.disabled = true; submit.textContent = 'RESERVING TAG…'; const reserved = await reserveGamertag(name); onlineProfile = { ...reserved, gender: creatorGender, selections: { ...creatorSelection }, createdAt: new Date().toISOString() }; submit.disabled = false; submit.textContent = 'CONTINUE TO CHARACTER CREATOR →'; $('#gamertag-error').textContent = ''; openCreatorModal(); $('#gamertag-modal').hidden = true; });
+document.querySelectorAll('.gender-tabs button').forEach((button) => button.addEventListener('click', () => { creatorGender = button.dataset.gender; document.querySelectorAll('.gender-tabs button').forEach((item) => item.classList.toggle('selected', item === button)); creatorSelection.face = creatorGender === 'male' ? 'Male_Face_01' : 'Face_01'; creatorSelection.arms = creatorGender === 'male' ? 'Male_Arms_01' : 'Arms_01'; creatorSelection.torso = creatorGender === 'male' ? 'Male_Torso_01' : 'Torso_01'; creatorSelection.legs = creatorGender === 'male' ? 'Male_Legs_01' : 'Legs_01'; renderCreatorSlots(); }));
+$('#creator-submit').addEventListener('click', () => { onlineProfile.gender = creatorGender; onlineProfile.selections = { ...creatorSelection }; localStorage.setItem('sth-online-profile', JSON.stringify(onlineProfile)); $('#creator-modal').hidden = true; started = true; startGame(selectedRole); });
+$('#friends-close').addEventListener('click', () => toggleFriends(false)); $('#friend-add-btn').addEventListener('click', addFriendRequest); document.querySelectorAll('[data-friend-tab]').forEach((tab) => tab.addEventListener('click', () => { friendTab = tab.dataset.friendTab; document.querySelectorAll('[data-friend-tab]').forEach((item) => item.classList.toggle('selected', item === tab)); renderFriends(); }));
+addEventListener('keydown', (event) => { if (event.target instanceof Element && event.target.matches('input,textarea')) return; const key = event.key.toLowerCase(); if (key === 'f' && !event.repeat) toggleFriends(); if (key === 'z' && !event.repeat) toggleInventory(); if (key >= '1' && key <= '6' && !event.repeat && !$('#creator-modal')?.hidden) return; if (key >= '1' && key <= '6' && !event.repeat && onlineProfile) useInventorySlot(Number(key) - 1); if (key === 'escape') { if (!$('#friends-panel').hidden || !$('#inventory-hotbar').hidden) closeOnlinePanels(); } });
 
 function startGame(role) {
   const canvas = $('#game');
@@ -652,7 +725,7 @@ function startGame(role) {
   addRain();
 
   const player = makeCharacter({
-    gender: role === 'manager' ? 'female' : 'male',
+    gender: onlineProfile?.gender || (role === 'manager' ? 'female' : 'male'),
     coat: role === 'manager' ? 0x6c3d46 : 0x222c37,
     skin: role === 'manager' ? 0xa66d50 : 0x81533f,
     hair: 0x171411,
@@ -913,7 +986,8 @@ function startGame(role) {
   function connectWorld() {
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
     const base = window.STH_WORLD_URL || `${protocol}://${location.hostname || '127.0.0.1'}:8000`;
-    const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?player_id=browser-${Math.random().toString(36).slice(2, 10)}&display_name=${role === 'manager' ? 'Manager' : 'Guest'}`;
+    const tag = onlineProfile?.tag || (role === 'manager' ? 'Manager' : 'Guest');
+    const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?player_id=browser-${Math.random().toString(36).slice(2, 10)}&display_name=${encodeURIComponent(tag)}`;
     try {
       worldSocket = new WebSocket(url);
       worldSocket.addEventListener('open', () => { $('#server-status').textContent = 'ONLINE WORLD'; });

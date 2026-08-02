@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
+import secrets
 import time
 import uuid
 from collections import defaultdict
@@ -10,9 +12,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import Float, String, create_engine, select
+from sqlalchemy import Float, Integer, String, create_engine, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 load_dotenv()
@@ -38,6 +41,13 @@ class PlayerProfile(Base):
     y: Mapped[float] = mapped_column(Float, default=0.0)
     z: Mapped[float] = mapped_column(Float, default=8.0)
     region_id: Mapped[str] = mapped_column(String(80), default="sth-city-01")
+
+
+class GamertagRegistry(Base):
+    __tablename__ = "gamertag_registry"
+    tag: Mapped[str] = mapped_column(String(40), primary_key=True)
+    display_name: Mapped[str] = mapped_column(String(16), nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 @dataclass
@@ -138,6 +148,24 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False,
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {"ok": True, "service": "subway-thots-hotel-world", "database": DATABASE_URL.split(":", 1)[0], "regions": len(regions), "tickRate": TICK_RATE}
+
+
+@app.post("/gamertag/allocate")
+def allocate_gamertag(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    display_name = str(payload.get("displayName", "")).strip()
+    if not re.fullmatch(r"[A-Za-z0-9._-]{3,16}", display_name):
+        return {"ok": False, "error": "Display name must be 3-16 letters, numbers, dots, underscores, or hyphens."}
+    for _ in range(100):
+        number = secrets.randbelow(900000) + 100000
+        tag = f"{display_name}#{number}"
+        try:
+            with SessionLocal() as db:
+                db.add(GamertagRegistry(tag=tag, display_name=display_name, number=number))
+                db.commit()
+            return {"ok": True, "displayName": display_name, "number": number, "tag": tag}
+        except IntegrityError:
+            continue
+    return {"ok": False, "error": "Unable to allocate a unique gamertag. Try again."}
 
 
 @app.get("/regions")

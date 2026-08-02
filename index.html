@@ -81,6 +81,41 @@
       <div id="runtime-error"></div>
     </div>
 
+    <section id="gamertag-modal" class="online-modal" aria-modal="true" hidden>
+      <div class="online-card gamertag-card">
+        <small class="online-kicker">SUBWAYTHOTSHOTEL ONLINE · ACCOUNT SETUP</small>
+        <h2>CREATE YOUR GAMERTAG</h2>
+        <p>Choose the public name players will see. Your permanent tag receives a unique six-digit number.</p>
+        <label for="gamertag-input">DISPLAY NAME</label>
+        <input id="gamertag-input" maxlength="16" autocomplete="off" placeholder="ThotQueen" />
+        <div id="gamertag-preview">Your tag: <strong>—</strong></div>
+        <div id="gamertag-error" role="alert"></div>
+        <button id="gamertag-submit">CONTINUE TO CHARACTER CREATOR →</button>
+      </div>
+    </section>
+
+    <section id="creator-modal" class="online-modal" aria-modal="true" hidden>
+      <div class="online-card creator-card">
+        <div class="creator-head"><div><small class="online-kicker">SUBWAYTHOTSHOTEL ONLINE</small><h2>CUSTOMIZE CHARACTER</h2></div><strong id="creator-tag"></strong></div>
+        <p class="creator-intro">Welcome to SubwayThotsHotel. Build your adult online character before entering free roam.</p>
+        <div class="gender-tabs"><button data-gender="female" class="selected">FEMALE</button><button data-gender="male">MALE</button></div>
+        <div id="creator-slots" class="creator-slots"></div>
+        <div class="creator-footer"><span id="creator-selection-summary"></span><button id="creator-submit">FINISH & SPAWN ONLINE →</button></div>
+      </div>
+    </section>
+
+    <aside id="friends-panel" class="nui-panel" aria-label="Friends list" hidden>
+      <div class="nui-header"><div><small>SUBWAYTHOTSHOTEL ONLINE</small><h2>FRIENDS <span id="friends-online-count">0 ONLINE</span></h2></div><button id="friends-close">×</button></div>
+      <div class="friend-add"><input id="friend-search" placeholder="Name#XXXXXX" maxlength="23" /><button id="friend-add-btn">ADD</button></div>
+      <div class="friend-tabs"><button data-friend-tab="online" class="selected">ONLINE</button><button data-friend-tab="offline">OFFLINE</button><button data-friend-tab="pending">PENDING</button></div>
+      <div id="friends-list"></div>
+    </aside>
+
+    <div id="inventory-hotbar" aria-label="Six slot inventory" hidden>
+      <div class="hotbar-title">INVENTORY <small>Z TO CLOSE</small></div>
+      <div id="hotbar-slots"></div>
+    </div>
+
     <script>
       window.addEventListener('error', function (event) {
         const el = document.getElementById('runtime-error');
