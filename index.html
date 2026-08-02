@@ -1,2 +1,94 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Subway Thots Hotel</title></head><body><div id="age-gate"><div class="gate-card"><div class="eyebrow">PRIVATE NIGHTLIFE NETWORK</div><h1>SUBWAY<br><span>THOTS HOTEL</span></h1><p>Adults-only fictional social nightlife prototype. Every guest is 18+.</p><button id="enter-btn">ENTER THE HOTEL</button><small>By entering, you confirm you are 18 or older.</small></div></div><div id="app"><canvas id="game"></canvas><div id="room-panel"><div class="room-head"><strong>HOTEL DIRECTORY</strong><button id="close-rooms">×</button></div><p>50 private suites · 5 floors · all guests 18+</p><div id="room-list"></div></div><div id="hud"><div class="brand">S/T/H <b id="server-status">LOCAL</b></div><div class="stats"><span>REP <strong id="rep">12</strong></span><span>CASH <strong id="cash">240</strong></span><span>GUESTS <strong id="guests">1,024</strong></span></div><div class="objective"><small>TONIGHT'S OBJECTIVE</small><strong id="objective">Make a memorable entrance</strong><button id="interact">INTERACT</button></div></div><div id="toast"></div><div id="prompt">WASD to walk · C city view · H hotel entrance · 1-5 floors · R room directory · Click guests</div><div id="runtime-error"></div></div><script>window.addEventListener('error',function(e){var el=document.getElementById('runtime-error');if(el){el.textContent='Game startup error: '+(e.message||'WebGL module failed to load')+' — run this project with npm run dev or npm run preview, not by double-clicking index.html.';el.classList.add('show')}});window.addEventListener('unhandledrejection',function(e){var el=document.getElementById('runtime-error');if(el){el.textContent='Game startup error: '+(e.reason?.message||e.reason||'module failed to load')+' — run this project with npm run dev or npm run preview.';el.classList.add('show')}});</script><script type="module" src="/src/main.js"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080b0f" />
+    <meta name="description" content="An adults-only, story-driven hotel and city life simulation." />
+    <title>Subway Thots Hotel — After Dark</title>
+  </head>
+  <body>
+    <div id="age-gate">
+      <div class="gate-scene" aria-hidden="true"></div>
+      <main class="gate-card">
+        <div class="gate-kicker"><span></span> PRIVATE NIGHTLIFE NETWORK</div>
+        <h1>SUBWAY<br /><em>THOTS</em> HOTEL</h1>
+        <p class="gate-copy">A cinematic city and hotel life simulation. All characters are fictional adults aged 21+.</p>
+        <fieldset class="role-picker">
+          <legend>Choose your story</legend>
+          <label class="role-card selected">
+            <input type="radio" name="role" value="guest" checked />
+            <span class="role-icon">G</span>
+            <span><b>MALE GUEST</b><small>Explore the city, check in, rest and build consensual relationships.</small></span>
+          </label>
+          <label class="role-card">
+            <input type="radio" name="role" value="manager" />
+            <span class="role-icon">M</span>
+            <span><b>FEMALE MANAGER</b><small>Run the hotel, keep it clean and handle guest requests.</small></span>
+          </label>
+        </fieldset>
+        <button id="enter-btn">BEGIN YOUR NIGHT <span>→</span></button>
+        <small class="age-copy">By entering, you confirm you are 21 or older.</small>
+      </main>
+    </div>
+
+    <div id="app">
+      <canvas id="game" aria-label="3D city and hotel game"></canvas>
+
+      <header id="topbar">
+        <div class="brand"><i>S</i>/T/H <span>AFTER DARK</span></div>
+        <div class="world-state"><span class="live-dot"></span><b id="server-status">LOCAL WORLD</b><span id="clock">11:48 PM</span></div>
+        <div class="stats">
+          <span>REPUTATION <strong id="rep">12</strong></span>
+          <span>CASH <strong>$<b id="cash">240</b></strong></span>
+          <span id="role-stat">GUEST</span>
+        </div>
+      </header>
+
+      <aside id="mission-card">
+        <div class="mission-line"><span id="chapter">CHAPTER 01</span><span id="location">STATION DISTRICT</span></div>
+        <small id="objective-label">CURRENT OBJECTIVE</small>
+        <strong id="objective">Walk to the hotel entrance</strong>
+        <div class="objective-progress"><i id="objective-fill"></i></div>
+      </aside>
+
+      <aside id="context-card" class="hidden-card">
+        <span class="keycap">E</span>
+        <div><small>INTERACT</small><strong id="context-action">Enter hotel</strong></div>
+      </aside>
+
+      <aside id="room-panel" aria-label="Hotel room directory">
+        <div class="room-head"><div><small>STH PROPERTY</small><strong>ROOM DIRECTORY</strong></div><button id="close-rooms" aria-label="Close room directory">×</button></div>
+        <p>50 private suites · five secured floors · all guests 21+</p>
+        <div id="room-list"></div>
+      </aside>
+
+      <aside id="pause-panel">
+        <small>QUICK GUIDE</small>
+        <strong id="pause-title">CITY CONTROLS</strong>
+        <div class="controls-grid"><span><kbd>WASD</kbd> Move</span><span><kbd>SHIFT</kbd> Sprint</span><span><kbd>E</kbd> Interact</span><span><kbd>R</kbd> Rooms</span></div>
+        <button id="resume-btn">RESUME</button>
+      </aside>
+
+      <button id="interact" aria-label="Interact with nearby person or object"><span>E</span> INTERACT</button>
+      <button id="sound-toggle" aria-label="Toggle ambience">SOUND: OFF</button>
+      <div id="minimap"><div class="map-grid"></div><i id="map-player"></i><b id="map-hotel">H</b><span>N</span></div>
+      <div id="district-title"><small>NOW ENTERING</small><strong id="district-name">STATION DISTRICT</strong></div>
+      <div id="fade"><div><small id="fade-kicker">STH</small><strong id="fade-title">AFTER DARK</strong></div></div>
+      <div id="toast" role="status"></div>
+      <div id="prompt">WASD MOVE <i>·</i> SHIFT SPRINT <i>·</i> E INTERACT <i>·</i> R ROOMS <i>·</i> ESC GUIDE</div>
+      <div id="gpu-gate"><strong>RTX GPU REQUIRED</strong><p>Enable an NVIDIA RTX GPU and hardware acceleration to play this high-fidelity build.</p></div>
+      <div id="runtime-error"></div>
+    </div>
+
+    <script>
+      window.addEventListener('error', function (event) {
+        const el = document.getElementById('runtime-error');
+        if (!el) return;
+        el.textContent = 'Game startup error: ' + (event.message || 'WebGL failed to load') + '. Run this project with npm run dev or npm run preview.';
+        el.classList.add('show');
+      });
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
