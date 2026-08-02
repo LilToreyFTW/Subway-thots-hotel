@@ -3,6 +3,7 @@
 ## Concept asset
 
 - `assets/generated/avatar-lineup.png` — original adult-only avatar lineup concept sheet.
+- `assets/generated/avatar-outfit-sheet.png` — original modular outfit and accessory concept sheet.
 - Generation direction: polished semi-real anime rendering, neon magenta/cyan nightlife lighting, four distinct adult women, fully clothed fashion, varied hair and silhouettes.
 
 ## Planned 3D conversions
