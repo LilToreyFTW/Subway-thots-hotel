@@ -1,66 +1,1104 @@
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import './style.css';
 
-const ageGate = document.querySelector('#age-gate');
-document.querySelector('#enter-btn').onclick = () => { ageGate.classList.add('hidden'); startGame(); };
-let started = false, rep = 12, cash = 240, selected = null, mode = 'exterior', floor = 1, currentRoom = null, worldSocket = null, lastNetworkSend = 0;
+const $ = (selector) => document.querySelector(selector);
+const ageGate = $('#age-gate');
+const roleCards = [...document.querySelectorAll('.role-card')];
+let selectedRole = 'guest';
+let started = false;
 
-function setServerStatus(label, color) { const el = document.querySelector('#server-status'); if (el) { el.textContent = label; el.style.color = color; } }
-function connectWorld() { const base = window.STH_WORLD_URL || `ws://${location.hostname || '127.0.0.1'}:8000`; const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?player_id=browser-${Math.random().toString(36).slice(2, 10)}&display_name=Guest`; try { worldSocket = new WebSocket(url); worldSocket.addEventListener('open', () => { setServerStatus('ONLINE', '#58e39c'); }); worldSocket.addEventListener('message', event => { const message = JSON.parse(event.data); if (message.type === 'welcome') setServerStatus('ONLINE', '#58e39c'); if (message.type === 'chat') setServerStatus('ONLINE', '#58e39c'); }); worldSocket.addEventListener('close', () => setServerStatus('OFFLINE', '#ff775d')); worldSocket.addEventListener('error', () => setServerStatus('OFFLINE', '#ff775d')); } catch (_) { setServerStatus('LOCAL', '#39e4ff'); } }
+roleCards.forEach((card) => {
+  card.addEventListener('click', () => {
+    roleCards.forEach((item) => item.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input').checked = true;
+    selectedRole = card.querySelector('input').value;
+  });
+});
 
-function startGame(){
-  if (started) return; started = true; connectWorld();
-  const canvas = document.querySelector('#game');
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(0x090914); scene.fog = new THREE.Fog(0x090914, 18, 70);
-  const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, .1, 120);
-  camera.position.set(0, 7, 16);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', precision: 'highp' }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15; renderer.physicallyCorrectLights = true;
-  const gpuContext = renderer.getContext(); const gpuDebug = gpuContext.getExtension('WEBGL_debug_renderer_info'); const gpuName = gpuDebug ? gpuContext.getParameter(gpuDebug.UNMASKED_RENDERER_WEBGL) : 'GPU name hidden by browser'; const rtxDetected = /\bRTX\b/i.test(gpuName); const devGpuBypass = new URLSearchParams(location.search).has('allow-low-gpu'); if (!rtxDetected && !devGpuBypass) { const gate = document.querySelector('#gpu-gate'); if (gate) { gate.classList.add('open'); gate.querySelector('strong').textContent = 'RTX GPU REQUIRED'; gate.querySelector('p').textContent = `Detected: ${gpuName}. Enable an NVIDIA RTX GPU and hardware acceleration to play this high-fidelity build.`; } return; }
-  const qualityBadge = document.querySelector('#gpu-quality'); if (qualityBadge) qualityBadge.textContent = rtxDetected ? 'RTX HIGH FIDELITY' : 'DEV GPU BYPASS';
-  scene.add(new THREE.HemisphereLight(0xffd3f4, 0x111126, 1.8));
-  const pink = new THREE.PointLight(0xff3fbf, 38, 32); pink.position.set(0, 9, 3); pink.castShadow = true; scene.add(pink);
-  const blue = new THREE.PointLight(0x28d9ff, 28, 28); blue.position.set(-12, 5, -8); scene.add(blue);
-  const mat = (c, e = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: .55, metalness: .25, emissive: e ? c : 0, emissiveIntensity: e });
-  const box = (x, y, z, sx, sy, sz, c, parent = scene) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat(c)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
-  const floorMat = mat(0x151527); const world = new THREE.Group(); scene.add(world); const interior = new THREE.Group(); interior.visible = false; scene.add(interior); const roomScene = new THREE.Group(); roomScene.visible = false; scene.add(roomScene);
-  const guests = []; let player = null;
-  function makeGuest(i, parent = world) { const g = new THREE.Group(); const colors = [0xff5b9e, 0x56d7ff, 0xffc857, 0xa97cff, 0xff775d, 0x58e39c]; const body = new THREE.Mesh(new THREE.CapsuleGeometry(.42, 1.15, 5, 10), mat(colors[i % colors.length])); body.position.y = 1.05; g.add(body); const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 16, 12), mat(0xf0b49d)); head.position.y = 1.95; g.add(head); const glow = new THREE.Mesh(new THREE.TorusGeometry(.58, .035, 8, 24), mat(0x22e4ff, 1)); glow.rotation.x = Math.PI / 2; glow.position.y = .06; g.add(glow); g.userData = { name: ['Nova', 'Jett', 'Mia', 'Roxy', 'Lux', 'Sage', 'Vee'][i % 7], mood: ['DANCING', 'CHILL', 'FLIRTING', 'VIBING'][i % 4], phase: i * .8 }; parent.add(g); return g; }
-  function buildRealisticRoom(n) {
-    roomScene.clear(); const r = n % 6;
-    const pbr = (color, roughness = .48, metalness = .08, clearcoat = 0) => new THREE.MeshPhysicalMaterial({ color, roughness, metalness, clearcoat, clearcoatRoughness: .18 });
-    const pbox = (x, y, z, sx, sy, sz, color, material = null) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material || pbr(color)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; roomScene.add(m); return m; };
-    const cyl = (x, y, z, radius, height, color, material = null) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.08, height, 24), material || pbr(color)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; roomScene.add(m); return m; };
-    const point = (color, intensity, distance, x, y, z) => { const l = new THREE.PointLight(color, intensity, distance); l.position.set(x, y, z); l.castShadow = true; roomScene.add(l); return l; };
-    roomScene.add(new THREE.HemisphereLight(0xffd9ee, 0x171423, 1.2)); point(0xff3fbf, 18, 20, -3, 4.5, -3); point(0x38d9ff, 12, 18, 5, 3.5, -6); point(0xffbf79, 8, 12, 4, 2.5, 3);
-    pbox(0, -.25, 0, 16, .5, 16, 0x211724, pbr(0x211724, .72));
-    for (let i = -7; i <= 7; i++) pbox(i * 1.05, .03, 0, 1, .08, 15.3, i % 2 ? pbr(0x6d4655, .38) : pbr(0x4d3147, .42));
-    pbox(0, 4.4, -8, 16, 8.8, .25, 0x30213a, pbr(0x30213a, .62)); pbox(-8, 4.4, 0, .25, 8.8, 16, 0x281c33, pbr(0x281c33, .62)); pbox(8, 4.4, 0, .25, 8.8, 16, 0x281c33, pbr(0x281c33, .62));
-    pbox(0, .65, -7.82, 15.7, .16, .12, 0x8f5279, pbr(0x8f5279, .35)); pbox(0, 3.1, -7.82, 15.7, .12, .12, 0x8f5279, pbr(0x8f5279, .35)); pbox(0, 4.0, -7.82, 15.7, .08, .08, 0xff39b5, pbr(0xff39b5, .3, .05, .7));
-    pbox(0, 4.2, -7.7, 7.1, 4.1, .08, 0x73cce2, pbr(0x73cce2, .12, .05, .2)); pbox(-3.8, 4.2, -7.6, .18, 4.2, .22, 0x3c304d, pbr(0x3c304d, .3, .7)); pbox(3.8, 4.2, -7.6, .18, 4.2, .22, 0x3c304d, pbr(0x3c304d, .3, .7)); pbox(-5.5, 4.2, -7.55, 1.2, 4.2, .22, 0x4c2a49, pbr(0x4c2a49, .45)); pbox(5.5, 4.2, -7.55, 1.2, 4.2, .22, 0x4c2a49, pbr(0x4c2a49, .45));
-    pbox(-2.5, .48, -2.1, 5.6, .45, 6.6, 0x3a253f, pbr(0x3a253f, .4)); pbox(-2.5, .83, -2.1, 5.25, .5, 6.25, 0xe7d8d4, pbr(0xe7d8d4, .82)); pbox(-2.5, 1.1, -3.1, 5.05, .18, 3.9, r % 2 ? 0x6d2e5d : 0x344e76, pbr(r % 2 ? 0x6d2e5d : 0x344e76, .48, .02, .15)); pbox(-2.5, 2.7, -5.3, 5.3, 3.3, .22, 0x472746, pbr(0x472746, .5)); pbox(-2.5, 2.8, -5.16, 4.8, 2.8, .12, 0x633557, pbr(0x633557, .5));
-    pbox(-3.9, 1.18, -4.15, 1.8, .22, 1.15, 0xf5e8e1, pbr(0xf5e8e1, .9)); pbox(-1.1, 1.18, -4.15, 1.8, .22, 1.15, 0xf5e8e1, pbr(0xf5e8e1, .9)); pbox(-2.5, 1.14, -1.15, 5.0, .12, 2.5, 0xff3fbf, pbr(0xff3fbf, .55, .02, .15));
-    for (const x of [-5.55, .55]) { pbox(x, 1.05, -2.5, 1.2, 1.5, 1.1, 0x5b3649, pbr(0x5b3649, .36)); pbox(x, 1.82, -2.5, 1.28, .08, 1.18, 0x9c5b72, pbr(0x9c5b72, .3, .15)); cyl(x, 2.45, -2.5, .07, 1.05, 0xd8a95d, pbr(0xd8a95d, .25, .75)); const shade = new THREE.Mesh(new THREE.ConeGeometry(.34, .38, 24, 1, true), pbr(0xf3d9dc, .55)); shade.position.set(x, 3.1, -2.5); shade.castShadow = true; roomScene.add(shade); }
-    pbox(2.7, .22, -2.3, 5.2, .12, 3.8, 0x5b2e65, pbr(0x5b2e65, .95)); pbox(4.7, 1.35, .4, 4.8, .18, 1.4, 0x69465d, pbr(0x69465d, .36)); pbox(4.7, .7, .4, .18, 1.3, 1.25, 0x3d2b43, pbr(0x3d2b43, .4)); pbox(2.75, .7, .4, .18, 1.3, 1.25, 0x3d2b43, pbr(0x3d2b43, .4)); pbox(4.7, 2.2, -.15, 2.8, 1.7, .08, 0x4f84a2, pbr(0x4f84a2, .3, .05, .35));
-    pbox(4.7, .3, 3.7, 2.6, .12, 1.9, 0x3f2448, pbr(0x3f2448, .9)); pbox(4.7, .82, 3.7, 2.2, .72, 1.5, 0x8d577e, pbr(0x8d577e, .58)); pbox(4.7, 1.65, 3.7, 2.3, .12, 1.6, 0xb67a99, pbr(0xb67a99, .5));
-    pbox(6.65, 3.2, -3.6, .1, 2.7, 2.3, 0xc2e9ef, pbr(0xc2e9ef, .08, .7, .4)); pbox(6.55, 3.2, -3.6, .18, 3.0, 2.6, 0x4b3153, pbr(0x4b3153, .4));
-    const plant = new THREE.Group(); const pot = new THREE.Mesh(new THREE.CylinderGeometry(.45, .55, .65, 20), pbr(0x49334d, .45)); pot.position.y = .35; plant.add(pot); for (let i = 0; i < 7; i++) { const leaf = new THREE.Mesh(new THREE.SphereGeometry(.17, 10, 8), pbr(i % 2 ? 0x2d9b77 : 0x45c68e, .6)); leaf.scale.set(.8, 2.5, .45); leaf.position.set(Math.cos(i) * .3, 1.1 + (i % 3) * .18, Math.sin(i) * .3); leaf.rotation.z = (i - 3) * .3; plant.add(leaf); } plant.position.set(-6.3, 0, 4.8); roomScene.add(plant);
-    pbox(-5.8, 2.3, -7.58, 1.8, 1.2, .06, 0xf2b06a, pbr(0xf2b06a, .5, .05, .25)); pbox(-5.8, 2.3, -7.5, 1.55, .95, .04, 0x722957, pbr(0x722957, .55));
-    roomScene.visible = true; interior.visible = false; world.visible = false; movePlayerTo(roomScene, 0, 5); currentRoom = n; mode = 'room'; followCamera(); document.querySelector('#objective').textContent = `Room ${n} · realistic suite`; toast(`Entered suite ${n}.`);
+$('#enter-btn').addEventListener('click', () => {
+  if (started) return;
+  started = true;
+  ageGate.classList.add('hidden');
+  startGame(selectedRole);
+});
+
+function startGame(role) {
+  const canvas = $('#game');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111820);
+  scene.fog = new THREE.FogExp2(0x111820, 0.009);
+
+  const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 310);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  const gl = renderer.getContext();
+  const isWebGL2 = renderer.capabilities.isWebGL2;
+  const maxTextureSize = renderer.capabilities.maxTextureSize;
+  const quality = isWebGL2 && maxTextureSize >= 8192 && innerWidth > 700 ? 'high' : 'balanced';
+
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 1.7 : 1.25));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.92;
+
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  if (quality === 'high') {
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.13, 0.48, 0.88));
   }
-  function buildExterior() { box(0, -.2, 0, 36, .4, 34, 0x151527, world); const grid = new THREE.GridHelper(34, 34, 0x9b2e91, 0x3a1a48); grid.position.y = .02; world.add(grid); box(-16, 5, 0, 1, 10, 34, 0x22132f, world); box(16, 5, 0, 1, 10, 34, 0x22132f, world); box(0, 8, -16, 32, 16, 1, 0x1b142b, world); for (let y = 2; y < 9; y += 2.3) { box(0, y, -13, 29, .18, .35, 0x61305e, world); for (let x = -12; x <= 12; x += 3) box(x, y + .75, -13, .9, 1.2, .12, 0x29b8e8, world); } box(0, 3, -15.3, 9, 6, .5, 0x160d25, world); box(0, 7, -15.7, 11, 1.3, .25, 0xff28b5, world); box(-8, 1, -5, 7, .4, 4, 0x442043, world); box(-8, 2, -6.5, 5, 2, .25, 0x10c5d9, world); box(8, 1, -6, 6, .4, 3, 0x30204b, world); box(8, 2, -6.8, 5, 1.8, .3, 0xd72a86, world); for (let i = 0; i < 16; i++) { const g = makeGuest(i); g.position.set((i % 8 - 3.5) * 2.3, 0, Math.floor(i / 8) * 3 - 1); guests.push(g); } }
-  function buildInterior() { box(0, -.2, 0, 22, .4, 34, 0x171321, interior); const g = new THREE.GridHelper(22, 22, 0x563a68, 0x281b38); g.position.y = .03; interior.add(g); box(-11, 3, 0, .5, 6, 34, 0x271531, interior); box(11, 3, 0, .5, 6, 34, 0x271531, interior); box(0, 5, -16, 22, 1, .5, 0x2a1836, interior); box(0, .1, 0, 2.2, .15, 34, 0xff32b5, interior); for (let r = 1; r <= 10; r++) { const z = 15 - r * 3; const left = box(-9.8, 1.7, z, .25, 2.3, 1.7, 0x38d7ee, interior); left.userData.room = (floor - 1) * 10 + r; const right = box(9.8, 1.7, z, .25, 2.3, 1.7, 0xff3fbf, interior); right.userData.room = (floor - 1) * 10 + r; box(-10.2, .2, z, .5, .2, 1.9, 0x3b2355, interior); box(10.2, .2, z, .5, .2, 1.9, 0x3b2355, interior); } for (let i = 0; i < 6; i++) { const g = makeGuest(i, interior); g.position.set((i % 2 ? 3 : -3), 0, i * 4 - 10); guests.push(g); } }
-  function buildCity() { const city = new THREE.Group(); world.add(city); box(0, -.28, 0, 80, .3, 80, 0x0c1020, city); for (let i = -4; i <= 4; i++) { box(i * 10, -.05, 0, 2.2, .12, 80, 0x25283c, city); box(0, -.04, i * 10, 80, .11, 2.2, 0x25283c, city); box(i * 10, .02, 0, .06, .06, 80, 0xffcf67, city); box(0, .02, i * 10, 80, .06, .06, 0xffcf67, city); } const palette = [0x2d3150, 0x3b2450, 0x263e55, 0x49304f, 0x293b49]; for (let gx = -3; gx <= 3; gx++) for (let gz = -3; gz <= 3; gz++) { if (Math.abs(gx) <= 1 && Math.abs(gz) <= 1) continue; const x = gx * 10 + (Math.random() - .5) * 2, z = gz * 10 + (Math.random() - .5) * 2; if (Math.random() < .15) { box(x, .12, z, 6.8, .24, 6.8, 0x17372e, city); for (let t = 0; t < 4; t++) { const tree = new THREE.Group(); const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.12, .16, 1.4, 8), mat(0x553524)); trunk.position.y = .8; tree.add(trunk); const crown = new THREE.Mesh(new THREE.SphereGeometry(.8, 10, 8), mat(0x1c9b78, 1)); crown.position.y = 1.8; tree.add(crown); tree.position.set(x + (t % 2 ? 1.8 : -1.8), 0, z + (t > 1 ? 1.8 : -1.8)); city.add(tree); } } else { const h = 3 + Math.random() * 9, w = 4.5 + Math.random() * 3, d = 4.5 + Math.random() * 3; box(x, h / 2, z, w, h, d, palette[Math.floor(Math.random() * palette.length)], city); for (let yy = 1.5; yy < h - .2; yy += 1.5) for (let xx = -w * .28; xx <= w * .28; xx += 1.2) { const window = box(x + xx, yy, z - d / 2 - .03, .48, .48, .05, Math.random() < .35 ? 0xff39b5 : 0x37d9ed, city); window.material.emissive = window.material.color; window.material.emissiveIntensity = .8; } } } for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) { if ((i + j) % 2) continue; const lamp = new THREE.Group(); box(0, 2.1, 0, .08, 4.2, .08, 0x343649, lamp); const light = new THREE.Mesh(new THREE.SphereGeometry(.18, 10, 8), mat(0xffd06a, 1)); light.position.y = 4.2; lamp.add(light); lamp.position.set(i * 10 + 3.3, 0, j * 10 + 3.3); city.add(lamp); } }
-  function buildRoom(n) { roomScene.clear(); roomScene.add(new THREE.AmbientLight(0xffc7e8, 1.4)); const r = n % 6; box(0, -.2, 0, 16, .4, 16, 0x1b1526, roomScene); box(0, 4, -8, 16, 8, .4, 0x251834, roomScene); box(-7, 3, 0, .4, 6, 16, 0x291a35, roomScene); box(7, 3, 0, .4, 6, 16, 0x291a35, roomScene); box(-2.6, .7, -2, 4.7, .55, 7, r % 2 ? 0x35265b : 0x4b214b, roomScene); box(-2.6, 1.2, -4.5, 4.7, .65, 1.5, 0xe6d6ec, roomScene); box(3.6, 1, 1.8, 2.1, 1.1, 1.1, 0x522143, roomScene); box(3.6, 1.75, 1.8, 2.3, .12, 1.2, 0x26d9ec, roomScene); box(3.6, .12, -5.5, 2.8, .2, 2, 0x3b234c, roomScene); box(4.8, .85, -5.5, .6, 1.6, 1.2, 0xff39b5, roomScene); box(-5.5, 2.5, -7.7, 4, 2.2, .15, 0x29d9ed, roomScene); box(0, 7, -7.7, 7, .15, .15, 0xff36b8, roomScene); for (let i = 0; i < 4; i++) box(-6 + i * 4, .2, 6.5, 1.7, .2, 1.7, 0x392242, roomScene); roomScene.visible = true; interior.visible = false; world.visible = false; movePlayerTo(roomScene, 0, 4); currentRoom = n; mode = 'room'; followCamera(); document.querySelector('#objective').textContent = `Room ${n} · suite view`; toast(`Entered suite ${n}.`); }
-  buildExterior(); buildCity(); buildInterior();
-  player = makeGuest(99, world); player.userData = { name: 'YOU', mood: 'PLAYER', phase: 0, isPlayer: true }; player.scale.setScalar(1.08); player.children[0].material.color.set(0x39e4ff); player.position.set(0, 0, 8);
-  function movePlayerTo(parent, x, z) { parent.attach(player); player.position.set(x, 0, z); }
-  function followCamera() { if (!player) return; const offsetZ = mode === 'room' ? 7 : 8; const offsetY = mode === 'room' ? 4.8 : 5.6; camera.position.set(player.position.x, player.position.y + offsetY, player.position.z + offsetZ); camera.lookAt(player.position.x, player.position.y + 1.05, player.position.z - 1.4); }
-  followCamera(); document.querySelector('#objective').textContent = 'You spawned outside the hotel · move with WASD'; const roomList = document.querySelector('#room-list'); for (let n = 1; n <= 50; n++) { const b = document.createElement('button'); b.textContent = `ROOM ${String(n).padStart(2, '0')}`; b.onclick = () => { document.querySelector('#room-panel').classList.remove('open'); buildRealisticRoom(n); }; roomList.appendChild(b); }
-  document.querySelector('#close-rooms').onclick = () => document.querySelector('#room-panel').classList.remove('open');
-  const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(); canvas.addEventListener('pointerdown', e => { mouse.x = e.clientX / innerWidth * 2 - 1; mouse.y = -(e.clientY / innerHeight) * 2 + 1; ray.setFromCamera(mouse, camera); const hit = ray.intersectObjects(guests, true)[0]; if (hit) { selected = hit.object.parent; document.querySelector('#objective').textContent = `Talk to ${selected.userData.name} · ${selected.userData.mood}`; toast(`You caught ${selected.userData.name}'s attention.`); } });
-  const keys = {}; addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase() === 'c') { mode = 'city'; world.visible = true; interior.visible = false; roomScene.visible = false; movePlayerTo(world, 0, 8); followCamera(); document.querySelector('#objective').textContent = 'City district · explore the nightlife grid'; toast('City district loaded.'); } if (e.key.toLowerCase() === 'h') { mode = mode === 'exterior' ? 'interior' : 'exterior'; world.visible = mode === 'exterior'; interior.visible = mode === 'interior'; roomScene.visible = false; movePlayerTo(mode === 'exterior' ? world : interior, 0, mode === 'exterior' ? 8 : 12); followCamera(); document.querySelector('#objective').textContent = mode === 'interior' ? `Hotel interior · Floor ${floor}` : 'Make a memorable entrance'; toast(mode === 'interior' ? 'Welcome inside the hotel.' : 'Back outside at the plaza.'); } if (/^[1-5]$/.test(e.key)) { floor = Number(e.key); mode = 'interior'; world.visible = false; interior.visible = true; roomScene.visible = false; movePlayerTo(interior, 0, 12); followCamera(); document.querySelector('#objective').textContent = `Hotel interior · Floor ${floor}`; toast(`Floor ${floor} selected · rooms ${(floor - 1) * 10 + 1}-${floor * 10}`); } if (e.key.toLowerCase() === 'r') document.querySelector('#room-panel').classList.add('open'); if (e.key === 'Escape') { roomScene.visible = false; mode = 'interior'; interior.visible = true; movePlayerTo(interior, 0, 12); followCamera(); document.querySelector('#objective').textContent = `Hotel interior · Floor ${floor}`; } }); addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-  document.querySelector('#interact').onclick = () => { if (selected) { rep += 3; cash += 25; update(); toast(`Good energy with ${selected.userData.name}! +3 REP · +$25`); selected = null; document.querySelector('#objective').textContent = 'Find your next connection'; } else if (mode === 'exterior') { mode = 'interior'; world.visible = false; interior.visible = true; movePlayerTo(interior, 0, 12); followCamera(); toast('You walked through the hotel entrance.'); } };
-  function update() { document.querySelector('#rep').textContent = rep; document.querySelector('#cash').textContent = cash; } function toast(t) { const el = document.querySelector('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(window.tt); window.tt = setTimeout(() => el.classList.remove('show'), 2300); }
-  addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
-  const clock = new THREE.Clock(); function loop() { requestAnimationFrame(loop); const t = clock.getElapsedTime(); for (const g of guests) { g.position.y = Math.sin(t * 2 + (g.userData.phase || 0)) * .06; g.rotation.y = Math.sin(t * .5 + (g.userData.phase || 0)) * .35; if (g.children[2]) g.children[2].rotation.z = t * 2; } let dx = 0, dz = 0; if (keys.w) dz -= 1; if (keys.s) dz += 1; if (keys.a) dx -= 1; if (keys.d) dx += 1; if (worldSocket && worldSocket.readyState === WebSocket.OPEN && t - lastNetworkSend > .05) { worldSocket.send(JSON.stringify({ type: 'input', x: dx, z: dz })); lastNetworkSend = t; } if (player) { player.position.x += dx * .12; player.position.z += dz * .12; player.position.x = THREE.MathUtils.clamp(player.position.x, -14, 14); player.position.z = THREE.MathUtils.clamp(player.position.z, -14, 16); if (dx || dz) player.rotation.y = Math.atan2(dx, -dz); } followCamera(); renderer.render(scene, camera); } loop();
+  composer.addPass(new OutputPass());
+
+  const clock = new THREE.Clock();
+  const city = new THREE.Group();
+  const hotel = new THREE.Group();
+  const suite = new THREE.Group();
+  scene.add(city, hotel, suite);
+  hotel.visible = false;
+  suite.visible = false;
+
+  let mode = role === 'manager' ? 'hotel' : 'city';
+  let currentRoom = null;
+  let paused = false;
+  let rep = 12;
+  let cash = role === 'manager' ? 420 : 240;
+  let taskCount = 0;
+  let checkedIn = false;
+  let slept = false;
+  let nearby = null;
+  let toastTimer;
+  let worldSocket = null;
+  let lastNetworkSend = 0;
+  let ambience = null;
+  let timeOfNight = 23 * 60 + 48;
+  const keys = Object.create(null);
+  const cityColliders = [];
+  const interactables = [];
+  const npcs = [];
+  const vehicles = [];
+  const rainDrops = [];
+  const tempWorld = new THREE.Vector3();
+  const targetCamera = new THREE.Vector3();
+  const cameraLook = new THREE.Vector3();
+
+  $('#role-stat').textContent = role === 'manager' ? 'MANAGER' : 'GUEST';
+  $('#cash').textContent = cash;
+
+  const seeded = (() => {
+    let seed = 47381;
+    return () => {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    };
+  })();
+
+  const materials = {
+    asphalt: new THREE.MeshStandardMaterial({ color: 0x171d22, roughness: 0.94, metalness: 0.03 }),
+    concrete: new THREE.MeshStandardMaterial({ color: 0x596065, roughness: 0.85 }),
+    wetConcrete: new THREE.MeshPhysicalMaterial({ color: 0x384047, roughness: 0.28, metalness: 0.08, clearcoat: 0.55, clearcoatRoughness: 0.25 }),
+    hotelStone: new THREE.MeshStandardMaterial({ color: 0x776b5b, roughness: 0.72 }),
+    darkMetal: new THREE.MeshStandardMaterial({ color: 0x171c21, roughness: 0.28, metalness: 0.82 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0x8ba8b2, roughness: 0.08, metalness: 0.1, transmission: 0.22, transparent: true, opacity: 0.72 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xb98c45, roughness: 0.25, metalness: 0.78 }),
+    carpet: new THREE.MeshStandardMaterial({ color: 0x321c24, roughness: 0.96 }),
+    wood: new THREE.MeshStandardMaterial({ color: 0x4a2f25, roughness: 0.65 }),
+    linen: new THREE.MeshStandardMaterial({ color: 0xd8d0c4, roughness: 0.91 }),
+  };
+
+  function material(color, roughness = 0.66, metalness = 0.05) {
+    return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+  }
+
+  function box(parent, x, y, z, sx, sy, sz, meshMaterial, shadows = true) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), meshMaterial);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = shadows;
+    mesh.receiveShadow = shadows;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function cylinder(parent, x, y, z, radius, height, meshMaterial, sides = 18) {
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, sides), meshMaterial);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function labelTexture(text, foreground = '#e9c27b', background = '#111519', width = 768, height = 180) {
+    const label = document.createElement('canvas');
+    label.width = width;
+    label.height = height;
+    const ctx = label.getContext('2d');
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.strokeRect(5, 5, width - 10, height - 10);
+    ctx.fillStyle = foreground;
+    ctx.font = `600 ${Math.floor(height * 0.48)}px Arial Narrow, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, width / 2, height / 2 + 3);
+    const texture = new THREE.CanvasTexture(label);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  }
+
+  function windowTexture(base, warmChance = 0.48) {
+    const surface = document.createElement('canvas');
+    surface.width = 256;
+    surface.height = 512;
+    const ctx = surface.getContext('2d');
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, 256, 512);
+    for (let y = 18; y < 495; y += 42) {
+      for (let x = 15; x < 245; x += 35) {
+        const lit = seeded() < warmChance;
+        ctx.fillStyle = lit ? (seeded() < 0.74 ? '#d7b878' : '#7aa3a5') : '#11191d';
+        ctx.fillRect(x, y, 20, 25);
+        ctx.fillStyle = lit ? 'rgba(255,238,190,.18)' : 'rgba(0,0,0,.2)';
+        ctx.fillRect(x + 2, y + 2, 16, 3);
+      }
+    }
+    const texture = new THREE.CanvasTexture(surface);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  }
+
+  function addSky() {
+    const geometry = new THREE.SphereGeometry(260, 32, 18);
+    const skyMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: { topColor: { value: new THREE.Color(0x091421) }, bottomColor: { value: new THREE.Color(0x3b4344) }, offset: { value: 12 }, exponent: { value: 0.75 } },
+      vertexShader: 'varying vec3 vWorldPosition; void main(){ vec4 worldPosition=modelMatrix*vec4(position,1.0); vWorldPosition=worldPosition.xyz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: 'uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float exponent; varying vec3 vWorldPosition; void main(){ float h=normalize(vWorldPosition+offset).y; gl_FragColor=vec4(mix(bottomColor,topColor,max(pow(max(h,0.0),exponent),0.0)),1.0); }',
+    });
+    scene.add(new THREE.Mesh(geometry, skyMaterial));
+
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(4.2, 24, 18), new THREE.MeshBasicMaterial({ color: 0xcbd2d3 }));
+    moon.position.set(-78, 92, -148);
+    scene.add(moon);
+  }
+
+  function addLighting() {
+    const hemisphere = new THREE.HemisphereLight(0x6f8798, 0x16110f, 1.35);
+    scene.add(hemisphere);
+    const moonlight = new THREE.DirectionalLight(0xa8b8c8, 2.2);
+    moonlight.position.set(-55, 85, 35);
+    moonlight.castShadow = true;
+    moonlight.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
+    moonlight.shadow.camera.left = -70;
+    moonlight.shadow.camera.right = 70;
+    moonlight.shadow.camera.top = 70;
+    moonlight.shadow.camera.bottom = -70;
+    moonlight.shadow.camera.far = 190;
+    moonlight.shadow.bias = -0.00018;
+    scene.add(moonlight);
+  }
+
+  function makeCharacter({ gender = 'female', coat = 0x303844, skin = 0x9a5f43, hair = 0x171310, accent = 0xb7894d, player = false } = {}) {
+    const root = new THREE.Group();
+    const cloth = material(coat, 0.72, 0.04);
+    const skinMat = material(skin, 0.75, 0.01);
+    const hairMat = material(hair, 0.9, 0.01);
+    const shoeMat = material(0x111315, 0.35, 0.25);
+    const accentMat = material(accent, 0.5, 0.15);
+
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(gender === 'female' ? 0.29 : 0.34, 0.78, 6, 12), cloth);
+    torso.position.y = 1.45;
+    torso.scale.z = gender === 'female' ? 0.76 : 0.82;
+    torso.castShadow = true;
+    root.add(torso);
+
+    const neck = cylinder(root, 0, 2.02, 0, 0.115, 0.25, skinMat, 12);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.245, 18, 14), skinMat);
+    head.position.y = 2.24;
+    head.scale.set(0.9, 1.08, 0.9);
+    head.castShadow = true;
+    root.add(head);
+
+    const hairMesh = new THREE.Mesh(new THREE.SphereGeometry(0.256, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.62), hairMat);
+    hairMesh.position.set(0, 2.33, 0.015);
+    hairMesh.rotation.x = -0.08;
+    root.add(hairMesh);
+
+    const hip = box(root, 0, 0.94, 0, gender === 'female' ? 0.52 : 0.58, 0.25, 0.34, cloth);
+    hip.geometry.translate(0, 0, 0);
+    const limbGeometry = new THREE.CapsuleGeometry(0.105, 0.62, 4, 8);
+    const legMaterial = gender === 'female' ? material(0x25292d, 0.78) : cloth;
+    const legs = [];
+    for (const side of [-1, 1]) {
+      const leg = new THREE.Group();
+      const legMesh = new THREE.Mesh(limbGeometry, legMaterial);
+      legMesh.position.y = -0.38;
+      legMesh.castShadow = true;
+      leg.add(legMesh);
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.14, 0.42), shoeMat);
+      shoe.position.set(0, -0.82, -0.07);
+      shoe.castShadow = true;
+      leg.add(shoe);
+      leg.position.set(side * 0.17, 0.84, 0);
+      root.add(leg);
+      legs.push(leg);
+
+      const arm = new THREE.Group();
+      const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.58, 4, 8), cloth);
+      sleeve.position.y = -0.35;
+      sleeve.castShadow = true;
+      arm.add(sleeve);
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.105, 10, 8), skinMat);
+      hand.position.y = -0.74;
+      arm.add(hand);
+      arm.position.set(side * (gender === 'female' ? 0.35 : 0.4), 1.8, 0);
+      arm.rotation.z = side * -0.045;
+      root.add(arm);
+      root.userData[`arm${side}`] = arm;
+    }
+    root.userData.legs = legs;
+    root.userData.gender = gender;
+    root.userData.walkPhase = seeded() * Math.PI * 2;
+    if (player) {
+      const marker = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.48, 28), new THREE.MeshBasicMaterial({ color: 0xe7b764, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+      marker.rotation.x = -Math.PI / 2;
+      marker.position.y = 0.018;
+      root.add(marker);
+    }
+    return root;
+  }
+
+  function addStreetLight(x, z, rotation = 0) {
+    const lamp = new THREE.Group();
+    cylinder(lamp, 0, 2.6, 0, 0.07, 5.2, materials.darkMetal, 12);
+    const arm = box(lamp, 0.35, 5.12, 0, 0.75, 0.07, 0.07, materials.darkMetal);
+    arm.rotation.y = rotation;
+    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffdda0, emissive: 0xffc774, emissiveIntensity: 4.4 });
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), bulbMat);
+    bulb.position.set(0.7, 5.06, 0);
+    lamp.add(bulb);
+    if (quality === 'high' && Math.abs(x + z) % 60 < 1) {
+      const light = new THREE.PointLight(0xffc777, 7, 17, 2);
+      light.position.set(0.7, 4.9, 0);
+      lamp.add(light);
+    }
+    lamp.position.set(x, 0, z);
+    city.add(lamp);
+  }
+
+  function addBuilding(x, z, width, depth, height, color, allowCollider = true) {
+    const texture = windowTexture(color, 0.34 + seeded() * 0.28);
+    const buildingMaterial = new THREE.MeshStandardMaterial({
+      map: texture,
+      emissiveMap: texture,
+      emissive: new THREE.Color(0x8e7652),
+      emissiveIntensity: 0.32,
+      roughness: 0.74,
+      metalness: 0.05,
+    });
+    const body = box(city, x, height / 2 + 0.35, z, width, height, depth, buildingMaterial);
+    body.castShadow = height < 34;
+    const ledgeMat = material(0x272c30, 0.78, 0.12);
+    for (let y = 4.4; y < height - 1; y += 7.2) box(city, x, y, z, width + 0.18, 0.15, depth + 0.18, ledgeMat, false);
+    box(city, x, height + 0.58, z, width + 0.35, 1.15, depth + 0.35, material(0x20262b, 0.85), true);
+    if (height > 15) {
+      box(city, x + width * 0.18, height + 1.55, z, Math.min(3.5, width * 0.35), 1.2, Math.min(3, depth * 0.34), ledgeMat);
+      if (seeded() > 0.55) cylinder(city, x - width * 0.22, height + 3.1, z, 0.07, 4, materials.darkMetal, 8);
+    }
+    if (allowCollider) cityColliders.push({ minX: x - width / 2 - 0.5, maxX: x + width / 2 + 0.5, minZ: z - depth / 2 - 0.5, maxZ: z + depth / 2 + 0.5 });
+  }
+
+  function addHotelExterior() {
+    const group = new THREE.Group();
+    group.position.set(0, 0, -46);
+    city.add(group);
+    const stone = materials.hotelStone;
+    box(group, 0, 12.2, 0, 30, 24, 18, stone);
+    box(group, 0, 1.8, 9.2, 24, 3.1, 1.1, material(0x26292a, 0.5, 0.2));
+
+    const windowMat = new THREE.MeshStandardMaterial({ color: 0x78909b, emissive: 0xb98a4f, emissiveIntensity: 0.75, roughness: 0.2, metalness: 0.1 });
+    for (let floor = 0; floor < 6; floor++) {
+      for (let column = -5; column <= 5; column++) {
+        if (floor === 0 && Math.abs(column) < 2) continue;
+        const window = box(group, column * 2.35, 3.3 + floor * 3.25, 9.07, 1.25, 1.75, 0.12, windowMat, false);
+        window.material = windowMat;
+      }
+    }
+    for (const x of [-5.7, -3.8, 3.8, 5.7]) cylinder(group, x, 3.4, 10, 0.23, 6.8, materials.gold, 20);
+    box(group, 0, 6.85, 9.5, 15, 0.45, 4.6, materials.darkMetal);
+    box(group, 0, 6.58, 11.4, 14.5, 0.12, 3.9, materials.gold);
+
+    const entranceGlass = box(group, 0, 2.9, 9.62, 6.8, 5.6, 0.18, materials.glass);
+    entranceGlass.castShadow = false;
+    box(group, 0, 5.85, 9.58, 8.1, 0.28, 0.3, materials.gold);
+    box(group, -3.45, 2.9, 9.58, 0.24, 5.8, 0.32, materials.gold);
+    box(group, 3.45, 2.9, 9.58, 0.24, 5.8, 0.32, materials.gold);
+
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 2.45), new THREE.MeshBasicMaterial({ map: labelTexture('S / T / H', '#e6bd75', '#111416'), transparent: false }));
+    sign.position.set(0, 10.25, 9.58);
+    group.add(sign);
+    const signLight = new THREE.PointLight(0xe4b56e, 11, 24, 2);
+    signLight.position.set(0, 8.3, 12.2);
+    group.add(signLight);
+
+    for (const x of [-10.6, 10.6]) {
+      const planter = cylinder(group, x, 0.55, 11.5, 0.8, 1.1, material(0x252a2a, 0.7), 22);
+      planter.scale.z = 0.85;
+      const plant = new THREE.Mesh(new THREE.ConeGeometry(1.05, 3.6, 12), material(0x18382c, 0.9));
+      plant.position.set(x, 2.6, 11.5);
+      plant.castShadow = true;
+      group.add(plant);
+    }
+    cityColliders.push({ minX: -15.3, maxX: 15.3, minZ: -55.5, maxZ: -37.2 });
+    interactables.push({ mode: 'city', type: 'hotelEntrance', object: group, position: new THREE.Vector3(0, 0, -34.5), label: 'Enter Subway Thots Hotel' });
+  }
+
+  function addCity() {
+    box(city, 0, -0.36, 0, 220, 0.7, 220, materials.asphalt, false);
+    const roadPositions = [-72, -24, 24, 72];
+    const roadMaterial = material(0x171c20, 0.34, 0.06);
+    for (const p of roadPositions) {
+      box(city, p, -0.02, 0, 13, 0.08, 212, roadMaterial, false);
+      box(city, 0, -0.015, p, 212, 0.08, 13, roadMaterial, false);
+      for (let line = -98; line <= 98; line += 7.5) {
+        box(city, p, 0.03, line, 0.12, 0.025, 3.4, material(0xc9a95e, 0.7), false);
+        box(city, line, 0.035, p, 3.4, 0.025, 0.12, material(0xc9a95e, 0.7), false);
+      }
+    }
+
+    for (let x = -96; x <= 96; x += 48) {
+      for (let z = -96; z <= 96; z += 48) {
+        const hotelBlock = x === 0 && (z === -48 || z === -96);
+        if (hotelBlock) continue;
+        box(city, x, 0.15, z, 31, 0.3, 31, materials.concrete, false);
+        const count = seeded() > 0.48 ? 2 : 1;
+        if (count === 1) {
+          const w = 21 + seeded() * 7;
+          const d = 20 + seeded() * 8;
+          addBuilding(x, z, w, d, 10 + seeded() * 30, ['#30373d', '#3a3534', '#293840', '#3e3d39'][Math.floor(seeded() * 4)]);
+        } else {
+          const vertical = seeded() > 0.5;
+          for (const side of [-1, 1]) {
+            const bx = x + (vertical ? side * 8 : 0);
+            const bz = z + (vertical ? 0 : side * 8);
+            addBuilding(bx, bz, vertical ? 12.5 : 25, vertical ? 25 : 12.5, 8 + seeded() * 22, ['#30373d', '#3a3534', '#293840', '#413a36'][Math.floor(seeded() * 4)]);
+          }
+        }
+      }
+    }
+
+    addHotelExterior();
+
+    const plaza = box(city, 0, 0.12, -27, 30, 0.24, 14, materials.wetConcrete, false);
+    plaza.receiveShadow = true;
+    for (let x = -12; x <= 12; x += 4) box(city, x, 0.245, -27, 0.065, 0.02, 13.2, material(0x798083, 0.45), false);
+
+    const metro = new THREE.Group();
+    metro.position.set(-45, 0, 5);
+    city.add(metro);
+    box(metro, 0, 1.6, 0, 8, 3.2, 5.5, materials.darkMetal);
+    box(metro, 0, 1.65, 2.78, 6.7, 2.5, 0.12, materials.glass);
+    const metroSign = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 1.1), new THREE.MeshBasicMaterial({ map: labelTexture('24TH STREET', '#d9d9d5', '#20262a') }));
+    metroSign.position.set(0, 3.65, 2.82);
+    metro.add(metroSign);
+
+    for (let p = -92; p <= 92; p += 16) {
+      for (const road of roadPositions) {
+        addStreetLight(road + 8.5, p);
+        addStreetLight(p, road + 8.5);
+      }
+    }
+
+    const park = new THREE.Group();
+    park.position.set(48, 0, 48);
+    city.add(park);
+    box(park, 0, 0.12, 0, 31, 0.24, 31, material(0x163029, 0.96), false);
+    box(park, 0, 0.24, 0, 3, 0.08, 31, material(0x74736b, 0.82), false);
+    box(park, 0, 0.24, 0, 31, 0.08, 3, material(0x74736b, 0.82), false);
+    for (let i = 0; i < 12; i++) {
+      const angle = i * 2.399;
+      const radius = 5 + (i % 4) * 3.1;
+      const tx = Math.cos(angle) * radius;
+      const tz = Math.sin(angle) * radius;
+      cylinder(park, tx, 1.6, tz, 0.18, 3.2, material(0x4b3122, 0.94), 9);
+      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(1.25 + seeded() * 0.55, 1), material(0x1e4739, 0.92));
+      crown.position.set(tx, 3.65, tz);
+      crown.castShadow = true;
+      park.add(crown);
+    }
+
+    for (let i = 0; i < 8; i++) {
+      const lane = i % 2 ? -24 : 24;
+      const vehicle = new THREE.Group();
+      const bodyMat = material([0x313a43, 0x5a2828, 0x726c60, 0x1e2125][i % 4], 0.35, 0.45);
+      box(vehicle, 0, 0.48, 0, 1.7, 0.52, 3.5, bodyMat);
+      box(vehicle, 0, 0.88, -0.2, 1.48, 0.52, 1.8, materials.glass);
+      for (const x of [-0.72, 0.72]) for (const z of [-1.05, 1.05]) {
+        const wheel = cylinder(vehicle, x, 0.25, z, 0.24, 0.18, material(0x0b0d0f, 0.88), 12);
+        wheel.rotation.z = Math.PI / 2;
+      }
+      const tail = new THREE.MeshBasicMaterial({ color: 0xe04435 });
+      box(vehicle, -0.52, 0.52, 1.77, 0.25, 0.15, 0.05, tail, false);
+      box(vehicle, 0.52, 0.52, 1.77, 0.25, 0.15, 0.05, tail, false);
+      vehicle.position.set(lane, 0, -95 + i * 24);
+      vehicle.userData.speed = 4.5 + (i % 3) * 1.1;
+      vehicle.userData.direction = i % 2 ? 1 : -1;
+      city.add(vehicle);
+      vehicles.push(vehicle);
+    }
+
+    const npcNames = ['Elena', 'Maya', 'Jules', 'Naomi', 'Camille', 'Ari', 'Jordan', 'Nico', 'Vivian', 'Tess'];
+    const npcSpots = [[-7,-16],[8,-13],[-32,18],[33,12],[-54,-2],[52,-22],[47,48],[-8,31],[28,-72],[-30,72]];
+    npcSpots.forEach(([x, z], index) => {
+      const npc = makeCharacter({ gender: index === 5 || index === 8 ? 'male' : 'female', coat: [0x4a3131,0x283947,0x4c493f,0x2d4540][index % 4], skin: [0x8c543b,0xc28163,0x6d402f,0xd0a086][index % 4], hair: [0x1a1210,0x42271e,0x15171a][index % 3] });
+      npc.position.set(x, 0, z);
+      npc.rotation.y = seeded() * Math.PI * 2;
+      npc.userData.name = npcNames[index];
+      npc.userData.base = new THREE.Vector3(x, 0, z);
+      npc.userData.radius = 1.4 + seeded() * 2;
+      city.add(npc);
+      npcs.push(npc);
+      interactables.push({ mode: 'city', type: 'person', object: npc, label: `Talk to ${npcNames[index]}` });
+    });
+  }
+
+  function addFurniture(parent, x, z, rotation = 0) {
+    const sofa = new THREE.Group();
+    box(sofa, 0, 0.52, 0, 3.2, 0.7, 1.15, material(0x3c4142, 0.89));
+    box(sofa, 0, 1.02, 0.46, 3.2, 0.85, 0.24, material(0x3c4142, 0.89));
+    for (const side of [-1, 1]) box(sofa, side * 1.55, 0.77, 0, 0.25, 0.9, 1.1, material(0x34393a, 0.86));
+    sofa.position.set(x, 0, z);
+    sofa.rotation.y = rotation;
+    parent.add(sofa);
+  }
+
+  function addHotelInterior() {
+    box(hotel, 0, -0.3, 0, 48, 0.6, 40, materials.wetConcrete);
+    box(hotel, 0, 7.5, -19.5, 48, 15, 1, materials.hotelStone);
+    box(hotel, -23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
+    box(hotel, 23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
+    box(hotel, 0, 7.5, 19.5, 48, 15, 1, materials.hotelStone);
+    box(hotel, 0, 0.03, -2, 7, 0.06, 34, materials.carpet, false);
+
+    for (const x of [-9, 9]) {
+      cylinder(hotel, x, 3.8, 2, 0.34, 7.6, materials.gold, 24);
+      cylinder(hotel, x, 3.8, -10, 0.34, 7.6, materials.gold, 24);
+    }
+    const chandelier = new THREE.Group();
+    cylinder(chandelier, 0, 7.3, 0, 0.05, 3.2, materials.gold, 12);
+    for (let i = 0; i < 10; i++) {
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), new THREE.MeshStandardMaterial({ color: 0xffe2ac, emissive: 0xffc86a, emissiveIntensity: 3 }));
+      const angle = i / 10 * Math.PI * 2;
+      bulb.position.set(Math.cos(angle) * 2.3, 5.7 + (i % 2) * 0.35, Math.sin(angle) * 2.3);
+      chandelier.add(bulb);
+    }
+    const chandelierLight = new THREE.PointLight(0xffd79a, 19, 27, 2);
+    chandelierLight.position.y = 5.8;
+    chandelierLight.castShadow = quality === 'high';
+    chandelier.add(chandelierLight);
+    hotel.add(chandelier);
+
+    const desk = new THREE.Group();
+    box(desk, 0, 0.72, 0, 11, 1.45, 2.2, materials.wood);
+    box(desk, 0, 1.5, 0, 11.3, 0.14, 2.45, materials.gold);
+    desk.position.set(0, 0, -12.2);
+    hotel.add(desk);
+    const deskSign = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.25), new THREE.MeshBasicMaterial({ map: labelTexture('RECEPTION', '#d9b66f', '#171719') }));
+    deskSign.position.set(0, 4.9, -19.02);
+    hotel.add(deskSign);
+
+    for (const x of [-16, -11, 11, 16]) {
+      box(hotel, x, 2.45, -18.9, 4.1, 4.7, 0.15, materials.glass);
+      box(hotel, x, 4.95, -18.7, 4.3, 0.18, 0.35, materials.gold);
+    }
+
+    addFurniture(hotel, -13, 6, Math.PI / 2);
+    addFurniture(hotel, 13, 6, -Math.PI / 2);
+    addFurniture(hotel, -13, -5, Math.PI / 2);
+    addFurniture(hotel, 13, -5, -Math.PI / 2);
+    for (const [x, z] of [[-13,1],[13,1],[-13,-10],[13,-10]]) {
+      cylinder(hotel, x, 0.42, z, 0.72, 0.18, materials.gold, 24);
+      cylinder(hotel, x, 0.22, z, 0.08, 0.45, materials.darkMetal, 12);
+    }
+
+    const elevatorMat = new THREE.MeshStandardMaterial({ color: 0x606367, roughness: 0.2, metalness: 0.82 });
+    for (const x of [-17.5, 17.5]) {
+      box(hotel, x, 3, -18.92, 6, 5.9, 0.18, elevatorMat);
+      box(hotel, x, 6.15, -18.75, 6.4, 0.32, 0.42, materials.gold);
+    }
+
+    interactables.push({ mode: 'hotel', type: 'hotelExit', position: new THREE.Vector3(0, 0, 16.7), label: 'Return to Station District' });
+    interactables.push({ mode: 'hotel', type: 'reception', position: new THREE.Vector3(0, 0, -9.7), label: role === 'manager' ? 'Review the front desk log' : 'Check in at reception' });
+    interactables.push({ mode: 'hotel', type: 'rooms', position: new THREE.Vector3(17.5, 0, -15.5), label: 'Use the guest elevator' });
+
+    const taskData = [
+      { type: 'spill', x: -12.8, z: 9, label: 'Clean the lobby spill' },
+      { type: 'laundry', x: 15.5, z: 10.5, label: 'Collect fresh laundry' },
+      { type: 'trash', x: -18, z: -7.5, label: 'Empty the waste bin' },
+    ];
+    taskData.forEach((task, index) => {
+      const prop = new THREE.Group();
+      if (task.type === 'spill') {
+        const spill = new THREE.Mesh(new THREE.CircleGeometry(0.85, 24), new THREE.MeshPhysicalMaterial({ color: 0x4a301e, roughness: 0.12, clearcoat: 0.8 }));
+        spill.rotation.x = -Math.PI / 2;
+        spill.position.y = 0.012;
+        prop.add(spill);
+      } else if (task.type === 'laundry') {
+        box(prop, 0, 0.32, 0, 1.2, 0.65, 0.8, material(0xcac5bb, 0.92));
+        for (let i = 0; i < 4; i++) box(prop, (i % 2 - .5) * .45, 0.75 + Math.floor(i / 2) * .2, 0, 0.42, 0.18, 0.62, materials.linen);
+      } else {
+        cylinder(prop, 0, 0.48, 0, 0.4, 0.95, materials.darkMetal, 18);
+      }
+      prop.position.set(task.x, 0, task.z);
+      hotel.add(prop);
+      interactables.push({ mode: 'hotel', type: 'managerTask', subtype: task.type, object: prop, label: task.label, completed: false, index });
+    });
+
+    const hotelNpcData = [
+      ['Dahlia', -8, -7, 0x543240, 0xb77755],
+      ['Monique', 8, 6, 0x263b45, 0x71412f],
+      ['Iris', -17, 12, 0x4b4234, 0xd09b79],
+      ['Marcus', 15, -7, 0x2e333b, 0x744631],
+    ];
+    hotelNpcData.forEach(([name, x, z, coat, skin], index) => {
+      const npc = makeCharacter({ gender: index === 3 ? 'male' : 'female', coat, skin });
+      npc.position.set(x, 0, z);
+      npc.userData.name = name;
+      npc.userData.base = new THREE.Vector3(x, 0, z);
+      npc.userData.radius = 1.3;
+      hotel.add(npc);
+      npcs.push(npc);
+      interactables.push({ mode: 'hotel', type: 'person', object: npc, label: `Talk to ${name}` });
+    });
+  }
+
+  function buildSuite(number) {
+    suite.clear();
+    interactables.splice(0, interactables.length, ...interactables.filter((item) => item.mode !== 'room'));
+    const accent = number % 3 === 0 ? 0x38566b : number % 2 ? 0x64364f : 0x4a5369;
+    box(suite, 0, -0.28, 0, 18, 0.55, 18, material(0x3e302b, 0.76));
+    for (let stripe = -8; stripe <= 8; stripe += 1.1) box(suite, stripe, 0.015, 0, 0.04, 0.025, 17.6, material(0x65534b, 0.78), false);
+    box(suite, 0, 4.5, -8.8, 18, 9, 0.4, material(0x4a4643, 0.88));
+    box(suite, -8.8, 4.5, 0, 0.4, 9, 18, material(0x423e3c, 0.88));
+    box(suite, 8.8, 4.5, 0, 0.4, 9, 18, material(0x423e3c, 0.88));
+    box(suite, 0, 8.8, 0, 18, 0.35, 18, material(0x323435, 0.82));
+
+    const window = box(suite, 2.8, 4.8, -8.55, 8.5, 5.8, 0.15, materials.glass);
+    window.castShadow = false;
+    for (const x of [-1.4, 2.8, 7]) box(suite, x, 4.8, -8.42, 0.13, 6, 0.18, materials.darkMetal);
+
+    box(suite, -3.2, 0.5, -2.4, 5.7, 0.8, 6.6, material(0x25272c, 0.69));
+    box(suite, -3.2, 1.02, -2.4, 5.35, 0.42, 6.2, materials.linen);
+    box(suite, -3.2, 1.25, -3.65, 5.2, 0.26, 3.2, material(accent, 0.86));
+    box(suite, -3.2, 2.8, -5.6, 5.8, 3.5, 0.35, material(0x3a2d2b, 0.74));
+    for (const x of [-4.6, -1.8]) box(suite, x, 1.43, -4.4, 2.1, 0.32, 1.2, materials.linen);
+
+    for (const x of [-6.6, 0.2]) {
+      box(suite, x, 0.68, -2.6, 1.2, 1.25, 1.25, materials.wood);
+      cylinder(suite, x, 1.72, -2.6, 0.07, 1.25, materials.gold, 12);
+      const shade = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.6, 20, 1, true), material(0xe3d5c1, 0.7));
+      shade.position.set(x, 2.45, -2.6);
+      suite.add(shade);
+    }
+    const warm = new THREE.PointLight(0xffc988, 12, 18, 2);
+    warm.position.set(-2, 5.2, -1);
+    warm.castShadow = quality === 'high';
+    suite.add(warm);
+    const cityGlow = new THREE.PointLight(0x6da0b8, 8, 20, 2);
+    cityGlow.position.set(4, 4.5, -7);
+    suite.add(cityGlow);
+
+    addFurniture(suite, 4.8, 2.5, Math.PI);
+    box(suite, 4.8, 0.34, -0.2, 2.5, 0.22, 1.3, materials.gold);
+    cylinder(suite, 4.8, 0.18, -0.2, 0.09, 0.4, materials.darkMetal, 12);
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 2.5), new THREE.MeshBasicMaterial({ map: labelTexture(`SUITE ${String(number).padStart(2, '0')}`, '#d2ad6d', '#22272a', 640, 360) }));
+    art.position.set(8.54, 3.7, 1.2);
+    art.rotation.y = -Math.PI / 2;
+    suite.add(art);
+
+    const door = box(suite, 0, 2.4, 8.55, 2.4, 4.8, 0.25, materials.wood);
+    door.castShadow = true;
+    interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
+    interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
+  }
+
+  function addRain() {
+    const count = quality === 'high' ? 1450 : 650;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (seeded() - 0.5) * 210;
+      positions[i * 3 + 1] = seeded() * 48;
+      positions[i * 3 + 2] = (seeded() - 0.5) * 210;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x9bb7c5, size: 0.075, transparent: true, opacity: 0.38, depthWrite: false }));
+    city.add(points);
+    rainDrops.push(points);
+  }
+
+  addSky();
+  addLighting();
+  addCity();
+  addHotelInterior();
+  addRain();
+
+  const player = makeCharacter({
+    gender: role === 'manager' ? 'female' : 'male',
+    coat: role === 'manager' ? 0x6c3d46 : 0x222c37,
+    skin: role === 'manager' ? 0xa66d50 : 0x81533f,
+    hair: 0x171411,
+    accent: 0xd0a45f,
+    player: true,
+  });
+  if (role === 'manager') {
+    hotel.add(player);
+    player.position.set(0, 0, 9);
+    city.visible = false;
+    hotel.visible = true;
+  } else {
+    city.add(player);
+    player.position.set(-5, 0, 7);
+  }
+
+  function showDistrict(name) {
+    $('#district-name').textContent = name;
+    const card = $('#district-title');
+    card.classList.remove('show');
+    void card.offsetWidth;
+    card.classList.add('show');
+  }
+
+  function setObjective(text, progress = 0.15, chapter = null) {
+    $('#objective').textContent = text;
+    $('#objective-fill').style.width = `${Math.max(5, Math.min(100, progress * 100))}%`;
+    if (chapter) $('#chapter').textContent = chapter;
+  }
+
+  function updateLocation(label) {
+    $('#location').textContent = label;
+  }
+
+  function toast(message) {
+    const element = $('#toast');
+    element.textContent = message;
+    element.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => element.classList.remove('show'), 2800);
+  }
+
+  function updateStats() {
+    $('#rep').textContent = rep;
+    $('#cash').textContent = cash;
+  }
+
+  function transition(kicker, title, callback) {
+    const fade = $('#fade');
+    $('#fade-kicker').textContent = kicker;
+    $('#fade-title').textContent = title;
+    fade.classList.add('show');
+    setTimeout(() => {
+      callback();
+      setTimeout(() => fade.classList.remove('show'), 380);
+    }, 520);
+  }
+
+  function switchMode(nextMode, position, parent) {
+    mode = nextMode;
+    city.visible = nextMode === 'city';
+    hotel.visible = nextMode === 'hotel';
+    suite.visible = nextMode === 'room';
+    parent.attach(player);
+    player.position.copy(position);
+    nearby = null;
+    $('#context-card').classList.add('hidden-card');
+    updateLocation(nextMode === 'city' ? 'STATION DISTRICT' : nextMode === 'hotel' ? 'HOTEL LOBBY' : `SUITE ${String(currentRoom).padStart(2, '0')}`);
+  }
+
+  function enterHotel() {
+    transition('S/T/H', 'HOTEL LOBBY', () => {
+      switchMode('hotel', new THREE.Vector3(0, 0, 14), hotel);
+      showDistrict('SUBWAY THOTS HOTEL');
+      if (role === 'guest') setObjective(checkedIn ? 'Use the elevator or meet someone in the lobby' : 'Check in at the reception desk', 0.34);
+      else setObjective(`Complete the opening inspection · ${taskCount}/3`, taskCount / 3, 'SHIFT 01');
+    });
+  }
+
+  function exitHotel() {
+    transition('STATION DISTRICT', 'CITY AFTER DARK', () => {
+      switchMode('city', new THREE.Vector3(0, 0, -31.5), city);
+      showDistrict('STATION DISTRICT');
+      setObjective(role === 'guest' ? 'Explore the district or return to the hotel' : 'Return to the hotel before the end of shift', 0.45);
+    });
+  }
+
+  function enterRoom(number) {
+    currentRoom = number;
+    transition('FLOOR ' + Math.ceil(number / 10), `SUITE ${String(number).padStart(2, '0')}`, () => {
+      buildSuite(number);
+      switchMode('room', new THREE.Vector3(0, 0, 6.2), suite);
+      if (role === 'guest') setObjective('Rest, or invite a consenting adult guest upstairs', 0.78, 'CHAPTER 02');
+      else setObjective('Inspect the suite and refresh the linens', 0.76, 'SHIFT 01');
+    });
+  }
+
+  function exitRoom() {
+    transition('S/T/H', 'HOTEL LOBBY', () => {
+      switchMode('hotel', new THREE.Vector3(17.5, 0, -13.5), hotel);
+      setObjective(role === 'manager' ? `Complete the opening inspection · ${taskCount}/3` : 'Enjoy the lobby or head back into the city', role === 'manager' ? taskCount / 3 : 0.7);
+    });
+  }
+
+  function romanceSequence(person) {
+    const name = person.object?.userData.name || 'your date';
+    transition('LATER THAT NIGHT', 'PRIVATE MOMENT', () => {
+      rep += 5;
+      updateStats();
+      toast(`${name} accepted your invitation. The evening continues privately. +5 reputation`);
+      setObjective('Get some rest before morning', 0.9, 'CHAPTER 03');
+    });
+  }
+
+  function interact() {
+    if (!nearby || paused) return;
+    const item = nearby.item;
+    if (item.type === 'hotelEntrance') return enterHotel();
+    if (item.type === 'hotelExit') return exitHotel();
+    if (item.type === 'roomExit') return exitRoom();
+    if (item.type === 'rooms') {
+      $('#room-panel').classList.add('open');
+      toast('Select a secured floor and suite.');
+      return;
+    }
+    if (item.type === 'reception') {
+      if (role === 'manager') {
+        cash += 35;
+        rep += 1;
+        updateStats();
+        toast('Front desk log reviewed. VIP arrival noted. +$35');
+      } else if (!checkedIn) {
+        checkedIn = true;
+        cash = Math.max(0, cash - 40);
+        updateStats();
+        setObjective('Use the guest elevator and choose a suite', 0.56);
+        toast('Checked in for the night. Your room key is active. -$40');
+      } else toast('Your room key remains active until noon.');
+      return;
+    }
+    if (item.type === 'managerTask') {
+      if (role !== 'manager') {
+        toast('Hotel staff will handle this area.');
+        return;
+      }
+      if (item.completed) return;
+      item.completed = true;
+      taskCount += 1;
+      cash += 30;
+      rep += 2;
+      if (item.object) item.object.visible = false;
+      updateStats();
+      if (taskCount >= 3) {
+        setObjective('Opening inspection complete · greet hotel guests', 1, 'SHIFT COMPLETE');
+        toast('Hotel inspection complete. The property is ready for guests. +$90 total');
+      } else {
+        setObjective(`Complete the opening inspection · ${taskCount}/3`, taskCount / 3, 'SHIFT 01');
+        toast(`${item.label} complete. +$30 · +2 reputation`);
+      }
+      return;
+    }
+    if (item.type === 'sleep') {
+      if (role === 'manager') {
+        taskCount = Math.max(taskCount, 3);
+        cash += 45;
+        updateStats();
+        toast('Suite inspected, amenities replenished and linens refreshed. +$45');
+        setObjective('Return to the lobby and continue the shift', 0.92);
+      } else if (!slept) {
+        slept = true;
+        transition('6:42 AM', 'A NEW MORNING', () => {
+          cash += 60;
+          rep += 3;
+          updateStats();
+          setObjective('Night complete · return to the city when ready', 1, 'NIGHT COMPLETE');
+          toast('Well rested. Night one complete. +$60 · +3 reputation');
+        });
+      }
+      return;
+    }
+    if (item.type === 'person') {
+      const name = item.object.userData.name;
+      if (role === 'manager') {
+        const request = taskCount >= 2 && Math.random() > 0.45;
+        if (request) {
+          toast(`${name} asks whether you would like to meet after your shift. You can politely accept or continue working.`);
+          rep += 2;
+          updateStats();
+        } else {
+          toast(`${name}: “The hotel looks incredible tonight. Thank you.” +1 reputation`);
+          rep += 1;
+          updateStats();
+        }
+      } else if (mode === 'hotel' && checkedIn) {
+        romanceSequence(item);
+      } else {
+        toast(`${name}: “You should check out the hotel lobby. It gets lively after midnight.”`);
+        rep += 1;
+        updateStats();
+      }
+    }
+  }
+
+  function makeRoomDirectory() {
+    const roomList = $('#room-list');
+    for (let number = 1; number <= 50; number++) {
+      const button = document.createElement('button');
+      button.textContent = `F${Math.ceil(number / 10)} · SUITE ${String(number).padStart(2, '0')}`;
+      button.addEventListener('click', () => {
+        $('#room-panel').classList.remove('open');
+        enterRoom(number);
+      });
+      roomList.appendChild(button);
+    }
+  }
+  makeRoomDirectory();
+
+  function togglePause(force) {
+    paused = typeof force === 'boolean' ? force : !paused;
+    $('#pause-panel').classList.toggle('open', paused);
+  }
+
+  function startAmbience() {
+    if (ambience) {
+      ambience.context.close();
+      ambience = null;
+      $('#sound-toggle').textContent = 'SOUND: OFF';
+      return;
+    }
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return toast('Audio ambience is unavailable in this browser.');
+    const context = new AudioContext();
+    const master = context.createGain();
+    master.gain.value = 0.07;
+    master.connect(context.destination);
+    const hum = context.createOscillator();
+    hum.type = 'sine';
+    hum.frequency.value = 52;
+    const humGain = context.createGain();
+    humGain.gain.value = 0.12;
+    hum.connect(humGain).connect(master);
+    hum.start();
+    const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.18;
+    const rain = context.createBufferSource();
+    rain.buffer = buffer;
+    rain.loop = true;
+    const filter = context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1400;
+    rain.connect(filter).connect(master);
+    rain.start();
+    ambience = { context, hum, rain };
+    $('#sound-toggle').textContent = 'SOUND: ON';
+  }
+
+  function connectWorld() {
+    const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+    const base = window.STH_WORLD_URL || `${protocol}://${location.hostname || '127.0.0.1'}:8000`;
+    const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?player_id=browser-${Math.random().toString(36).slice(2, 10)}&display_name=${role === 'manager' ? 'Manager' : 'Guest'}`;
+    try {
+      worldSocket = new WebSocket(url);
+      worldSocket.addEventListener('open', () => { $('#server-status').textContent = 'ONLINE WORLD'; });
+      worldSocket.addEventListener('close', () => { $('#server-status').textContent = 'LOCAL WORLD'; });
+      worldSocket.addEventListener('error', () => { $('#server-status').textContent = 'LOCAL WORLD'; });
+    } catch {
+      $('#server-status').textContent = 'LOCAL WORLD';
+    }
+  }
+  connectWorld();
+
+  function itemWorldPosition(item) {
+    if (item.position) return tempWorld.copy(item.position);
+    if (item.object) return item.object.getWorldPosition(tempWorld);
+    return tempWorld.set(0, 0, 0);
+  }
+
+  function updateNearby() {
+    let best = null;
+    let bestDistance = 3.15;
+    for (const item of interactables) {
+      if (item.mode !== mode || item.completed || (item.object && !item.object.visible)) continue;
+      const position = itemWorldPosition(item);
+      const distance = Math.hypot(player.position.x - position.x, player.position.z - position.z);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = item;
+      }
+    }
+    nearby = best ? { item: best, distance: bestDistance } : null;
+    $('#context-card').classList.toggle('hidden-card', !nearby);
+    if (nearby) $('#context-action').textContent = nearby.item.label;
+  }
+
+  function cityBlocked(x, z) {
+    for (const collider of cityColliders) {
+      if (x > collider.minX && x < collider.maxX && z > collider.minZ && z < collider.maxZ) return true;
+    }
+    return false;
+  }
+
+  function movePlayer(delta) {
+    let dx = 0;
+    let dz = 0;
+    if (keys.w || keys.arrowup) dz -= 1;
+    if (keys.s || keys.arrowdown) dz += 1;
+    if (keys.a || keys.arrowleft) dx -= 1;
+    if (keys.d || keys.arrowright) dx += 1;
+    const moving = dx !== 0 || dz !== 0;
+    if (moving) {
+      const length = Math.hypot(dx, dz);
+      dx /= length;
+      dz /= length;
+      const speed = (keys.shift ? 7.2 : 4.25) * delta;
+      const nextX = player.position.x + dx * speed;
+      const nextZ = player.position.z + dz * speed;
+      if (mode === 'city') {
+        if (!cityBlocked(nextX, player.position.z)) player.position.x = THREE.MathUtils.clamp(nextX, -103, 103);
+        if (!cityBlocked(player.position.x, nextZ)) player.position.z = THREE.MathUtils.clamp(nextZ, -103, 103);
+      } else if (mode === 'hotel') {
+        player.position.x = THREE.MathUtils.clamp(nextX, -22, 22);
+        player.position.z = THREE.MathUtils.clamp(nextZ, -18, 18);
+      } else {
+        player.position.x = THREE.MathUtils.clamp(nextX, -8, 8);
+        player.position.z = THREE.MathUtils.clamp(nextZ, -7.8, 7.4);
+      }
+      const desiredRotation = Math.atan2(dx, dz);
+      player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
+    }
+    const walk = moving ? Math.sin(clock.elapsedTime * (keys.shift ? 12 : 8)) * 0.56 : 0;
+    const legs = player.userData.legs || [];
+    if (legs[0]) legs[0].rotation.x = walk;
+    if (legs[1]) legs[1].rotation.x = -walk;
+    if (player.userData['arm-1']) player.userData['arm-1'].rotation.x = -walk * 0.7;
+    if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7;
+    player.position.y = moving ? Math.abs(Math.sin(clock.elapsedTime * 8)) * 0.025 : 0;
+    return { dx, dz, moving };
+  }
+
+  function updateCamera(delta) {
+    const roomScale = mode === 'room' ? 0.82 : 1;
+    targetCamera.set(player.position.x + 6.7 * roomScale, player.position.y + 5.2 * roomScale, player.position.z + 8.4 * roomScale);
+    camera.position.lerp(targetCamera, 1 - Math.pow(0.0025, delta));
+    cameraLook.set(player.position.x, player.position.y + 1.25, player.position.z - 0.7);
+    camera.lookAt(cameraLook);
+  }
+
+  function updateWorld(delta, elapsed) {
+    for (let index = 0; index < npcs.length; index++) {
+      const npc = npcs[index];
+      if (!npc.parent?.visible) continue;
+      const base = npc.userData.base;
+      if (!base) continue;
+      const angle = elapsed * 0.18 + index * 1.7;
+      npc.position.x = base.x + Math.sin(angle) * npc.userData.radius;
+      npc.position.z = base.z + Math.cos(angle * 0.83) * npc.userData.radius;
+      npc.rotation.y = angle + Math.PI / 2;
+      const npcWalk = Math.sin(elapsed * 4.5 + npc.userData.walkPhase) * 0.26;
+      if (npc.userData.legs?.[0]) npc.userData.legs[0].rotation.x = npcWalk;
+      if (npc.userData.legs?.[1]) npc.userData.legs[1].rotation.x = -npcWalk;
+    }
+    for (const vehicle of vehicles) {
+      vehicle.position.z += vehicle.userData.speed * vehicle.userData.direction * delta;
+      if (vehicle.position.z > 106) vehicle.position.z = -106;
+      if (vehicle.position.z < -106) vehicle.position.z = 106;
+      vehicle.rotation.y = vehicle.userData.direction > 0 ? 0 : Math.PI;
+    }
+    for (const rain of rainDrops) {
+      const positions = rain.geometry.attributes.position.array;
+      for (let i = 1; i < positions.length; i += 3) {
+        positions[i] -= delta * 19;
+        if (positions[i] < 0) positions[i] = 46;
+      }
+      rain.geometry.attributes.position.needsUpdate = true;
+    }
+    timeOfNight += delta * 0.46;
+    const hours = Math.floor(timeOfNight / 60) % 24;
+    const minutes = Math.floor(timeOfNight) % 60;
+    $('#clock').textContent = `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
+  }
+
+  function updateMap() {
+    if (mode !== 'city') {
+      $('#map-hotel').style.left = '50%';
+      $('#map-hotel').style.top = '50%';
+      return;
+    }
+    const relativeX = THREE.MathUtils.clamp(50 + (-player.position.x / 110) * 70, 8, 86);
+    const relativeZ = THREE.MathUtils.clamp(50 + ((-46 - player.position.z) / 110) * 70, 8, 86);
+    $('#map-hotel').style.left = `${relativeX}%`;
+    $('#map-hotel').style.top = `${relativeZ}%`;
+  }
+
+  addEventListener('keydown', (event) => {
+    keys[event.key.toLowerCase()] = true;
+    if (event.key.toLowerCase() === 'e' && !event.repeat) interact();
+    if (event.key.toLowerCase() === 'r' && !event.repeat && mode !== 'city') $('#room-panel').classList.toggle('open');
+    if (event.key === 'Escape' && !event.repeat) {
+      if ($('#room-panel').classList.contains('open')) $('#room-panel').classList.remove('open');
+      else togglePause();
+    }
+  });
+  addEventListener('keyup', (event) => { keys[event.key.toLowerCase()] = false; });
+  $('#interact').addEventListener('click', interact);
+  $('#close-rooms').addEventListener('click', () => $('#room-panel').classList.remove('open'));
+  $('#resume-btn').addEventListener('click', () => togglePause(false));
+  $('#sound-toggle').addEventListener('click', startAmbience);
+
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 1.7 : 1.25));
+  });
+
+  if (role === 'manager') {
+    updateLocation('HOTEL LOBBY');
+    setObjective('Complete the opening inspection · 0/3', 0.05, 'SHIFT 01');
+    setTimeout(() => showDistrict('SUBWAY THOTS HOTEL'), 900);
+  } else {
+    setObjective('Walk to the hotel entrance', 0.14, 'CHAPTER 01');
+    setTimeout(() => showDistrict('STATION DISTRICT'), 900);
+  }
+
+  camera.position.set(player.position.x + 7, 5.4, player.position.z + 8.5);
+  camera.lookAt(player.position.x, 1.2, player.position.z);
+
+  function loop() {
+    requestAnimationFrame(loop);
+    const delta = Math.min(clock.getDelta(), 0.05);
+    const elapsed = clock.elapsedTime;
+    let movement = { dx: 0, dz: 0, moving: false };
+    if (!paused) {
+      movement = movePlayer(delta);
+      updateNearby();
+      updateWorld(delta, elapsed);
+      updateMap();
+    }
+    updateCamera(delta);
+    if (worldSocket?.readyState === WebSocket.OPEN && elapsed - lastNetworkSend > 0.08) {
+      worldSocket.send(JSON.stringify({ type: 'input', x: movement.dx, z: movement.dz, zone: mode }));
+      lastNetworkSend = elapsed;
+    }
+    composer.render();
+  }
+  loop();
 }
