@@ -138,6 +138,12 @@ function startGame(role) {
 
   let mode = role === 'manager' ? 'hotel' : 'city';
   let cameraMode = 'third';
+  let cameraYaw = Math.PI;
+  let cameraPitch = 0.28;
+  let cameraDistance = 7.4;
+  let cameraDragging = false;
+  let jumpQueued = false;
+  let verticalVelocity = 0;
   let currentRoom = null;
   let paused = false;
   let rep = 12;
@@ -1041,13 +1047,19 @@ function startGame(role) {
   }
 
   function movePlayer(delta) {
-    let dx = 0;
-    let dz = 0;
-    if (keys.w || keys.arrowup) dz -= 1;
-    if (keys.s || keys.arrowdown) dz += 1;
-    if (keys.a || keys.arrowleft) dx -= 1;
-    if (keys.d || keys.arrowright) dx += 1;
-    const moving = dx !== 0 || dz !== 0;
+    let inputX = 0;
+    let inputZ = 0;
+    if (keys.w || keys.arrowup) inputZ -= 1;
+    if (keys.s || keys.arrowdown) inputZ += 1;
+    if (keys.a || keys.arrowleft) inputX -= 1;
+    if (keys.d || keys.arrowright) inputX += 1;
+    const moving = inputX !== 0 || inputZ !== 0;
+    const forwardX = Math.sin(cameraYaw);
+    const forwardZ = Math.cos(cameraYaw);
+    const rightX = Math.cos(cameraYaw);
+    const rightZ = -Math.sin(cameraYaw);
+    let dx = rightX * inputX + forwardX * -inputZ;
+    let dz = rightZ * inputX + forwardZ * -inputZ;
     if (moving) {
       const length = Math.hypot(dx, dz);
       dx /= length;
@@ -1068,32 +1080,35 @@ function startGame(role) {
       const desiredRotation = Math.atan2(dx, dz);
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
-    const walk = moving ? Math.sin(clock.elapsedTime * (keys.shift ? 12 : 8)) * 0.56 : 0;
+    if (jumpQueued && player.position.y <= 0.001) { verticalVelocity = 6.4; jumpQueued = false; }
+    verticalVelocity -= 18 * delta;
+    player.position.y += verticalVelocity * delta;
+    if (player.position.y <= 0) { player.position.y = 0; verticalVelocity = 0; }
+    const grounded = player.position.y <= 0.001;
+    const walk = moving && grounded ? Math.sin(clock.elapsedTime * (keys.shift ? 12 : 8)) * 0.56 : 0;
     const legs = player.userData.legs || [];
     if (legs[0]) legs[0].rotation.x = walk;
     if (legs[1]) legs[1].rotation.x = -walk;
     if (player.userData['arm-1']) player.userData['arm-1'].rotation.x = -walk * 0.7;
     if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7;
-    player.position.y = moving ? Math.abs(Math.sin(clock.elapsedTime * 8)) * 0.025 : 0;
     return { dx, dz, moving };
   }
 
   function updateCamera(delta) {
-    const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y));
+    cameraMode = cameraDistance <= 1.7 ? 'first' : 'third';
+    const horizontal = Math.cos(cameraPitch);
+    const viewX = Math.sin(cameraYaw) * horizontal;
+    const viewZ = Math.cos(cameraYaw) * horizontal;
     if (cameraMode === 'first') {
       player.visible = false;
       camera.fov = 74;
       targetCamera.set(player.position.x, player.position.y + 1.62, player.position.z);
-      cameraLook.copy(player.position).addScaledVector(forward, 10);
-      cameraLook.y = player.position.y + 1.52;
+      cameraLook.set(player.position.x + viewX * 10, player.position.y + 1.62 + Math.sin(cameraPitch) * 10, player.position.z + viewZ * 10);
     } else {
       player.visible = true;
       camera.fov = 52;
-      const distance = mode === 'room' ? 4.8 : 7.4;
-      targetCamera.copy(player.position).addScaledVector(forward, -distance);
-      targetCamera.y = player.position.y + 4.25;
-      cameraLook.copy(player.position);
-      cameraLook.y = player.position.y + 1.28;
+      targetCamera.set(player.position.x - viewX * cameraDistance, player.position.y + 1.35 + Math.sin(cameraPitch) * cameraDistance, player.position.z - viewZ * cameraDistance);
+      cameraLook.set(player.position.x, player.position.y + 1.2, player.position.z);
     }
     camera.updateProjectionMatrix();
     camera.position.lerp(targetCamera, 1 - Math.pow(0.0025, delta));
@@ -1148,11 +1163,8 @@ function startGame(role) {
 
   addEventListener('keydown', (event) => {
     keys[event.key.toLowerCase()] = true;
+    if (event.key === ' ' && !event.repeat) jumpQueued = true;
     if (event.key.toLowerCase() === 'e' && !event.repeat) interact();
-    if (event.key.toLowerCase() === 'v' && !event.repeat) {
-      cameraMode = cameraMode === 'third' ? 'first' : 'third';
-      showGlobalToast(cameraMode === 'first' ? 'FIRST-PERSON CAMERA' : 'THIRD-PERSON CAMERA');
-    }
     if (event.key.toLowerCase() === 'r' && !event.repeat && mode !== 'city') $('#room-panel').classList.toggle('open');
     if (event.key === 'Escape' && !event.repeat) {
       if ($('#room-panel').classList.contains('open')) $('#room-panel').classList.remove('open');
@@ -1160,6 +1172,25 @@ function startGame(role) {
     }
   });
   addEventListener('keyup', (event) => { keys[event.key.toLowerCase()] = false; });
+  canvas.addEventListener('pointerdown', (event) => {
+    if (event.button === 2) { cameraDragging = true; canvas.setPointerCapture?.(event.pointerId); }
+  });
+  canvas.addEventListener('pointerup', (event) => {
+    if (event.button === 2) { cameraDragging = false; canvas.releasePointerCapture?.(event.pointerId); }
+  });
+  canvas.addEventListener('pointermove', (event) => {
+    if (!cameraDragging || paused) return;
+    cameraYaw -= event.movementX * 0.006;
+    cameraPitch = THREE.MathUtils.clamp(cameraPitch - event.movementY * 0.004, 0.05, 1.15);
+  });
+  canvas.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    const wasFirstPerson = cameraDistance <= 1.7;
+    cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.01, 1.35, 12);
+    const isFirstPerson = cameraDistance <= 1.7;
+    if (wasFirstPerson !== isFirstPerson) showGlobalToast(isFirstPerson ? 'FIRST-PERSON POV' : 'THIRD-PERSON POV');
+  }, { passive: false });
+  canvas.addEventListener('contextmenu', (event) => event.preventDefault());
   $('#interact').addEventListener('click', interact);
   $('#close-rooms').addEventListener('click', () => $('#room-panel').classList.remove('open'));
   $('#resume-btn').addEventListener('click', () => togglePause(false));
