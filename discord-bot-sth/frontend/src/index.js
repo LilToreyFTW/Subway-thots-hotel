@@ -6,8 +6,9 @@
 import { authClient } from './auth/AuthClient.js';
 import { mountLoginScreen } from './ui/LoginScreen.js';
 import { mountPlayerNameScreen } from './ui/PlayerNameScreen.js';
+import { AuthState } from './auth/AuthClient.js';
 import { SessionManager } from './auth/SessionManager.js';
-import { AuthState, canStartWorld } from './auth/AuthGuard.js';
+import { canStartWorld } from './auth/AuthGuard.js';
 import { renderProfileCard } from './ui/DiscordProfileCard.js';
 import { showMembershipRequiredModal, hideMembershipRequiredModal } from './ui/MembershipRequiredModal.js';
 import { showAccountStatusModal } from './ui/AccountStatusModal.js';

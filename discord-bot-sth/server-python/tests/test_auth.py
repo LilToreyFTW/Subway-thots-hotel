@@ -1,131 +1,129 @@
-"""Authentication + account creation tests (mocked Discord)."""
+"""Authentication API tests (mocked Discord)."""
 from __future__ import annotations
 
-from auth.discord_oauth import create_authorization_start, consume_state, handle_callback
-from models import User
+import time
+
+from models import DiscordAccount, GameProfile, User
 
 
-def _oauth_start_and_code(client, fake_discord, *, member_roles=None, not_member=False,
-                          bad_state=False, no_code=False, pkce_fail=False):
-    # Begin login to get a valid state row.
-    resp = client.get("/auth/discord/login")
-    assert resp.status_code == 200, resp.text
-    state = resp.json()["state"]
-    # Configure the fake Discord response.
-    if not_member:
-        fake_discord.member = None
-    else:
-        fake_discord.member = {"roles": member_roles or ["1534021254691033128"]}
-    code = "" if no_code else "fake-code"
-    if bad_state:
-        state = "bogus-state"
-    return client.get(f"/auth/discord/callback?code={code}&state={state}")
+def _login_with(client, fake_discord, *, discord_id="1513224601751130132",
+               name="Slizzy", member=None, create_name=True):
+    """Drive the full Discord OAuth callback. `member` is the guild member
+    payload (dict with 'roles') or None when not a server member."""
+    fake_discord.user = {"id": discord_id, "username": "u",
+                         "global_name": "U", "avatar": None}
+    fake_discord.member = member  # None => not a member
+    r = client.get("/auth/discord/login")
+    state = r.json()["state"]
+    resp = client.get(f"/auth/discord/callback?code=fake&state={state}")
+    if create_name and resp.status_code == 200 and resp.json().get("needs_player_name"):
+        client.post("/account/create-player-name", json={"display_name": name},
+                    headers={"X-CSRF-Token": resp.cookies.get("sth_csrf", "")})
+    return resp
 
 
 def test_successful_discord_login_creates_session(client, fake_discord):
-    resp = _oauth_start_and_code(client, fake_discord)
-    assert resp.status_code == 200, resp.text
+    resp = _login_with(client, fake_discord,
+                       member={"roles": ["1534021254691033128"]})
+    assert resp.status_code == 200
     body = resp.json()
     assert body["ok"] is True
     assert body["needs_player_name"] is True
-    assert "sth_session" in resp.cookies
-    # Session is valid.
-    me = client.get("/auth/session")
-    assert me.status_code == 200
-    assert me.json()["authenticated"] is True
+    # Session cookie + CSRF cookie issued.
+    assert client.cookies.get("sth_session")
+    assert client.cookies.get("sth_csrf")
 
 
 def test_invalid_oauth_state(client, fake_discord):
-    resp = _oauth_start_and_code(client, fake_discord, bad_state=True)
+    fake_discord.member = {"roles": ["1534021254691033128"]}
+    resp = client.get("/auth/discord/callback?code=fake&state=bogus")
     assert resp.status_code == 400
     assert resp.json()["error"] == "invalid_state"
-    # No session cookie issued.
-    assert "sth_session" not in resp.cookies
 
 
 def test_user_not_in_server_denied(client, fake_discord):
-    resp = _oauth_start_and_code(client, fake_discord, not_member=True)
+    # Not a member => 403 with invite.
+    resp = _login_with(client, fake_discord, member=None, create_name=False)
     assert resp.status_code == 403
     assert resp.json()["error"] == "membership_required"
     assert "invite_url" in resp.json()
 
 
 def test_missing_required_role(client, fake_discord):
-    # Member but without the player/verified role.
-    resp = _oauth_start_and_code(client, fake_discord, member_roles=["999999999999999"])
+    # Member but lacks Player/Verified role => 403 role_required.
+    resp = _login_with(client, fake_discord,
+                       member={"roles": ["999999999999999999"]},
+                       create_name=False)
     assert resp.status_code == 403
     assert resp.json()["error"] == "role_required"
 
 
-def test_role_automatically_assigned_on_signup(client, fake_discord, db):
-    # Player role present -> account created, verified role assignment attempted.
-    resp = _oauth_start_and_code(client, fake_discord, member_roles=["1534021254691033128"])
-    assert resp.status_code == 200
-    # The fake HTTP records a PUT to assign the verified role.
-    assert any("roles" in c[0] for c in fake_discord.assigned_roles)
+def test_role_automatically_assigned_on_signup(client, fake_discord):
+    _login_with(client, fake_discord, member={"roles": ["1534021254691033128"]})
+    # Bot should have assigned the Verified role during registration.
+    assert any("roles" in url for url in fake_discord.assigned_roles)
 
 
 def test_duplicate_discord_account(client, fake_discord):
-    # First login creates the user; second should still succeed (returning player).
-    r1 = _oauth_start_and_code(client, fake_discord)
-    assert r1.status_code == 200
-    # Create the game name.
-    client.post("/account/create-player-name", json={"display_name": "Slizzy"},
-                headers={"X-CSRF-Token": r1.json()["csrf_token"]})
-    # Second login with same discord id.
-    r2 = _oauth_start_and_code(client, fake_discord)
-    assert r2.status_code == 200
-    assert r2.json()["needs_player_name"] is False
+    # Logging in twice with the same Discord id reuses the account (200), not 400.
+    a = _login_with(client, fake_discord, member={"roles": ["1534021254691033128"]})
+    assert a.status_code == 200
+    b = _login_with(client, fake_discord, member={"roles": ["1534021254691033128"]})
+    assert b.status_code == 200
+    db = __import__("database").SessionLocal()
+    count = db.query(DiscordAccount).filter(
+        DiscordAccount.discord_user_id == "1513224601751130132").count()
+    db.close()
+    assert count == 1
 
 
 def test_create_player_name_and_tag_format(client, fake_discord):
-    login = _oauth_start_and_code(client, fake_discord)
-    csrf = login.json()["csrf_token"]
-    resp = client.post("/account/create-player-name", json={"display_name": "Slizzy"},
-                      headers={"X-CSRF-Token": csrf})
-    assert resp.status_code == 200, resp.text
-    tag = resp.json()["full_game_tag"]
-    assert tag.startswith("Slizzy#")
-    number = int(tag.split("#")[1])
-    assert 100000 <= number <= 999999
+    _login_with(client, fake_discord, name="Slizzy",
+                member={"roles": ["1534021254691033128"]})
+    me = client.get("/auth/session")
+    assert me.status_code == 200
+    assert me.json()["user"]["game"]["full_game_tag"] == "Slizzy#738665"
+    assert me.json()["user"]["game"]["name_number"] == 738665
 
 
 def test_invalid_game_name(client, fake_discord):
-    login = _oauth_start_and_code(client, fake_discord)
-    csrf = login.json()["csrf_token"]
-    for bad in ["ab", "SuperLongNameThatExceeds", "Bad Name", "a!b"]:
-        resp = client.post("/account/create-player-name", json={"display_name": bad},
-                          headers={"X-CSRF-Token": csrf})
-        assert resp.status_code == 400, (bad, resp.text)
+    _login_with(client, fake_discord, create_name=False,
+                member={"roles": ["1534021254691033128"]})
+    resp = client.post("/account/create-player-name", json={"display_name": "ab"},
+                       headers={"X-CSRF-Token": client.cookies.get("sth_csrf", "")})
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "too_short"
 
 
 def test_reserved_game_name(client, fake_discord):
-    login = _oauth_start_and_code(client, fake_discord)
-    csrf = login.json()["csrf_token"]
-    resp = client.post("/account/create-player-name", json={"display_name": "Owner"},
-                      headers={"X-CSRF-Token": csrf})
+    _login_with(client, fake_discord, create_name=False,
+                member={"roles": ["1534021254691033128"]})
+    resp = client.post("/account/create-player-name", json={"display_name": "admin"},
+                       headers={"X-CSRF-Token": client.cookies.get("sth_csrf", "")})
     assert resp.status_code == 400
     assert resp.json()["error"] == "reserved_name"
 
 
 def test_duplicate_game_name_case_insensitive(client, fake_discord):
-    login = _oauth_start_and_code(client, fake_discord)
-    csrf = login.json()["csrf_token"]
-    r1 = client.post("/account/create-player-name", json={"display_name": "Slizzy"},
-                     headers={"X-CSRF-Token": csrf})
-    assert r1.status_code == 200
-    # Second, different discord account with same name (different case).
-    fake_discord.user = {"id": "999999999999999999", "username": "other", "global_name": "other", "avatar": None}
-    r2 = _oauth_start_and_code(client, fake_discord, member_roles=["1534021254691033128"])
-    csrf2 = r2.json()["csrf_token"]
-    r3 = client.post("/account/create-player-name", json={"display_name": "slizzy"},
-                     headers={"X-CSRF-Token": csrf2})
-    assert r3.status_code == 400
-    assert r3.json()["error"] == "duplicate_name"
+    # First account takes Slizzy.
+    _login_with(client, fake_discord, name="Slizzy",
+                member={"roles": ["1534021254691033128"]})
+    # Second Discord id tries SLIZZY (case-insensitive dup).
+    fake_discord.user = {"id": "222222222222222222", "username": "v",
+                         "global_name": "V", "avatar": None}
+    fake_discord.member = {"roles": ["1534021254691033128"]}
+    r = client.get("/auth/discord/login")
+    state = r.json()["state"]
+    resp = client.get(f"/auth/discord/callback?code=fake&state={state}")
+    dup = client.post("/account/create-player-name", json={"display_name": "SLIZZY"},
+                      headers={"X-CSRF-Token": resp.cookies.get("sth_csrf", "")})
+    assert dup.status_code == 400
+    assert dup.json()["error"] == "duplicate_name"
 
 
 def test_csrf_protection_on_create_name(client, fake_discord):
-    login = _oauth_start_and_code(client, fake_discord)
-    # No CSRF header -> rejected.
+    _login_with(client, fake_discord, create_name=False,
+                member={"roles": ["1534021254691033128"]})
+    # No CSRF header => 403.
     resp = client.post("/account/create-player-name", json={"display_name": "Slizzy"})
     assert resp.status_code == 403

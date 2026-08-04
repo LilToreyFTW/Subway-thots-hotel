@@ -14,8 +14,14 @@ _PKG = Path(__file__).resolve().parent.parent
 if str(_PKG) not in sys.path:
     sys.path.insert(0, str(_PKG))
 
-# Use an isolated, throwaway SQLite DB for tests.
-os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+# Use an isolated, throwaway SQLite DB file for tests (a file persists across
+# connections; :memory: would not without StaticPool and the app creates its own
+# engine at import time, so a file is the reliable choice).
+import tempfile
+_TEST_DB = os.path.join(tempfile.gettempdir(), f"sth_test_{os.getpid()}.db")
+if os.path.exists(_TEST_DB):
+    os.remove(_TEST_DB)
+os.environ.setdefault("DATABASE_URL", f"sqlite:///{_TEST_DB}")
 os.environ.setdefault("SESSION_SECRET", "test-session-secret-0123456789abcdef")
 os.environ.setdefault("AUTH_SECRET", "test-auth-secret-0123456789abcdef")
 os.environ.setdefault("DISCORD_GUILD_ID", "1534020917825503282")
@@ -115,34 +121,31 @@ def fake_discord(monkeypatch):
     return fake
 
 
-@pytest.fixture()
-def client(fake_discord):
-    """A TestClient with a fresh in-memory DB and tables created."""
+@pytest.fixture(scope="session")
+def _engine():
+    """One engine = the app's own engine (file-based temp DB). The app creates it
+    at import from DATABASE_URL; we ensure tables exist and reuse it so the client
+    and db fixtures see identical data."""
     import database as db_module
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False},
-                           poolclass=StaticPool)
-    db_module.engine = engine
-    db_module.SessionLocal.configure(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    db_module.init_models()  # creates tables on the app's engine
+    yield db_module.engine
 
+
+@pytest.fixture()
+def client(fake_discord, _engine):
+    """A TestClient backed by the shared engine."""
     import main as main_module
     app = main_module.app
     with TestClient(app) as c:
         yield c
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture()
-def db():
+def db(_engine):
     import database as db_module
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False},
-                           poolclass=StaticPool)
-    db_module.engine = engine
-    db_module.SessionLocal.configure(bind=engine)
-    Base.metadata.create_all(bind=engine)
     s = db_module.SessionLocal()
     try:
         yield s
     finally:
+        s.rollback()
         s.close()
-        Base.metadata.drop_all(bind=engine)

@@ -10,6 +10,7 @@ Field notes (see spec):
 from __future__ import annotations
 
 import enum
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -163,7 +164,7 @@ class DiscordMembershipCache(Base):
     is_member: Mapped[bool] = mapped_column(Boolean, default=False)
     role_ids: Mapped[str] = mapped_column(Text, default="")  # comma-separated
     permission: Mapped[str] = mapped_column(String(16), default="guest")
-    cached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), default=utcnow)
+    cached_at: Mapped[int] = mapped_column(BigInteger, default=lambda: int(time.time()))
     expires_at: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
 
