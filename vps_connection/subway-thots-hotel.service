@@ -1,0 +1,15 @@
+[Unit]
+Description=SubwayThotsHotel Online World Host
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/subway-thots-hotel/vps_connection
+ExecStart=/opt/subway-thots-hotel/vps_connection/.venv/bin/python Host.py
+Restart=always
+RestartSec=3
+EnvironmentFile=/opt/subway-thots-hotel/vps_connection/.env
+
+[Install]
+WantedBy=multi-user.target

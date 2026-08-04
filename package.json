@@ -1,9 +1,20 @@
 {
-  "name":"subway-thots-hotel",
-  "private":true,
-  "version":"0.1.0",
-  "type":"module",
-  "scripts":{"dev":"vite","build":"vite build && node scripts/prepare-hosting.js","preview":"vite preview --host 0.0.0.0"},
-  "dependencies":{"three":"^0.180.0"},
-  "devDependencies":{"vite":"^7.1.7"}
+  "name": "subway-thots-hotel",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/prepare-hosting.js",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test test/*.test.js",
+    "test:server": "npm test --prefix multiplayer-server"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.1",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
 }

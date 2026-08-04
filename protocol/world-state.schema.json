@@ -1,23 +1,45 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Subway Thots Hotel world state",
+  "title": "Subway Thots Hotel snapshot message",
   "type": "object",
-  "required": ["regionId", "serverTick", "entities"],
+  "required": ["type", "regionId", "serverTime", "players"],
   "properties": {
+    "type": {"const": "snapshot"},
     "regionId": {"type": "string"},
-    "serverTick": {"type": "integer", "minimum": 0},
-    "entities": {
+    "serverTime": {"type": "number"},
+    "players": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "kind", "position"],
+        "required": ["id", "displayName", "position", "rotation", "zone", "roomId", "gender", "selections", "moving"],
         "properties": {
           "id": {"type": "string"},
-          "kind": {"enum": ["player", "npc", "object", "vehicle"]},
-          "position": {"type": "object", "required": ["x", "y", "z"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}},
-          "rotationY": {"type": "number"},
-          "appearanceKey": {"type": "string"},
-          "roomId": {"type": ["string", "null"]}
+          "displayName": {"type": "string"},
+          "position": {
+            "type": "object",
+            "required": ["x", "y", "z"],
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"},
+              "z": {"type": "number"}
+            },
+            "additionalProperties": false
+          },
+          "rotation": {"type": "number"},
+          "zone": {"enum": ["city", "hotel", "room"]},
+          "roomId": {"type": ["string", "null"]},
+          "gender": {"enum": ["female", "male"]},
+          "selections": {
+            "type": "object",
+            "properties": {
+              "face": {"type": "string"},
+              "arms": {"type": "string"},
+              "torso": {"type": "string"},
+              "legs": {"type": "string"}
+            },
+            "additionalProperties": false
+          },
+          "moving": {"type": "boolean"}
         },
         "additionalProperties": false
       }

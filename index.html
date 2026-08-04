@@ -52,6 +52,12 @@
         <div class="objective-progress"><i id="objective-fill"></i></div>
       </aside>
 
+      <aside id="needs-card" aria-label="Player needs">
+        <div><span>ENERGY</span><i><b id="need-energy"></b></i><strong id="need-energy-value">100</strong></div>
+        <div><span>HUNGER</span><i><b id="need-hunger"></b></i><strong id="need-hunger-value">100</strong></div>
+        <div><span>HYGIENE</span><i><b id="need-hygiene"></b></i><strong id="need-hygiene-value">100</strong></div>
+      </aside>
+
       <aside id="context-card" class="hidden-card">
         <span class="keycap">E</span>
         <div><small>INTERACT</small><strong id="context-action">Enter hotel</strong></div>
@@ -72,11 +78,14 @@
 
       <button id="interact" aria-label="Interact with nearby person or object"><span>E</span> INTERACT</button>
       <button id="sound-toggle" aria-label="Toggle ambience">SOUND: OFF</button>
+      <button id="mic-toggle" aria-label="Enable proximity voice microphone" aria-pressed="false"><span class="mic-dot"></span><b>MIC: MUTED</b><small id="voice-status">VOICE OFFLINE</small></button>
       <div id="minimap"><div class="map-grid"></div><i id="map-player"></i><b id="map-hotel">H</b><span>N</span></div>
       <div id="district-title"><small>NOW ENTERING</small><strong id="district-name">STATION DISTRICT</strong></div>
       <div id="fade"><div><small id="fade-kicker">STH</small><strong id="fade-title">AFTER DARK</strong></div></div>
       <div id="toast" role="status"></div>
-      <div id="prompt">WASD / ARROWS MOVE <i>·</i> SPACE JUMP <i>·</i> RMB LOOK <i>·</i> WHEEL ZOOM / POV <i>·</i> SHIFT SPRINT <i>·</i> E INTERACT <i>·</i> ESC GUIDE</div>
+      <div id="chat-feed" aria-live="polite"></div>
+      <form id="chat-box" hidden><input id="chat-input" maxlength="240" autocomplete="off" placeholder="Message nearby players…" /><button>SEND</button></form>
+      <div id="prompt">WASD / ARROWS MOVE <i>·</i> SPACE JUMP <i>·</i> RMB LOOK <i>·</i> WHEEL ZOOM / POV <i>·</i> SHIFT SPRINT <i>·</i> E INTERACT <i>·</i> ENTER CHAT <i>·</i> ESC GUIDE</div>
       <div id="gpu-gate"><strong>RTX GPU REQUIRED</strong><p>Enable an NVIDIA RTX GPU and hardware acceleration to play this high-fidelity build.</p></div>
       <div id="runtime-error"></div>
     </div>
@@ -124,6 +133,34 @@
         el.classList.add('show');
       });
     </script>
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/main.js?v=5"></script>
+    <!-- Discord auth + community system (opt-in via VITE_STH_AUTH=on). When this
+         env is set, the game requires Discord authentication before the world
+         starts. When unset, the existing local gamertag flow is preserved. -->
+    <script type="module">
+      if (import.meta.env && import.meta.env.VITE_STH_AUTH === 'on') {
+        import('/discord-bot-sth/frontend/src/index.js').then((m) => {
+          const gate = document.getElementById('age-gate');
+          const status = document.getElementById('runtime-error');
+          m.bootstrapAuth({
+            gateRoot: gate,
+            onReady: (ticket) => {
+              // The world should only start with a valid ticket. Stash it on
+              // window so main.js (which already reads query overrides) can use
+              // it; also collapse the age gate once authenticated.
+              window.STH_AUTH_TICKET = ticket;
+              window.STH_AUTH_READY = true;
+              if (gate && !window.STH_AUTH_BYPASS_GATE) {
+                // Keep gate hidden behind auth until onReady; main.js launches
+                // the world only after this signal.
+              }
+            },
+          });
+        }).catch((e) => {
+          const el = document.getElementById('runtime-error');
+          if (el) { el.textContent = 'Auth system failed to load: ' + e.message; el.classList.add('show'); }
+        });
+      }
+    </script>
   </body>
 </html>

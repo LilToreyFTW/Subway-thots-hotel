@@ -3,9 +3,30 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import './style.css';
+import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
+import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
+import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
+const PUBLIC_WORLD_HOST = '147.189.172.104:7076';
+const localDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
+const worldOverride = localDevelopment ? new URLSearchParams(location.search).get('world') : null;
+const WORLD_URL = window.STH_WORLD_URL || import.meta.env.VITE_STH_WORLD_URL || worldOverride || (location.protocol === 'http:' ? `ws://${PUBLIC_WORLD_HOST}` : null);
+const voiceOverride = localDevelopment ? new URLSearchParams(location.search).get('voice') : null;
+const VOICE_URL = resolveVoiceServerUrl({
+  protocol: location.protocol,
+  hostname: location.hostname,
+  configuredUrl: window.STH_VOICE_URL || import.meta.env.VITE_STH_VOICE_URL,
+  queryOverride: voiceOverride,
+});
+const VOICE_ICE_SERVERS = [
+  { urls: import.meta.env.VITE_STUN_URL || 'stun:stun.l.google.com:19302' },
+  ...(import.meta.env.VITE_TURN_URL ? [{
+    urls: import.meta.env.VITE_TURN_URL,
+    username: import.meta.env.VITE_TURN_USERNAME || '',
+    credential: import.meta.env.VITE_TURN_CREDENTIAL || '',
+  }] : []),
+];
 const ageGate = $('#age-gate');
 const roleCards = [...document.querySelectorAll('.role-card')];
 let selectedRole = 'guest';
@@ -36,8 +57,8 @@ function profileTag(name) {
 }
 async function reserveGamertag(name) {
   try {
-    const protocol = location.protocol === 'https:' ? 'https' : 'http';
-    const base = window.STH_WORLD_URL ? window.STH_WORLD_URL.replace(/^ws/, 'http').replace(/\/$/, '') : `${protocol}://${location.hostname || '127.0.0.1'}:8000`;
+    if (!WORLD_URL) throw new Error('Secure world endpoint is not configured.');
+    const base = WORLD_URL.replace(/^ws/, 'http').replace(/\/$/, '');
     const response = await fetch(`${base}/gamertag/allocate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: name }) });
     const result = await response.json();
     if (result.ok) return result;
@@ -69,7 +90,7 @@ function closeOnlinePanels() { $('#friends-panel').hidden = true; $('#inventory-
 function toggleFriends(force) { const panel = $('#friends-panel'); panel.hidden = typeof force === 'boolean' ? !force : !panel.hidden; if (!panel.hidden) renderFriends(); }
 function toggleInventory(force) { const bar = $('#inventory-hotbar'); bar.hidden = typeof force === 'boolean' ? !force : !bar.hidden; if (!bar.hidden) renderHotbar(); }
 function renderHotbar() { const root = $('#hotbar-slots'); root.innerHTML = ''; inventoryItems.forEach((item, index) => { const slot = document.createElement('button'); slot.className = `hotbar-slot${selectedInventorySlot === index ? ' selected' : ''}`; slot.innerHTML = `<kbd>${index + 1}</kbd><span class="item-icon">${item?.icon || '·'}</span><strong>${item?.name || 'Empty'}</strong><small>${item?.qty ? `Qty ${item.qty}` : '—'}</small>`; slot.onclick = () => useInventorySlot(index); root.appendChild(slot); }); }
-function useInventorySlot(index) { selectedInventorySlot = index; const item = inventoryItems[index]; renderHotbar(); if (!item) return; if (item.key === 'water' || item.key === 'food') { if (item.qty > 0) item.qty -= 1; showGlobalToast(`${item.name} used · needs restored.`); } else if (item.key === 'radio') showGlobalToast('Radio menu ready.'); else if (item.key === 'phone') showGlobalToast('Phone opened.'); else if (item.key === 'keys') showGlobalToast('Hotel keys equipped.'); else showGlobalToast(`${item.name} equipped.`); renderHotbar(); }
+function useInventorySlot(index) { selectedInventorySlot = index; const item = inventoryItems[index]; renderHotbar(); if (!item) return; if (item.key === 'water' || item.key === 'food') { if (item.qty <= 0) return showGlobalToast(`${item.name} is empty.`); item.qty -= 1; window.sthRestoreNeed?.(item.key === 'food' ? 'hunger' : 'hygiene', item.key === 'food' ? 28 : 12); showGlobalToast(`${item.name} used · needs restored.`); } else if (item.key === 'radio') showGlobalToast('Radio menu ready.'); else if (item.key === 'phone') showGlobalToast('Phone opened.'); else if (item.key === 'keys') showGlobalToast('Hotel keys equipped.'); else showGlobalToast(`${item.name} equipped.`); renderHotbar(); }
 function renderFriends() {
   const list = $('#friends-list'); list.innerHTML = '';
   const visible = friends.filter((friend) => friendTab === 'pending' ? friend.status === 'Pending' : friend.status.toLowerCase().includes(friendTab === 'online' ? 'online' : 'offline'));
@@ -107,6 +128,8 @@ function startGame(role) {
   scene.fog = new THREE.FogExp2(0x111820, 0.009);
 
   const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 310);
+  const audioListener = new THREE.AudioListener();
+  camera.add(audioListener);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   const gl = renderer.getContext();
   const isWebGL2 = renderer.capabilities.isWebGL2;
@@ -149,11 +172,29 @@ function startGame(role) {
   let rep = 12;
   let cash = role === 'manager' ? 420 : 240;
   let taskCount = 0;
+  let frontDeskReviewed = false;
+  const inspectedSuites = new Set();
+  let activeJob = null;
+  let jobStep = 0;
+  let savedNeeds = null;
+  try { savedNeeds = JSON.parse(localStorage.getItem('sth-needs') || 'null'); } catch { localStorage.removeItem('sth-needs'); }
+  const needs = {
+    energy: THREE.MathUtils.clamp(Number(savedNeeds?.energy ?? 100), 0, 100),
+    hunger: THREE.MathUtils.clamp(Number(savedNeeds?.hunger ?? 100), 0, 100),
+    hygiene: THREE.MathUtils.clamp(Number(savedNeeds?.hygiene ?? 100), 0, 100),
+  };
+  let lastNeedsSave = 0;
   let checkedIn = false;
   let slept = false;
   let nearby = null;
   let toastTimer;
   let worldSocket = null;
+  let voiceClient = null;
+  let reconnectTimer = null;
+  let reconnectAttempts = 0;
+  let localPlayerId = localStorage.getItem('sth-player-id') || `browser-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
+  let sessionToken = localStorage.getItem('sth-session-token') || '';
+  localStorage.setItem('sth-player-id', localPlayerId);
   let lastNetworkSend = 0;
   let ambience = null;
   let timeOfNight = 23 * 60 + 48;
@@ -162,6 +203,7 @@ function startGame(role) {
   const interactables = [];
   const npcs = [];
   const vehicles = [];
+  const remotePlayers = new Map();
   const rainDrops = [];
   const tempWorld = new THREE.Vector3();
   const targetCamera = new THREE.Vector3();
@@ -286,7 +328,22 @@ function startGame(role) {
     scene.add(moonlight);
   }
 
-  function makeCharacter({ gender = 'female', coat = 0x303844, skin = 0x9a5f43, hair = 0x171310, accent = 0xb7894d, player = false } = {}) {
+  function styleIndex(value, count) {
+    let hash = 0;
+    for (const char of String(value || '01')) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return hash % count;
+  }
+
+  function makeCharacter({ gender = 'female', coat = 0x303844, skin = 0x9a5f43, hair = 0x171310, accent = 0xb7894d, player = false, selections = null, tagText = null } = {}) {
+    const skinPalette = [0x5d382b, 0x754632, 0x925b42, 0xb97858, 0xd09a79, 0xe0b08d];
+    const outfitPalette = [0x252d38, 0x533344, 0x24433f, 0x57472e, 0x3e3155, 0x5b292c, 0x27445c, 0x3d4146];
+    const hairPalette = [0x14100e, 0x352019, 0x6d4528, 0x8e6a3d, 0x24191e, 0x151a21];
+    if (selections) {
+      skin = skinPalette[styleIndex(selections.face, skinPalette.length)];
+      coat = outfitPalette[styleIndex(selections.torso, outfitPalette.length)];
+      hair = hairPalette[styleIndex(selections.face, hairPalette.length)];
+      accent = outfitPalette[styleIndex(selections.arms, outfitPalette.length)];
+    }
     const root = new THREE.Group();
     const cloth = material(coat, 0.72, 0.04);
     const skinMat = material(skin, 0.75, 0.01);
@@ -345,8 +402,31 @@ function startGame(role) {
       root.userData[`arm${side}`] = arm;
     }
     root.userData.legs = legs;
+    root.userData.torso = torso;
+    root.userData.head = head;
     root.userData.gender = gender;
     root.userData.walkPhase = seeded() * Math.PI * 2;
+    root.userData.arms = [root.userData['arm-1'], root.userData.arm1];
+    const outfitStyle = styleIndex(selections?.torso, 4);
+    if (outfitStyle === 1) {
+      const jacket = box(root, 0, 1.48, 0.17, gender === 'female' ? 0.62 : 0.7, 0.72, 0.16, accentMat);
+      jacket.rotation.x = -0.04;
+    } else if (outfitStyle === 2) {
+      const chain = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.025, 8, 20, Math.PI * 1.25), accentMat);
+      chain.position.set(0, 1.82, -0.27);
+      chain.rotation.x = Math.PI / 2;
+      root.add(chain);
+    } else if (outfitStyle === 3) {
+      box(root, 0, 1.38, -0.3, gender === 'female' ? 0.48 : 0.58, 0.18, 0.09, accentMat);
+    }
+    const hairStyle = styleIndex(selections?.face, 3);
+    if (hairStyle === 1) {
+      const bun = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), hairMat);
+      bun.position.set(0, 2.55, 0.08);
+      root.add(bun);
+    } else if (hairStyle === 2) {
+      for (const side of [-1, 1]) box(root, side * 0.21, 2.18, 0.02, 0.13, 0.58, 0.15, hairMat, false);
+    }
     if (player) {
       const marker = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.48, 28), new THREE.MeshBasicMaterial({ color: 0xe7b764, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
       marker.rotation.x = -Math.PI / 2;
@@ -355,11 +435,24 @@ function startGame(role) {
       const playerLight = new THREE.PointLight(0x74e8f0, 2.4, 7, 2);
       playerLight.position.set(0, 1.7, 0);
       root.add(playerLight);
-      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(onlineProfile?.tag || 'YOU', '#7de3e5', '#111820'), transparent: true, depthTest: false }));
+      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(tagText || onlineProfile?.tag || 'YOU', '#7de3e5', '#111820'), transparent: true, depthTest: false }));
+      tag.scale.set(2.8, 0.46, 1);
+      tag.position.set(0, 3.05, 0);
+      root.add(tag);
+    } else if (tagText) {
+      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTexture(tagText, '#f0cb82', '#111820'), transparent: true, depthTest: false }));
       tag.scale.set(2.8, 0.46, 1);
       tag.position.set(0, 3.05, 0);
       root.add(tag);
     }
+    const voiceIndicator = new THREE.Mesh(
+      new THREE.SphereGeometry(0.09, 12, 8),
+      new THREE.MeshBasicMaterial({ color: 0x68d7a3, transparent: true, opacity: 0.9 }),
+    );
+    voiceIndicator.position.set(0.37, 2.7, 0);
+    voiceIndicator.visible = false;
+    root.add(voiceIndicator);
+    root.userData.voiceIndicator = voiceIndicator;
     return root;
   }
 
@@ -496,6 +589,57 @@ function startGame(role) {
     const metroSign = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 1.1), new THREE.MeshBasicMaterial({ map: labelTexture('24TH STREET', '#d9d9d5', '#20262a') }));
     metroSign.position.set(0, 3.65, 2.82);
     metro.add(metroSign);
+    interactables.push({ mode: 'city', type: 'jobBoard', position: new THREE.Vector3(-45, 0, 8.3), label: 'View courier jobs' });
+
+    const foodStand = new THREE.Group();
+    foodStand.position.set(14, 0, -18);
+    city.add(foodStand);
+    box(foodStand, 0, 0.75, 0, 3.4, 1.5, 1.8, material(0x6f3035, 0.55, 0.2));
+    box(foodStand, 0, 2.45, 0, 4.2, 0.18, 2.5, material(0xd4a34f, 0.38, 0.35));
+    for (const x of [-1.55, 1.55]) cylinder(foodStand, x, 1.6, 0, 0.07, 3.2, materials.darkMetal, 10);
+    const foodSign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.72), new THREE.MeshBasicMaterial({ map: labelTexture('NIGHT BITES', '#ffe0a0', '#681e2b'), transparent: false }));
+    foodSign.position.set(0, 2.75, 0.02);
+    foodStand.add(foodSign);
+    interactables.push({ mode: 'city', type: 'foodStand', position: new THREE.Vector3(14, 0, -16.6), label: 'Buy a hot meal · $18' });
+
+    const neonWords = ['OPEN LATE', 'CITY CLUB', 'VINYL', '24 HOUR'];
+    [[-69,-39,0],[69,9,Math.PI],[9,69,-Math.PI/2],[-39,69,Math.PI/2]].forEach(([x,z,rotation], index) => {
+      const glow = new THREE.MeshBasicMaterial({ map: labelTexture(neonWords[index], index % 2 ? '#66e4ec' : '#ff63c3', '#121018', 640, 150) });
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(5.8, 1.35), glow);
+      sign.position.set(x, 4.1, z);
+      sign.rotation.y = rotation;
+      city.add(sign);
+      const light = new THREE.PointLight(index % 2 ? 0x4ed5e3 : 0xf24cb6, quality === 'high' ? 5 : 2.5, 10, 2);
+      light.position.copy(sign.position).add(new THREE.Vector3(0, -0.3, 1.2));
+      city.add(light);
+    });
+
+    const puddleMaterial = new THREE.MeshPhysicalMaterial({ color: 0x182b35, roughness: 0.08, metalness: 0.25, clearcoat: 1, transparent: true, opacity: 0.72 });
+    for (let i = 0; i < 22; i++) {
+      const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.8 + seeded() * 1.7, 18), puddleMaterial);
+      puddle.rotation.x = -Math.PI / 2;
+      puddle.scale.y = 0.35 + seeded() * 0.4;
+      puddle.position.set((seeded() - 0.5) * 185, 0.055, (seeded() - 0.5) * 185);
+      city.add(puddle);
+    }
+
+    for (const [x, z, rotation] of [[-18,-28,0],[18,-28,0],[-55,28,Math.PI/2],[55,28,Math.PI/2]]) {
+      const bench = new THREE.Group();
+      box(bench, 0, 0.55, 0, 2.5, 0.18, 0.55, materials.wood);
+      box(bench, 0, 1.05, 0.25, 2.5, 0.75, 0.14, materials.wood);
+      for (const side of [-1,1]) box(bench, side * 0.9, 0.28, 0, 0.12, 0.55, 0.45, materials.darkMetal);
+      bench.position.set(x, 0, z);
+      bench.rotation.y = rotation;
+      city.add(bench);
+    }
+
+    [[62,-24],[-24,62],[62,62]].forEach(([x,z], index) => {
+      const marker = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.08, 24), new THREE.MeshBasicMaterial({ color: 0x5cc8cf, transparent: true, opacity: 0.68 }));
+      marker.position.set(x, 0.08, z);
+      marker.visible = false;
+      city.add(marker);
+      interactables.push({ mode: 'city', type: 'courierStop', position: new THREE.Vector3(x, 0, z), object: marker, active: false, stopIndex: index, label: `Deliver package ${index + 1}/3` });
+    });
 
     for (let p = -92; p <= 92; p += 16) {
       for (const road of roadPositions) {
@@ -744,6 +888,7 @@ function startGame(role) {
     skin: role === 'manager' ? 0xa66d50 : 0x81533f,
     hair: 0x171411,
     accent: 0xd0a45f,
+    selections: onlineProfile?.selections,
     player: true,
   });
   if (role === 'manager') {
@@ -789,6 +934,24 @@ function startGame(role) {
     $('#rep').textContent = rep;
     $('#cash').textContent = cash;
   }
+
+  function updateNeedsUI() {
+    for (const key of ['energy', 'hunger', 'hygiene']) {
+      const value = Math.round(THREE.MathUtils.clamp(needs[key], 0, 100));
+      const bar = $(`#need-${key}`);
+      bar.style.width = `${value}%`;
+      bar.classList.toggle('low', value < 25);
+      $(`#need-${key}-value`).textContent = value;
+    }
+  }
+
+  function restoreNeed(key, amount) {
+    needs[key] = THREE.MathUtils.clamp(needs[key] + amount, 0, 100);
+    updateNeedsUI();
+    localStorage.setItem('sth-needs', JSON.stringify(needs));
+  }
+  window.sthRestoreNeed = restoreNeed;
+  updateNeedsUI();
 
   function transition(kicker, title, callback) {
     const fade = $('#fade');
@@ -849,6 +1012,8 @@ function startGame(role) {
 
   function romanceSequence(person) {
     const name = person.object?.userData.name || 'your date';
+    if (person.object?.userData.romanceCompleted) return toast(`${name} already shared a private moment with you tonight.`);
+    person.object.userData.romanceCompleted = true;
     transition('LATER THAT NIGHT', 'PRIVATE MOMENT', () => {
       rep += 5;
       updateStats();
@@ -868,15 +1033,61 @@ function startGame(role) {
       toast('Select a secured floor and suite.');
       return;
     }
+    if (item.type === 'jobBoard') {
+      if (activeJob) return toast(`Courier route active · package ${jobStep + 1}/3`);
+      activeJob = 'courier';
+      jobStep = 0;
+      const stops = interactables.filter((entry) => entry.type === 'courierStop');
+      stops.forEach((stop, index) => { stop.active = index === 0; stop.object.visible = index === 0; });
+      setObjective('Deliver package 1/3 · east side', 0.12, 'COURIER SHIFT');
+      toast('Courier route accepted. Three drops · $120 payout.');
+      return;
+    }
+    if (item.type === 'courierStop') {
+      if (activeJob !== 'courier' || item.stopIndex !== jobStep) return;
+      item.active = false;
+      item.object.visible = false;
+      jobStep += 1;
+      cash += 20;
+      rep += 1;
+      restoreNeed('energy', -6);
+      updateStats();
+      const next = interactables.find((entry) => entry.type === 'courierStop' && entry.stopIndex === jobStep);
+      if (next) {
+        next.active = true;
+        next.object.visible = true;
+        setObjective(`Deliver package ${jobStep + 1}/3`, (jobStep + 0.2) / 3, 'COURIER SHIFT');
+        toast(`Package delivered. +$20 · next drop marked.`);
+      } else {
+        cash += 60;
+        rep += 5;
+        activeJob = null;
+        setObjective('Courier route complete · find another job', 1, 'SHIFT COMPLETE');
+        toast('Route complete. +$120 total · +8 reputation');
+      }
+      updateStats();
+      return;
+    }
+    if (item.type === 'foodStand') {
+      if (cash < 18) return toast('You need $18 for a hot meal.');
+      cash -= 18;
+      restoreNeed('hunger', 46);
+      updateStats();
+      toast('Hot meal finished. Hunger restored. -$18');
+      return;
+    }
     if (item.type === 'reception') {
       if (role === 'manager') {
+        if (frontDeskReviewed) return toast('The front desk log is already reviewed for this shift.');
+        frontDeskReviewed = true;
         cash += 35;
         rep += 1;
         updateStats();
         toast('Front desk log reviewed. VIP arrival noted. +$35');
       } else if (!checkedIn) {
+        if (cash < 40) return toast('You need $40 to check in for the night.');
         checkedIn = true;
-        cash = Math.max(0, cash - 40);
+        cash -= 40;
         updateStats();
         setObjective('Use the guest elevator and choose a suite', 0.56);
         toast('Checked in for the night. Your room key is active. -$40');
@@ -906,6 +1117,8 @@ function startGame(role) {
     }
     if (item.type === 'sleep') {
       if (role === 'manager') {
+        if (inspectedSuites.has(currentRoom)) return toast(`Suite ${String(currentRoom).padStart(2, '0')} is already inspected.`);
+        inspectedSuites.add(currentRoom);
         taskCount = Math.max(taskCount, 3);
         cash += 45;
         updateStats();
@@ -916,6 +1129,8 @@ function startGame(role) {
         transition('6:42 AM', 'A NEW MORNING', () => {
           cash += 60;
           rep += 3;
+          restoreNeed('energy', 100);
+          restoreNeed('hygiene', 45);
           updateStats();
           setObjective('Night complete · return to the city when ready', 1, 'NIGHT COMPLETE');
           toast('Well rested. Night one complete. +$60 · +3 reputation');
@@ -925,22 +1140,24 @@ function startGame(role) {
     }
     if (item.type === 'person') {
       const name = item.object.userData.name;
+      const firstConversation = !item.object.userData.spokeToPlayer;
+      item.object.userData.spokeToPlayer = true;
       if (role === 'manager') {
         const request = taskCount >= 2 && Math.random() > 0.45;
         if (request) {
           toast(`${name} asks whether you would like to meet after your shift. You can politely accept or continue working.`);
-          rep += 2;
+          if (firstConversation) rep += 2;
           updateStats();
         } else {
-          toast(`${name}: “The hotel looks incredible tonight. Thank you.” +1 reputation`);
-          rep += 1;
+          toast(`${name}: “The hotel looks incredible tonight. Thank you.”${firstConversation ? ' +1 reputation' : ''}`);
+          if (firstConversation) rep += 1;
           updateStats();
         }
       } else if (mode === 'hotel' && checkedIn) {
         romanceSequence(item);
       } else {
-        toast(`${name}: “You should check out the hotel lobby. It gets lively after midnight.”`);
-        rep += 1;
+        toast(`${name}: “${firstConversation ? 'You should check out the hotel lobby. It gets lively after midnight.' : 'Good seeing you again. Enjoy the district.'}”`);
+        if (firstConversation) rep += 1;
         updateStats();
       }
     }
@@ -1000,21 +1217,179 @@ function startGame(role) {
     $('#sound-toggle').textContent = 'SOUND: ON';
   }
 
+  function appendChat(displayName, text, system = false) {
+    const feed = $('#chat-feed');
+    const line = document.createElement('div');
+    line.className = 'chat-line';
+    const name = document.createElement('b');
+    name.textContent = system ? 'WORLD' : displayName;
+    line.append(name, document.createTextNode(` · ${text}`));
+    feed.appendChild(line);
+    while (feed.children.length > 6) feed.firstElementChild.remove();
+    setTimeout(() => line.remove(), 12000);
+  }
+
+  function removeRemotePlayer(id) {
+    const remote = remotePlayers.get(id);
+    if (!remote) return;
+    scene.remove(remote.avatar);
+    remotePlayers.delete(id);
+  }
+
+  function syncRemotePlayers(players) {
+    const seen = new Set();
+    for (const data of players) {
+      if (data.id === localPlayerId) continue;
+      seen.add(data.id);
+      let remote = remotePlayers.get(data.id);
+      if (!remote) {
+        const avatar = makeCharacter({ gender: data.gender || 'female', selections: data.selections || null, tagText: data.displayName || 'Player' });
+        avatar.position.set(data.position.x, data.position.y || 0, data.position.z);
+        scene.add(avatar);
+        remote = { avatar, target: avatar.position.clone(), lastPosition: avatar.position.clone(), rotation: data.rotation || 0, zone: data.zone || 'city', roomId: data.roomId ?? null, phase: Math.random() * Math.PI * 2 };
+        remotePlayers.set(data.id, remote);
+      }
+      remote.target.set(data.position.x, data.position.y || 0, data.position.z);
+      remote.rotation = data.rotation || 0;
+      remote.zone = data.zone || 'city';
+      remote.roomId = data.roomId ?? null;
+    }
+    for (const id of remotePlayers.keys()) if (!seen.has(id)) removeRemotePlayer(id);
+  }
+
+  function scheduleReconnect() {
+    if (reconnectTimer) return;
+    reconnectAttempts += 1;
+    const delay = Math.min(10000, 750 * (2 ** Math.min(reconnectAttempts - 1, 4)));
+    $('#server-status').textContent = 'RECONNECTING';
+    reconnectTimer = setTimeout(() => { reconnectTimer = null; connectWorld(); }, delay);
+  }
+
   function connectWorld() {
-    const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-    const base = window.STH_WORLD_URL || `${protocol}://${location.hostname || '127.0.0.1'}:8000`;
+    const base = WORLD_URL;
+    if (!base) {
+      $('#server-status').textContent = 'SECURE HOST REQUIRED';
+      $('#server-status').dataset.endpoint = '';
+      appendChat('WORLD', 'This HTTPS build needs a trusted wss:// endpoint configured by the host.', true);
+      return;
+    }
     const tag = onlineProfile?.tag || (role === 'manager' ? 'Manager' : 'Guest');
-    const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?player_id=browser-${Math.random().toString(36).slice(2, 10)}&display_name=${encodeURIComponent(tag)}`;
+    const params = new URLSearchParams({ player_id: localPlayerId, display_name: tag });
+    if (sessionToken) params.set('session_token', sessionToken);
+    const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?${params}`;
+    $('#server-status').textContent = 'CONNECTING';
+    $('#server-status').dataset.endpoint = base;
     try {
       worldSocket = new WebSocket(url);
-      worldSocket.addEventListener('open', () => { $('#server-status').textContent = 'ONLINE WORLD'; });
-      worldSocket.addEventListener('close', () => { $('#server-status').textContent = 'LOCAL WORLD'; });
+      worldSocket.addEventListener('open', () => {
+        reconnectAttempts = 0;
+        $('#server-status').textContent = 'ONLINE WORLD';
+        appendChat('WORLD', 'Connected to Station District.', true);
+      });
+      worldSocket.addEventListener('message', (event) => {
+        let message;
+        try { message = JSON.parse(event.data); } catch { return; }
+        if (message.type === 'welcome') {
+          localPlayerId = message.playerId || localPlayerId;
+          localStorage.setItem('sth-player-id', localPlayerId);
+          if (message.sessionToken) {
+            sessionToken = message.sessionToken;
+            localStorage.setItem('sth-session-token', sessionToken);
+          }
+        } else if (message.type === 'snapshot') syncRemotePlayers(message.players || []);
+        else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
+        else if (message.type === 'presence') {
+          if (message.playerId !== localPlayerId) appendChat('WORLD', `${message.displayName} ${message.action === 'join' ? 'entered' : 'left'} the district.`, true);
+          if (message.action === 'leave') removeRemotePlayer(message.playerId);
+        } else if (message.type === 'error') appendChat('WORLD', message.message || 'The world server rejected that action.', true);
+      });
+      worldSocket.addEventListener('close', (event) => {
+        remotePlayers.forEach((_, id) => removeRemotePlayer(id));
+        if (event.code === 4001) {
+          $('#server-status').textContent = 'ACTIVE IN ANOTHER TAB';
+          appendChat('WORLD', 'This player session was opened in another tab.', true);
+          return;
+        }
+        if (event.code === 4401) {
+          $('#server-status').textContent = 'SESSION AUTH FAILED';
+          appendChat('WORLD', 'The saved world-session token was rejected.', true);
+          return;
+        }
+        scheduleReconnect();
+      });
       worldSocket.addEventListener('error', () => { $('#server-status').textContent = 'LOCAL WORLD'; });
     } catch {
       $('#server-status').textContent = 'LOCAL WORLD';
+      scheduleReconnect();
     }
   }
   connectWorld();
+
+  const micButton = $('#mic-toggle');
+  const voiceStatus = $('#voice-status');
+  if (VOICE_URL) {
+    voiceClient = new ProximityVoiceClient({
+      serverUrl: VOICE_URL,
+      lobbyCode: 'PUBLIC',
+      playerId: localPlayerId,
+      displayName: onlineProfile?.tag || (role === 'manager' ? 'Manager' : 'Guest'),
+      authToken: window.STH_VOICE_TOKEN || onlineProfile?.voiceToken || null,
+      listener: audioListener,
+      maxDistance: 25,
+      iceServers: VOICE_ICE_SERVERS,
+      getLocalState: () => ({
+        position: { x: player.position.x, y: player.position.y, z: player.position.z },
+        rotation: player.rotation.y,
+        zone: mode,
+        roomId: mode === 'room' ? currentRoom : null,
+      }),
+      getRemoteObject: (playerId) => remotePlayers.get(playerId)?.avatar || null,
+    });
+    voiceClient.addEventListener('status', ({ detail }) => { voiceStatus.textContent = detail.label; });
+    voiceClient.addEventListener('mutechange', ({ detail }) => {
+      micButton.classList.toggle('live', !detail.muted);
+      micButton.setAttribute('aria-pressed', String(!detail.muted));
+      micButton.querySelector('b').textContent = detail.muted ? 'MIC: MUTED' : 'MIC: LIVE';
+    });
+    voiceClient.addEventListener('localspeaking', ({ detail }) => micButton.classList.toggle('speaking', detail.speaking));
+    voiceClient.addEventListener('speaking', ({ detail }) => {
+      const remote = remotePlayers.get(detail.playerId);
+      if (remote?.avatar.userData.voiceIndicator) remote.avatar.userData.voiceIndicator.visible = detail.speaking && remote.avatar.visible;
+    });
+    voiceClient.addEventListener('error', ({ detail }) => {
+      voiceStatus.textContent = 'VOICE ERROR';
+      appendChat('VOICE', detail.message || 'Voice connection failed.', true);
+    });
+    voiceClient.connect();
+  } else {
+    micButton.disabled = true;
+    voiceStatus.textContent = 'SECURE VOICE HOST REQUIRED';
+    micButton.title = 'Configure VITE_STH_VOICE_URL with an HTTPS/WSS Socket.io endpoint.';
+  }
+
+  micButton.addEventListener('click', async () => {
+    if (!voiceClient) return;
+    try {
+      await voiceClient.toggleMicrophone();
+    } catch (error) {
+      voiceStatus.textContent = 'MIC PERMISSION DENIED';
+      appendChat('VOICE', error.message || 'Microphone permission was denied.', true);
+    }
+  });
+  addEventListener('beforeunload', () => voiceClient?.disconnect(), { once: true });
+
+  function openChat() {
+    $('#chat-box').hidden = false;
+    $('#chat-input').focus();
+  }
+  function closeChat() { $('#chat-box').hidden = true; $('#chat-input').value = ''; canvas.focus(); }
+  $('#chat-box').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = $('#chat-input').value.trim();
+    if (text && worldSocket?.readyState === WebSocket.OPEN) worldSocket.send(JSON.stringify({ type: 'chat', text }));
+    else if (text) appendChat('WORLD', 'Chat requires the online world host.', true);
+    closeChat();
+  });
 
   function itemWorldPosition(item) {
     if (item.position) return tempWorld.copy(item.position);
@@ -1026,7 +1401,7 @@ function startGame(role) {
     let best = null;
     let bestDistance = 3.15;
     for (const item of interactables) {
-      if (item.mode !== mode || item.completed || (item.object && !item.object.visible)) continue;
+      if (item.mode !== mode || item.completed || item.active === false || (item.object && !item.object.visible)) continue;
       const position = itemWorldPosition(item);
       const distance = Math.hypot(player.position.x - position.x, player.position.z - position.z);
       if (distance < bestDistance) {
@@ -1064,7 +1439,9 @@ function startGame(role) {
       const length = Math.hypot(dx, dz);
       dx /= length;
       dz /= length;
-      const speed = (keys.shift ? 7.2 : 4.25) * delta;
+      const needPenalty = needs.energy < 15 || needs.hunger < 10 ? 0.62 : needs.energy < 35 ? 0.82 : 1;
+      const canSprint = keys.shift && needs.energy > 8;
+      const speed = (canSprint ? 7.2 : 4.25) * needPenalty * delta;
       const nextX = player.position.x + dx * speed;
       const nextZ = player.position.z + dz * speed;
       if (mode === 'city') {
@@ -1085,12 +1462,17 @@ function startGame(role) {
     player.position.y += verticalVelocity * delta;
     if (player.position.y <= 0) { player.position.y = 0; verticalVelocity = 0; }
     const grounded = player.position.y <= 0.001;
-    const walk = moving && grounded ? Math.sin(clock.elapsedTime * (keys.shift ? 12 : 8)) * 0.56 : 0;
+    const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);
+    const walk = moving && grounded ? Math.sin(cycle) * 0.56 : 0;
     const legs = player.userData.legs || [];
-    if (legs[0]) legs[0].rotation.x = walk;
-    if (legs[1]) legs[1].rotation.x = -walk;
-    if (player.userData['arm-1']) player.userData['arm-1'].rotation.x = -walk * 0.7;
-    if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7;
+    const jumpPose = grounded ? 0 : -0.48;
+    if (legs[0]) legs[0].rotation.x = walk + jumpPose;
+    if (legs[1]) legs[1].rotation.x = -walk + jumpPose;
+    const idle = moving ? 0 : Math.sin(clock.elapsedTime * 1.7) * 0.035;
+    if (player.userData['arm-1']) player.userData['arm-1'].rotation.x = -walk * 0.7 + idle;
+    if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7 - idle;
+    if (player.userData.torso) player.userData.torso.rotation.x = moving ? Math.min(0.12, Math.abs(walk) * 0.08) : idle * 0.22;
+    if (player.userData.head) player.userData.head.rotation.y = moving ? 0 : Math.sin(clock.elapsedTime * 0.55) * 0.06;
     return { dx, dz, moving };
   }
 
@@ -1143,6 +1525,27 @@ function startGame(role) {
       }
       rain.geometry.attributes.position.needsUpdate = true;
     }
+    const activity = (keys.w || keys.a || keys.s || keys.d || keys.arrowup || keys.arrowdown || keys.arrowleft || keys.arrowright) ? (keys.shift ? 2.1 : 1.25) : 0.45;
+    needs.energy = Math.max(0, needs.energy - delta * 0.055 * activity);
+    needs.hunger = Math.max(0, needs.hunger - delta * 0.034);
+    needs.hygiene = Math.max(0, needs.hygiene - delta * 0.022 * activity);
+    if (elapsed - lastNeedsSave > 5) {
+      updateNeedsUI();
+      localStorage.setItem('sth-needs', JSON.stringify(needs));
+      lastNeedsSave = elapsed;
+    }
+    for (const remote of remotePlayers.values()) {
+      remote.avatar.visible = remote.zone === mode && (mode !== 'room' || String(remote.roomId) === String(currentRoom));
+      remote.avatar.position.lerp(remote.target, 1 - Math.pow(0.0008, delta));
+      remote.avatar.rotation.y = THREE.MathUtils.lerp(remote.avatar.rotation.y, remote.rotation, 1 - Math.pow(0.002, delta));
+      const distance = remote.avatar.position.distanceTo(remote.lastPosition);
+      const stride = distance > 0.002 ? Math.sin(elapsed * 9 + remote.phase) * 0.42 : 0;
+      if (remote.avatar.userData.legs?.[0]) remote.avatar.userData.legs[0].rotation.x = stride;
+      if (remote.avatar.userData.legs?.[1]) remote.avatar.userData.legs[1].rotation.x = -stride;
+      if (remote.avatar.userData.arms?.[0]) remote.avatar.userData.arms[0].rotation.x = -stride * 0.7;
+      if (remote.avatar.userData.arms?.[1]) remote.avatar.userData.arms[1].rotation.x = stride * 0.7;
+      remote.lastPosition.copy(remote.avatar.position);
+    }
     timeOfNight += delta * 0.46;
     const hours = Math.floor(timeOfNight / 60) % 24;
     const minutes = Math.floor(timeOfNight) % 60;
@@ -1162,7 +1565,12 @@ function startGame(role) {
   }
 
   addEventListener('keydown', (event) => {
+    if (event.target instanceof Element && event.target.matches('input,textarea')) {
+      if (event.key === 'Escape' && event.target === $('#chat-input')) closeChat();
+      return;
+    }
     keys[event.key.toLowerCase()] = true;
+    if (event.key === 'Enter' && !event.repeat) { event.preventDefault(); openChat(); return; }
     if (event.key === ' ' && !event.repeat) jumpQueued = true;
     if (event.key.toLowerCase() === 'e' && !event.repeat) interact();
     if (event.key.toLowerCase() === 'r' && !event.repeat && mode !== 'city') $('#room-panel').classList.toggle('open');
@@ -1229,8 +1637,19 @@ function startGame(role) {
       updateMap();
     }
     updateCamera(delta);
+    voiceClient?.update();
     if (worldSocket?.readyState === WebSocket.OPEN && elapsed - lastNetworkSend > 0.08) {
-      worldSocket.send(JSON.stringify({ type: 'input', x: movement.dx, z: movement.dz, zone: mode }));
+      worldSocket.send(JSON.stringify({
+        type: 'input',
+        x: movement.dx,
+        z: movement.dz,
+        rotation: player.rotation.y,
+        zone: mode,
+        roomId: mode === 'room' ? currentRoom : null,
+        moving: movement.moving,
+        gender: onlineProfile?.gender || (role === 'manager' ? 'female' : 'male'),
+        selections: onlineProfile?.selections || null,
+      }));
       lastNetworkSend = elapsed;
     }
     composer.render();

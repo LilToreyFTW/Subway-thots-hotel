@@ -1,0 +1,14 @@
+{
+  "name": "sth-auth-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Subway-Thots-Hotel Discord authentication and community UI modules.",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
+}
