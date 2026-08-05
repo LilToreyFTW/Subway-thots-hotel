@@ -8,6 +8,9 @@ multiplayer-server/*.log
 vps_connection/.venv/
 vps_connection/.env
 vps_connection/*.db
+vps_connection/*.zip
+vps_connection/**/*.db
+vps_connection/**/*.zip
 vps_connection-package.zip
 __pycache__/
 *.pyc
