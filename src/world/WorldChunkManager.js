@@ -183,8 +183,20 @@ export class WorldChunkManager {
     if (plan.hasElevator) add(this.geometries.facade, dark, width * .22, height / 2, depth * .16, 2.2, height, 2.2);
     if (plan.hasStairs) add(this.geometries.facade, trim, -width * .22, height / 2, depth * .16, 2.5, height, 2.5);
     group.userData.floorPlan = plan;
-    group.position.copy(position);
-    return group;
+    // Distant buildings collapse to a single low-poly silhouette; near the
+    // player the full façade, floors, and window geometry remains available.
+    const distant = new THREE.Group();
+    const low = new THREE.Mesh(this.geometries.building, facade);
+    low.scale.set(width, height, depth);
+    low.position.y = height / 2;
+    low.castShadow = false; low.receiveShadow = true;
+    distant.add(low);
+    const lod = new THREE.LOD();
+    lod.addLevel(group, 0);
+    lod.addLevel(distant, this.config.chunkSizeMeters * .52);
+    lod.position.copy(position);
+    lod.userData.floorPlan = plan;
+    return lod;
   }
 
   clear() {

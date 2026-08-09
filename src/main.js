@@ -148,7 +148,7 @@ function startGame(role) {
   scene.background = new THREE.Color(0x111820);
   scene.fog = new THREE.FogExp2(0x111820, 0.009);
 
-  const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 310);
+  const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, GameConfig.rendering.renderDistance);
   const inputController = new InputController(canvas);
   const cameraController = new ThirdPersonCameraController(camera, GameConfig.camera);
   const audioListener = new THREE.AudioListener();
@@ -164,7 +164,7 @@ function startGame(role) {
   const isWebGL2 = renderer.capabilities.isWebGL2;
   const maxTextureSize = renderer.capabilities.maxTextureSize;
   const quality = isWebGL2 && maxTextureSize >= 8192 && innerWidth > 700 ? 'high' : 'balanced';
-  const pixelRatioCap = quality === 'high' ? 2 : 1.35;
+  const pixelRatioCap = quality === 'high' ? GameConfig.rendering.maxPixelRatio : GameConfig.rendering.balancedPixelRatio;
   const updateRendererSize = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap));
     renderer.setSize(innerWidth, innerHeight);
@@ -271,6 +271,7 @@ function startGame(role) {
     };
   })();
   const structuralGrid = new StructuralGrid(2, .25);
+  const geometryCache = new Map();
 
   const materialLibrary = new MaterialLibrary();
   const materials = materialLibrary.named();
@@ -296,7 +297,9 @@ function startGame(role) {
   }
 
   function box(parent, x, y, z, sx, sy, sz, meshMaterial, shadows = true) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), meshMaterial);
+    const key = `box:${sx}:${sy}:${sz}`;
+    if (!geometryCache.has(key)) geometryCache.set(key, new THREE.BoxGeometry(sx, sy, sz));
+    const mesh = new THREE.Mesh(geometryCache.get(key), meshMaterial);
     mesh.position.set(x, y, z);
     const shadowEnabled = shadows && sx * sy * sz >= 0.018;
     mesh.castShadow = shadowEnabled;
@@ -306,7 +309,9 @@ function startGame(role) {
   }
 
   function cylinder(parent, x, y, z, radius, height, meshMaterial, sides = 18) {
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, sides), meshMaterial);
+    const key = `cylinder:${radius}:${height}:${sides}`;
+    if (!geometryCache.has(key)) geometryCache.set(key, new THREE.CylinderGeometry(radius, radius, height, sides));
+    const mesh = new THREE.Mesh(geometryCache.get(key), meshMaterial);
     mesh.position.set(x, y, z);
     const shadowEnabled = radius * height >= 0.025;
     mesh.castShadow = shadowEnabled;
@@ -573,7 +578,6 @@ function startGame(role) {
     root.add(hairMesh);
 
     const hip = box(root, 0, 0.94, 0, gender === 'female' ? 0.52 : 0.58, 0.25, 0.34, cloth);
-    hip.geometry.translate(0, 0, 0);
     const limbGeometry = new THREE.CapsuleGeometry(0.105, 0.62, 4, 8);
     const legMaterial = gender === 'female' ? material(0x25292d, 0.78) : cloth;
     const legs = [];
@@ -811,6 +815,20 @@ function startGame(role) {
         box(city, line, 0.035, p, 3.4, 0.025, 0.12, material(0xc9a95e, 0.7), false);
       }
     }
+    // Repeated road reflectors are batched into one draw call instead of
+    // hundreds of individual meshes.
+    const reflectorCount = roadPositions.length * 25 * 2;
+    const reflectors = new THREE.InstancedMesh(new THREE.BoxGeometry(.12, .025, .62), material(0xe1be63, .52, .2), reflectorCount);
+    const reflectorMatrix = new THREE.Matrix4();
+    let reflectorIndex = 0;
+    for (const p of roadPositions) {
+      for (let line = -90; line <= 90; line += 7.5) {
+        reflectorMatrix.makeTranslation(p, .07, line); reflectors.setMatrixAt(reflectorIndex++, reflectorMatrix);
+        reflectorMatrix.makeTranslation(line, .07, p); reflectorMatrix.multiply(new THREE.Matrix4().makeRotationY(Math.PI / 2)); reflectors.setMatrixAt(reflectorIndex++, reflectorMatrix);
+      }
+    }
+    reflectors.count = reflectorIndex; reflectors.instanceMatrix.needsUpdate = true; reflectors.castShadow = false; reflectors.receiveShadow = false;
+    city.add(reflectors);
 
     for (let x = -96; x <= 96; x += 48) {
       for (let z = -96; z <= 96; z += 48) {

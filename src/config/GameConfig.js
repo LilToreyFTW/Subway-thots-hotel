@@ -1,3 +1,5 @@
+const query = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
+
 export const GameConfig = Object.freeze({
   world: {
     seed: 47381,
@@ -7,6 +9,8 @@ export const GameConfig = Object.freeze({
     unloadChunkRadius: 2,
     floatingOriginThresholdMeters: 640,
     defaultRegion: 'us-seattle-central',
+    roomDensity: .72,
+    propDensity: .68,
   },
   player: {
     walkSpeed: 4.25,
@@ -29,8 +33,14 @@ export const GameConfig = Object.freeze({
     maxPitch: 1.15,
     smoothness: 0.0025,
   },
+  rendering: {
+    renderDistance: 310,
+    shadowQuality: 'adaptive',
+    maxPixelRatio: 2,
+    balancedPixelRatio: 1.35,
+  },
   debug: {
-    chunks: new URLSearchParams(location.search).has('debugChunks'),
-    coordinates: new URLSearchParams(location.search).has('debugGeo'),
+    chunks: query.has('debugChunks'),
+    coordinates: query.has('debugGeo'),
   },
 });
