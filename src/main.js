@@ -22,6 +22,7 @@ import { MaterialLibrary } from './rendering/MaterialLibrary.js';
 import { TextureLibrary } from './rendering/TextureLibrary.js';
 import { DecalSystem } from './world/DecalSystem.js';
 import { EnvironmentLighting, LightingProfile } from './rendering/EnvironmentLighting.js';
+import { DayNightCycle } from './rendering/DayNightCycle.js';
 import { createRoomPlan } from './world/RoomArchetypes.js';
 import { StructuralGrid } from './world/StructuralGrid.js';
 import { NavigationStandards, hasWalkableOpening } from './world/NavigationStandards.js';
@@ -240,7 +241,7 @@ function startGame(role) {
   localStorage.setItem('sth-player-id', localPlayerId);
   let lastNetworkSend = 0;
   let ambience = null;
-  let timeOfNight = 23 * 60 + 48;
+  let timeOfNight = 9 * 60 + 20;
   const keys = inputController.keys;
   const cityColliders = [];
   const hotelColliders = [];
@@ -260,6 +261,7 @@ function startGame(role) {
   const remotePlayers = new Map();
   const rainDrops = [];
   const doors = [];
+  const nightLights = [];
   const targetCamera = new THREE.Vector3();
   const cameraLook = new THREE.Vector3();
 
@@ -534,6 +536,7 @@ function startGame(role) {
     const moon = new THREE.Mesh(new THREE.SphereGeometry(4.2, 24, 18), new THREE.MeshBasicMaterial({ color: 0xcbd2d3 }));
     moon.position.set(-78, 92, -148);
     scene.add(moon);
+    return { skyUniforms: skyMaterial.uniforms, moon };
   }
 
   function addLighting() {
@@ -679,6 +682,8 @@ function startGame(role) {
     if (quality === 'high' && Math.abs(x + z) % 60 < 1) {
       const light = new THREE.PointLight(0xffc777, 7, 17, 2);
       light.position.set(0.7, 4.9, 0);
+      light.userData.baseIntensity = 7;
+      nightLights.push(light);
       lamp.add(light);
     }
     lamp.position.set(x, 0, z);
@@ -1321,8 +1326,9 @@ function startGame(role) {
     hotel.add(dust);
   }
 
-  addSky();
+  const sky = addSky();
   const environmentLighting = addLighting();
+  const dayNightCycle = new DayNightCycle({ skyUniforms: sky.skyUniforms, moon: sky.moon, lighting: environmentLighting, nightLights });
   addCity();
   addHotelInterior();
   addRain();
@@ -1350,11 +1356,11 @@ function startGame(role) {
     hotel.visible = false;
   }
   environmentLighting.apply(role === 'manager' ? LightingProfile.HOTEL_LOBBY : LightingProfile.CITY);
-  const playerFill = new THREE.PointLight(0xffd8b3, 10, 11, 2);
+  const playerFill = new THREE.PointLight(0xffd8b3, 16, 13, 2);
   playerFill.position.set(2.2, 3.1, 3.2);
   playerFill.userData.keepVisible = true;
   player.add(playerFill);
-  const playerRim = new THREE.PointLight(0x78cde0, 6, 9, 2);
+  const playerRim = new THREE.PointLight(0x78cde0, 9, 11, 2);
   playerRim.position.set(-2.6, 2.5, -2.3);
   playerRim.userData.keepVisible = true;
   player.add(playerRim);
@@ -2135,10 +2141,9 @@ function startGame(role) {
       if (remote.avatar.userData.arms?.[1]) remote.avatar.userData.arms[1].rotation.x = stride * 0.7;
       remote.lastPosition.copy(remote.avatar.position);
     }
-    timeOfNight += delta * 0.46;
-    const hours = Math.floor(timeOfNight / 60) % 24;
-    const minutes = Math.floor(timeOfNight) % 60;
-    $('#clock').textContent = `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
+    timeOfNight = (timeOfNight + delta * .5) % 1440;
+    const clockState = dayNightCycle.update(timeOfNight);
+    $('#clock').textContent = `${clockState.hours % 12 || 12}:${String(clockState.minutes).padStart(2, '0')} ${clockState.hours >= 12 ? 'PM' : 'AM'}`;
   }
 
   function updateMap() {

@@ -45,6 +45,9 @@ export class EnvironmentLighting {
       this.groups.set(name, group);
     }
     this.active = null;
+    this.currentProfile = PROFILES[LightingProfile.CITY];
+    this.daylight = 0;
+    this.dayDirection = new THREE.Vector3(-.5, .8, .4);
     this.lastFocus = new THREE.Vector3(Infinity, Infinity, Infinity);
     this.focusPoint = new THREE.Vector3();
   }
@@ -53,6 +56,7 @@ export class EnvironmentLighting {
     if (this.active === name) return;
     const profile = PROFILES[name] || PROFILES[LightingProfile.CITY];
     this.active = name;
+    this.currentProfile = profile;
     this.scene.background.set(profile.sky);
     this.scene.fog.color.set(profile.fog);
     this.scene.fog.density = profile.density;
@@ -69,12 +73,23 @@ export class EnvironmentLighting {
     for (const [profileName, group] of this.groups) group.visible = profileName === name;
   }
 
+  setDaylight({ daylight, direction }) {
+    this.daylight = daylight;
+    this.dayDirection.copy(direction).normalize();
+    const profile = this.currentProfile;
+    const indoor = profile.root !== 'city';
+    const baseline = indoor ? .82 : .58;
+    this.hemisphere.intensity = profile.hemi * (baseline + daylight * (indoor ? .25 : .74));
+    this.key.intensity = profile.key * (baseline + daylight * (indoor ? .18 : 1.18));
+    this.key.color.set(daylight > .45 ? 0xfff1d0 : 0x9ec9e9);
+  }
+
   updateShadowFocus(subject) {
     subject.getWorldPosition(this.focusPoint);
     if (this.lastFocus.distanceToSquared(this.focusPoint) < 9) return;
     this.lastFocus.copy(this.focusPoint);
     this.key.target.position.set(this.focusPoint.x, 0, this.focusPoint.z);
-    this.key.position.set(this.focusPoint.x - 34, 58, this.focusPoint.z + 28);
+    this.key.position.copy(this.focusPoint).addScaledVector(this.dayDirection, 72);
     this.key.target.updateMatrixWorld();
   }
 }
