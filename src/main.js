@@ -657,6 +657,47 @@ function startGame(role) {
     if (allowCollider) cityColliders.push({ minX: x - width / 2 - 0.5, maxX: x + width / 2 + 0.5, minZ: z - depth / 2 - 0.5, maxZ: z + depth / 2 + 0.5 });
   }
 
+  function addSubwayStation(parent) {
+    const station = new THREE.Group();
+    parent.add(station);
+    const tile = material(0x394248, .52, .08);
+    const track = material(0x15191d, .86, .18);
+    const hazard = material(0xd2a95f, .5, .18);
+    // Ticket concourse: tile field, turnstiles, stair bank, and ceiling ribs.
+    box(station, 0, .04, 0, 16, .08, 11, tile, false);
+    for (let x = -4.8; x <= 4.8; x += 2.4) {
+      box(station, x, .63, -1.2, .26, 1.15, 1.05, materials.darkMetal);
+      box(station, x, 1.13, -1.72, .84, .06, .06, new THREE.MeshBasicMaterial({ color: 0x78cde0 }), false);
+    }
+    for (let step = 0; step < 6; step++) box(station, 0, .12 + step * .17, -4.15 - step * .42, 8.5, .17, .5, material(0x4c5357, .62, .15));
+    for (const x of [-7.1, -3.6, 0, 3.6, 7.1]) box(station, x, 3.4, -2.8, .2, 6.8, 10.2, materials.darkMetal, false);
+    // Platform and track trench with rails, sleepers, waiting seats, and signage.
+    box(station, 0, .12, -11.2, 16, .24, 7.1, tile);
+    box(station, 0, .26, -14.25, 16, .05, .24, hazard, false);
+    box(station, 0, -.2, -18.5, 16, .38, 7.4, track);
+    for (const x of [-3.3, 3.3]) box(station, x, .03, -18.5, .12, .12, 7.2, materials.darkMetal, false);
+    for (let z = -15.6; z >= -21.4; z -= .62) box(station, 0, -.02, z, 7.5, .08, .14, material(0x493f36, .72), false);
+    for (const x of [-5.3, -1.8, 1.8, 5.3]) addChair(station, x, -10.3, Math.PI, 0x334c59);
+    const platformSign = new THREE.Mesh(new THREE.PlaneGeometry(5.8, .92), new THREE.MeshBasicMaterial({ map: labelTexture('PLATFORM 2 · UPTOWN', '#d8eff1', '#182126') }));
+    platformSign.position.set(0, 3.35, -14.65); station.add(platformSign);
+    for (const x of [-7.25, 7.25]) { box(station, x, 2.6, -11.5, .35, 5.1, 7.2, materials.hotelStone); addRail(station, x * .92, -11.3, 5.5, Math.PI / 2); }
+    // Two tunnel mouths, one active and one sealed abandoned service spur.
+    for (const [x, label, color] of [[-4.2, 'EAST TUNNEL', 0x78cde0], [4.2, 'SEALED SPUR', 0xbe6b9d]]) {
+      box(station, x, 2.45, -22.25, 4.3, 4.9, .5, materials.darkMetal);
+      const portal = new THREE.Mesh(new THREE.TorusGeometry(1.55, .16, 8, 18, Math.PI), material(color, .35, .52)); portal.position.set(x, 1.1, -22.56); station.add(portal);
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.7, .42), new THREE.MeshBasicMaterial({ map: labelTexture(label, '#e6e1d0', '#15181a') })); sign.position.set(x, 3.55, -22.58); station.add(sign);
+    }
+    // Service rooms, power cabinets, and maintenance storage flank the platform.
+    for (const [x, name, accent] of [[-10.5, 'POWER', 0xd2a95f], [10.5, 'MAINTENANCE', 0x7ba77b]]) {
+      box(station, x, 1.8, -15, 3.8, 3.6, 5.2, materials.hotelStone);
+      box(station, x, 1.55, -12.36, 1.9, 2.8, .12, materials.darkMetal);
+      box(station, x, 2.9, -12.3, 2.3, .14, .2, material(accent, .3, .52), false);
+      addDisplayShelf(station, x, -15.8); addTrashCan(station, x + 1.2, -14);
+      const roomSign = new THREE.Mesh(new THREE.PlaneGeometry(2.5, .45), new THREE.MeshBasicMaterial({ map: labelTexture(name, '#e7d8a0', '#171a1b') })); roomSign.position.set(x, 3.03, -12.23); station.add(roomSign);
+    }
+    return station;
+  }
+
   function addHotelExterior() {
     const group = new THREE.Group();
     group.position.set(0, 0, -46);
@@ -756,8 +797,10 @@ function startGame(role) {
     addTicketMachine(metro, .15, -1.3);
     for (let i = 0; i < 4; i++) addChair(metro, -2.55 + i * 1.7, 1.5, Math.PI, 0x334c59);
     addRail(metro, 0, -2.25, 6.6);
+    addSubwayStation(metro);
     cityColliders.push({ minX: -49.3, maxX: -40.7, minZ: 2.1, maxZ: 7.9 });
     interactables.push({ mode: 'city', type: 'jobBoard', position: new THREE.Vector3(-45, 0, 8.3), label: 'View courier jobs' });
+    interactables.push({ mode: 'city', type: 'subwayInfo', position: new THREE.Vector3(-45, 0, 0), label: 'Explore 24th Street Station' });
 
     const foodStand = new THREE.Group();
     foodStand.position.set(14, 0, -18);
@@ -1388,6 +1431,7 @@ function startGame(role) {
     if (!nearby || paused) return;
     const item = nearby.item;
     if (item.type === 'hotelEntrance') return enterHotel();
+    if (item.type === 'subwayInfo') { toast('24th Street Station: ticket concourse, platform, service rooms, active tunnel, and a sealed abandoned spur.'); return; }
     if (item.type === 'hotelExit') return exitHotel();
     if (item.type === 'hotelAmenity') {
       const messages = { bar: 'Velvet Bar is open late. Take a seat and meet the crowd.', restaurant: 'Night Dining is serving a full late menu.', lounge: 'VIP Lounge access granted. The music is low and the seating is private.', security: 'Security desk checked. Cameras and access logs are active.', service: 'Service wing stocked: laundry, maintenance, storage, and staff supplies.', stairs: 'Stairwell connects to guest floors, rooftop access, and the service basement.' };
