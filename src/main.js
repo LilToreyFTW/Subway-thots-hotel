@@ -921,7 +921,15 @@ function startGame(role) {
     city.visible = true;
     hotel.visible = false;
   }
-  const playerModel = new PlayerModel(player);
+  const playerFill = new THREE.PointLight(0xffd8b3, 10, 11, 2);
+  playerFill.position.set(2.2, 3.1, 3.2);
+  playerFill.userData.keepVisible = true;
+  player.add(playerFill);
+  const playerRim = new THREE.PointLight(0x78cde0, 6, 9, 2);
+  playerRim.position.set(-2.6, 2.5, -2.3);
+  playerRim.userData.keepVisible = true;
+  player.add(playerRim);
+  const playerModel = new PlayerModel(player, { clothing: 0x5d8197, shoes: 0x303940, accessory: 0xe0b96d });
   playerModel.load().catch((error) => console.warn('GLB player model unavailable; keeping fallback avatar.', error));
   const playerController = new PlayerController(GameConfig.player, playerModel);
 

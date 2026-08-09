@@ -18,7 +18,7 @@ export class PlayerModel {
     model.scale.setScalar(1);
     this.appearance.apply(model);
     model.traverse((node) => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
-    this.host.children.forEach((child) => { if (child.userData?.keepMarker !== true) child.visible = false; });
+    this.host.children.forEach((child) => { if (child.userData?.keepVisible !== true) child.visible = false; });
     this.host.add(model);
     this.mixer = new THREE.AnimationMixer(model);
     gltf.animations.forEach((clip) => this.actions.set(clip.name.toLowerCase(), this.mixer.clipAction(clip)));

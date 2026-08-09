@@ -4,7 +4,7 @@ import * as THREE from 'three';
 // independent treatment; unknown meshes use a conservative clothing fallback.
 export class PlayerAppearance {
   constructor(options = {}) {
-    this.options = { skin: 0xb98769, clothing: 0x27313b, shoes: 0x101214, hair: 0x1b1512, accessory: 0xc39451, ...options };
+    this.options = { skin: 0xc99573, clothing: 0x526f82, shoes: 0x242a30, hair: 0x2d2019, accessory: 0xd6a85c, ...options };
   }
   apply(model) {
     model.traverse((node) => {
