@@ -908,6 +908,41 @@ function startGame(role) {
     }
   }
 
+  function addHotelZone({ name, type, x, z, width, depth, accent = 0xb98c45 }) {
+    const zone = new THREE.Group();
+    zone.position.set(x, 0, z);
+    const floor = material(type === 'service' ? 0x3a4144 : 0x473a34, .7, .08);
+    box(zone, 0, .025, 0, width, .05, depth, floor, false);
+    // Three sided zone shell keeps circulation open from the main hall.
+    box(zone, 0, 1.6, -depth / 2, width, 3.2, .22, materials.hotelStone);
+    box(zone, -width / 2, 1.6, 0, .22, 3.2, depth, materials.hotelStone);
+    box(zone, width / 2, 1.6, 0, .22, 3.2, depth, materials.hotelStone);
+    box(zone, 0, 3.18, -depth / 2 - .02, width + .12, .18, .34, materials.gold, false);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(width - .6, 5.5), .65), new THREE.MeshBasicMaterial({ map: labelTexture(name, '#efd18b', '#171b1d'), transparent: false }));
+    sign.position.set(0, 2.72, -depth / 2 - .14); zone.add(sign);
+    const glow = new THREE.PointLight(accent, 2.4, 7, 2); glow.position.set(0, 2.35, -depth / 2 + .65); zone.add(glow);
+    if (type === 'bar') {
+      box(zone, 0, .76, -.9, width - 1.2, 1.45, 1.25, materials.wood);
+      box(zone, 0, 1.52, -.9, width - .9, .12, 1.48, materials.gold);
+      for (let i = -2; i <= 2; i++) { addChair(zone, i * 1.35, .65, Math.PI, 0x493242); cylinder(zone, i * 1.35, 1.85, -1.28, .09, .34, material(0x7da5ad, .25, .35), 12); }
+    } else if (type === 'restaurant') {
+      for (const [tx, tz] of [[-2, -1.1], [2, -1.1], [-2, 2], [2, 2]]) { addCafeTable(zone, tx, tz); addChair(zone, tx - 1.05, tz, Math.PI / 2); addChair(zone, tx + 1.05, tz, -Math.PI / 2); }
+    } else if (type === 'lounge') {
+      addFurniture(zone, 0, -.6); addCafeTable(zone, 0, 1.35); addFloorLamp(zone, -width / 2 + .8, 1.2, accent); addWallTV(zone, 0, 2.15, -depth / 2 + .14);
+    } else if (type === 'service') {
+      addDisplayShelf(zone, -width / 2 + 1.1, 0, Math.PI / 2); addDisplayShelf(zone, width / 2 - 1.1, 0, -Math.PI / 2); addTrashCan(zone, 0, depth / 2 - .8);
+      for (let i = -1; i <= 1; i++) box(zone, i * 1.55, .6, -.7, 1.1, 1.1, .85, material(0xc6c4be, .72), false);
+    } else if (type === 'security') {
+      box(zone, 0, .75, -.65, width - 1, 1.4, 1.05, materials.darkMetal); addWallTV(zone, 0, 2.05, -depth / 2 + .14); addVendingMachine(zone, width / 2 - 1, .8, accent);
+    } else if (type === 'stairs') {
+      for (let step = 0; step < 7; step++) box(zone, 0, .12 + step * .23, depth / 2 - .65 - step * .45, width - 1.1, .23, .54, material(0x474c4f, .6, .2));
+      addRail(zone, -width / 2 + .4, 0, depth - 1.1, Math.PI / 2); addRail(zone, width / 2 - .4, 0, depth - 1.1, Math.PI / 2);
+    }
+    zone.userData.zoneType = type;
+    hotel.add(zone);
+    return zone;
+  }
+
   function addHotelInterior() {
     const hotelFloor = box(hotel, 0, -0.3, 0, 48, 0.6, 40, materials.wetConcrete);
     hotelFloors.push(hotelFloor);
@@ -984,6 +1019,21 @@ function startGame(role) {
       box(hotel, x, 3, -18.92, 6, 5.9, 0.18, elevatorMat);
       box(hotel, x, 6.15, -18.75, 6.4, 0.32, 0.42, materials.gold);
     }
+
+    // Purposeful hotel wings branch off the open main hall; their front edges
+    // remain open so every space is discoverable without loading a new scene.
+    const hotelZones = [
+      { name: 'VELVET BAR', type: 'bar', x: -15.2, z: 13.5, width: 14, depth: 10, accent: 0xbe6b9d },
+      { name: 'NIGHT DINING', type: 'restaurant', x: 14.5, z: 13.5, width: 15, depth: 10, accent: 0xd2a95f },
+      { name: 'VIP LOUNGE', type: 'lounge', x: -15.5, z: -3.8, width: 11, depth: 7.5, accent: 0x6c9ab1 },
+      { name: 'SECURITY', type: 'security', x: 17.3, z: -4, width: 9, depth: 7.5, accent: 0x78cde0 },
+      { name: 'LAUNDRY + SERVICE', type: 'service', x: 16.5, z: 4.8, width: 10, depth: 6.6, accent: 0x7ba77b },
+      { name: 'STAIRS / ROOF', type: 'stairs', x: -18.4, z: -12.8, width: 7.4, depth: 6.3, accent: 0xd2a95f },
+    ];
+    hotelZones.forEach((zone) => {
+      addHotelZone(zone);
+      interactables.push({ mode: 'hotel', type: 'hotelAmenity', subtype: zone.type, position: new THREE.Vector3(zone.x, 0, zone.z + zone.depth / 2 - .7), label: `Enter ${zone.name}` });
+    });
 
     interactables.push({ mode: 'hotel', type: 'hotelExit', position: new THREE.Vector3(0, 0, 16.7), label: 'Return to Station District' });
     interactables.push({ mode: 'hotel', type: 'reception', position: new THREE.Vector3(0, 0, -9.7), label: role === 'manager' ? 'Review the front desk log' : 'Check in at reception' });
@@ -1339,6 +1389,11 @@ function startGame(role) {
     const item = nearby.item;
     if (item.type === 'hotelEntrance') return enterHotel();
     if (item.type === 'hotelExit') return exitHotel();
+    if (item.type === 'hotelAmenity') {
+      const messages = { bar: 'Velvet Bar is open late. Take a seat and meet the crowd.', restaurant: 'Night Dining is serving a full late menu.', lounge: 'VIP Lounge access granted. The music is low and the seating is private.', security: 'Security desk checked. Cameras and access logs are active.', service: 'Service wing stocked: laundry, maintenance, storage, and staff supplies.', stairs: 'Stairwell connects to guest floors, rooftop access, and the service basement.' };
+      toast(messages[item.subtype] || 'This hotel area is ready for use.');
+      return;
+    }
     if (item.type === 'roomExit') return exitRoom();
     if (item.type === 'rooms') {
       $('#room-panel').classList.add('open');
