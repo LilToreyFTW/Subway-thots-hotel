@@ -3,6 +3,7 @@ import { SeededRandom, hashString } from '../core/SeededRandom.js';
 import { GeoCoordinateSystem } from './GeoCoordinateSystem.js';
 import { RegionCatalog } from './RegionCatalog.js';
 import { StructuralGrid } from './StructuralGrid.js';
+import { createMultiFloorPlan } from './MultiFloorPlan.js';
 
 const disposeChunk = (node) => {
   // Chunk geometry/materials are intentionally shared and owned by the manager;
@@ -149,6 +150,8 @@ export class WorldChunkManager {
   }
 
   createStructure({ random, width, depth, height, color, position }) {
+    const plan = createMultiFloorPlan(height, { hasElevator: width >= 16, hasStairs: true });
+    height = plan.alignedHeight;
     const group = new THREE.Group();
     const facade = this.material(color, .7, .08);
     const dark = this.material(0x20262b, .82, .18);
@@ -160,16 +163,20 @@ export class WorldChunkManager {
     add(this.geometries.building, facade, 0, height / 2, 0, width, height, depth);
     add(this.geometries.facade, dark, 0, .45, 0, width + .28, .9, depth + .28);
     add(this.geometries.roof, dark, 0, height + .52, 0, width + .55, 1.04, depth + .55);
-    const floors = Math.max(2, Math.floor(height / 4.2));
-    for (let floor = 1; floor < floors; floor++) add(this.geometries.facade, trim, 0, floor * height / floors, 0, width + .18, .13, depth + .18);
+    const floors = plan.floorCount;
+    for (const floor of plan.floors.slice(1)) add(this.geometries.facade, trim, 0, floor.y, 0, width + .18, .13, depth + .18);
     for (const cx of [-width / 2 + .22, width / 2 - .22]) for (const cz of [-depth / 2 + .22, depth / 2 - .22]) add(this.geometries.facade, trim, cx, height / 2, cz, .24, height + .1, .24);
     const bayCount = Math.max(2, Math.floor(width / 3.4));
     for (let floor = 0; floor < floors; floor++) for (let bay = 0; bay < bayCount; bay++) {
       const x = -width / 2 + (bay + .5) * width / bayCount;
-      add(this.geometries.facade, glass, x, 1.5 + floor * height / floors, -depth / 2 - .025, width / bayCount * .58, height / floors * .48, .06);
+      add(this.geometries.facade, glass, x, 1.5 + floor * plan.floorHeight, -depth / 2 - .025, width / bayCount * .58, plan.floorHeight * .48, .06);
     }
     // A shallow, road-facing storefront canopy gives each generated block an entrance hierarchy.
     add(this.geometries.facade, trim, 0, 2.55, -depth / 2 - .5, Math.min(5.5, width * .4), .16, .85);
+    // Vertical cores use the same floor indices as the facade slabs.
+    if (plan.hasElevator) add(this.geometries.facade, dark, width * .22, height / 2, depth * .16, 2.2, height, 2.2);
+    if (plan.hasStairs) add(this.geometries.facade, trim, -width * .22, height / 2, depth * .16, 2.5, height, 2.5);
+    group.userData.floorPlan = plan;
     group.position.copy(position);
     return group;
   }
