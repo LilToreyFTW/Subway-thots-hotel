@@ -15,6 +15,7 @@ import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { GroundProbe } from './player/GroundProbe.js';
 import { MaterialLibrary } from './rendering/MaterialLibrary.js';
 import { createRoomPlan } from './world/RoomArchetypes.js';
+import { StructuralGrid } from './world/StructuralGrid.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -239,6 +240,7 @@ function startGame(role) {
       return (seed - 1) / 2147483646;
     };
   })();
+  const structuralGrid = new StructuralGrid(2, .25);
 
   const materialLibrary = new MaterialLibrary();
   const materials = materialLibrary.named();
@@ -628,6 +630,7 @@ function startGame(role) {
   }
 
   function addBuilding(x, z, width, depth, height, color, allowCollider = true) {
+    ({ x, z, width, depth, height } = structuralGrid.footprint({ x, z, width, depth, height }));
     const structure = new THREE.Group();
     structure.position.set(x, 0, z);
     city.add(structure);
@@ -953,6 +956,7 @@ function startGame(role) {
   }
 
   function addHotelZone({ name, type, x, z, width, depth, accent = 0xb98c45 }) {
+    ({ x, z, width, depth } = structuralGrid.footprint({ x, z, width, depth }));
     const zone = new THREE.Group();
     zone.position.set(x, 0, z);
     const floor = material(type === 'service' ? 0x3a4144 : 0x473a34, .7, .08);

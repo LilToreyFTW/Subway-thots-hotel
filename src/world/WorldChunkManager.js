@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { SeededRandom, hashString } from '../core/SeededRandom.js';
 import { GeoCoordinateSystem } from './GeoCoordinateSystem.js';
 import { RegionCatalog } from './RegionCatalog.js';
+import { StructuralGrid } from './StructuralGrid.js';
 
 const disposeChunk = (node) => {
   // Chunk geometry/materials are intentionally shared and owned by the manager;
@@ -34,6 +35,7 @@ export class WorldChunkManager {
       facade: new THREE.BoxGeometry(1, 1, 1),
     };
     this.materialPool = new Map();
+    this.structuralGrid = new StructuralGrid(2, .25);
   }
 
   material(color, roughness = 0.76, metalness = 0.04) {
@@ -130,9 +132,9 @@ export class WorldChunkManager {
     corners.forEach(([sx, sz], index) => {
       const count = 2 + random.int(0, 2);
       for (let i = 0; i < count; i++) {
-        const width = random.range(12, 24);
-        const depth = random.range(12, 24);
-        const height = random.range(9, 42);
+        const width = this.structuralGrid.snapSize(random.range(12, 24));
+        const depth = this.structuralGrid.snapSize(random.range(12, 24));
+        const height = this.structuralGrid.snapSize(random.range(9, 42));
         const position = new THREE.Vector3(sx * (roadWidth / 2 + width / 2 + 8 + random.range(0, 16)), 0, sz * (roadWidth / 2 + depth / 2 + 8 + random.range(0, 16)));
         chunk.add(this.createStructure({ random, width, depth, height, color: random.pick(palette), position }));
       }
