@@ -16,6 +16,10 @@ export class PlayerModel {
     const gltf = await new GLTFLoader().loadAsync(url);
     const model = gltf.scene;
     model.scale.setScalar(1);
+    // Soldier.glb is authored facing its local -Z axis while the controller
+    // treats local +Z as forward. Correct that asset-space offset once so the
+    // host rotation always points the visible body in its travel direction.
+    model.rotation.y = Math.PI;
     this.appearance.apply(model);
     model.traverse((node) => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
     this.host.children.forEach((child) => { if (child.userData?.keepVisible !== true) child.visible = false; });
