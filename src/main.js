@@ -10,6 +10,7 @@ import { ThirdPersonCameraController } from './camera/ThirdPersonCameraControlle
 import { WorldChunkManager } from './world/WorldChunkManager.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
 import { PlayerModel } from './player/PlayerModel.js';
+import { NpcModelLibrary } from './npc/NpcModelLibrary.js';
 import { PlayerController } from './player/PlayerController.js';
 import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { GroundProbe } from './player/GroundProbe.js';
@@ -947,11 +948,16 @@ function startGame(role) {
       ['Brielle', 'Concierge friend', -16, 64], ['Milan', 'Late-night guest', 15, -44], ['Avery', 'Hotel visitor', -61, -63],
     ];
     cityNightlife.forEach(([name, socialRole, x, z], index) => {
-      const npc = makeCharacter({ gender: 'female', coat: [0x4a3131,0x283947,0x4c493f,0x2d4540,0x56314f,0x3b2e52][index % 6], skin: [0x8c543b,0xc28163,0x6d402f,0xd0a086,0x9d6045][index % 5], hair: [0x1a1210,0x42271e,0x15171a,0x6a4329][index % 4], accent: [0xd1a15a,0x7db9c2,0xc76a92][index % 3] });
+      const coat = [0x4a3131,0x283947,0x4c493f,0x2d4540,0x56314f,0x3b2e52][index % 6];
+      const skin = [0x8c543b,0xc28163,0x6d402f,0xd0a086,0x9d6045][index % 5];
+      const hair = [0x1a1210,0x42271e,0x15171a,0x6a4329][index % 4];
+      const accent = [0xd1a15a,0x7db9c2,0xc76a92][index % 3];
+      const npc = makeCharacter({ gender: 'female', coat, skin, hair, accent });
       npc.position.set(x, 0, z);
       npc.rotation.y = seeded() * Math.PI * 2;
       npc.userData.name = name;
       npc.userData.socialRole = socialRole;
+      npc.userData.appearance = { skin, clothing: coat, hair, accessory: accent };
       npc.userData.base = new THREE.Vector3(x, 0, z);
       npc.userData.radius = 1.4 + seeded() * 2;
       city.add(npc);
@@ -1149,6 +1155,7 @@ function startGame(role) {
       npc.position.set(x, 0, z);
       npc.userData.name = name;
       npc.userData.socialRole = socialRole;
+      npc.userData.appearance = { skin, clothing: coat, hair: [0x1a1210,0x42271e,0x15171a,0x6a4329][index % 4], accessory: [0xd1a15a,0x7db9c2,0xc76a92][index % 3] };
       npc.userData.base = new THREE.Vector3(x, 0, z);
       npc.userData.radius = 1.3;
       hotel.add(npc);
@@ -1283,6 +1290,10 @@ function startGame(role) {
   const playerModel = new PlayerModel(player, { clothing: 0x5d8197, shoes: 0x303940, accessory: 0xe0b96d });
   playerModel.load().catch((error) => console.warn('GLB player model unavailable; keeping fallback avatar.', error));
   const playerController = new PlayerController(GameConfig.player, playerModel);
+  const npcModelLibrary = new NpcModelLibrary();
+  npcModelLibrary.load()
+    .then(() => npcs.forEach((npc) => npcModelLibrary.attach(npc, npc.userData.appearance)))
+    .catch((error) => console.warn('NPC GLB model unavailable; keeping fallback NPCs.', error));
 
   // The original hotel district remains hand-authored. Beyond it, the streamed
   // layer uses WGS84 anchored chunks and can later swap procedural lots for
@@ -1982,6 +1993,7 @@ function startGame(role) {
       npc.position.z = base.z + Math.cos(angle * 0.83) * npc.userData.radius;
       npc.rotation.y = angle + Math.PI / 2;
       const npcWalk = Math.sin(elapsed * 4.5 + npc.userData.walkPhase) * 0.26;
+      npcModelLibrary.update(npc, delta, true);
       if (npc.userData.legs?.[0]) npc.userData.legs[0].rotation.x = npcWalk;
       if (npc.userData.legs?.[1]) npc.userData.legs[1].rotation.x = -npcWalk;
     }
