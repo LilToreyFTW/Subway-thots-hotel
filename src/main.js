@@ -1553,8 +1553,11 @@ function startGame(role) {
       player.position.x = THREE.MathUtils.clamp(nextX, -8, 8);
       player.position.z = THREE.MathUtils.clamp(nextZ, -7.8, 7.4);
     }
+    let turnDirection = 0;
     if (moving) {
       const desiredRotation = Math.atan2(dx, dz);
+      const rotationDelta = Math.atan2(Math.sin(desiredRotation - player.rotation.y), Math.cos(desiredRotation - player.rotation.y));
+      turnDirection = rotationDelta;
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
     player.position.y += displacement.y;
@@ -1571,7 +1574,7 @@ function startGame(role) {
     if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7 - idle;
     if (player.userData.torso) player.userData.torso.rotation.x = moving ? Math.min(0.12, Math.abs(walk) * 0.08) : idle * 0.22;
     if (player.userData.head) player.userData.head.rotation.y = moving ? 0 : Math.sin(clock.elapsedTime * 0.55) * 0.06;
-    return { dx, dz, moving, sprinting: canSprint, airborne: !grounded };
+    return { dx, dz, moving, sprinting: canSprint, airborne: !grounded, verticalVelocity: playerController.motor.velocity.y, turnDirection };
   }
 
   function updateCamera(delta) {

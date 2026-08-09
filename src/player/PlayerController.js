@@ -10,6 +10,7 @@ export class PlayerController {
   }
   step(input) { return this.motor.step(input); }
   land() { this.motor.land(); }
+  requestAction(state, duration) { return this.stateMachine.request(state, duration); }
   updateVisual(delta, movement) {
     const state = this.stateMachine.update({ ...movement, verticalVelocity: this.motor.velocity.y, delta });
     this.animations.update(delta, state.state);
