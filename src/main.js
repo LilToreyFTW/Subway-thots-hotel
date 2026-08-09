@@ -3,6 +3,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
 import { GameConfig } from './config/GameConfig.js';
@@ -15,6 +17,8 @@ import { PlayerController } from './player/PlayerController.js';
 import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { GroundProbe } from './player/GroundProbe.js';
 import { MaterialLibrary } from './rendering/MaterialLibrary.js';
+import { TextureLibrary } from './rendering/TextureLibrary.js';
+import { DecalSystem } from './world/DecalSystem.js';
 import { EnvironmentLighting, LightingProfile } from './rendering/EnvironmentLighting.js';
 import { createRoomPlan } from './world/RoomArchetypes.js';
 import { StructuralGrid } from './world/StructuralGrid.js';
@@ -176,10 +180,17 @@ function startGame(role) {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  if (quality === 'high') {
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.13, 0.48, 0.88));
-  }
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), quality === 'high' ? 0.12 : 0.06, 0.42, 0.9);
+  composer.addPass(bloomPass);
+  const fxaaPass = new ShaderPass(FXAAShader);
+  composer.addPass(fxaaPass);
   composer.addPass(new OutputPass());
+  const updatePostProcessing = () => {
+    const ratio = renderer.getPixelRatio();
+    fxaaPass.material.uniforms.resolution.value.set(1 / (innerWidth * ratio), 1 / (innerHeight * ratio));
+    bloomPass.setSize(innerWidth * ratio, innerHeight * ratio);
+  };
+  updatePostProcessing();
 
   const clock = new THREE.Clock();
   const city = new THREE.Group();
@@ -261,6 +272,8 @@ function startGame(role) {
 
   const materialLibrary = new MaterialLibrary();
   const materials = materialLibrary.named();
+  const textureLibrary = new TextureLibrary();
+  const decals = new DecalSystem();
 
   function material(color, roughness = 0.66, metalness = 0.05) {
     return materialLibrary.standard(color, roughness, metalness);
@@ -774,8 +787,11 @@ function startGame(role) {
   }
 
   function addCity() {
-    const cityFloor = box(city, 0, -0.36, 0, 220, 0.7, 220, materials.asphalt, false);
+    const cityFloor = box(city, 0, -0.36, 0, 220, 0.7, 220, textureLibrary.withRepeat(materials.asphalt, 'asphalt', 44), false);
     cityFloors.push(cityFloor);
+    decals.floor(city, 7, .03, -23, 8, 4, { kind: 'water', rotation: .35 });
+    decals.floor(city, -32, .03, 18, 5, 3, { kind: 'grime', rotation: -.5 });
+    decals.floor(city, -45, .04, 7.8, 3.6, 1.2, { kind: 'marking', label: '24' });
     const roadPositions = [-72, -24, 24, 72];
     const roadMaterial = material(0x171c20, 0.34, 0.06);
     for (const p of roadPositions) {
@@ -1023,8 +1039,10 @@ function startGame(role) {
   }
 
   function addHotelInterior() {
-    const hotelFloor = box(hotel, 0, -0.3, 0, 48, 0.6, 40, materials.wetConcrete);
+    const hotelFloor = box(hotel, 0, -0.3, 0, 48, 0.6, 40, textureLibrary.withRepeat(materials.wetConcrete, 'tile', 12, 10));
     hotelFloors.push(hotelFloor);
+    decals.floor(hotel, 0, .03, 8, 5, 2.5, { kind: 'marking', label: 'S / T / H' });
+    decals.floor(hotel, 15.8, .03, 10.5, 3.2, 2.2, { kind: 'grime' });
     box(hotel, 0, 7.5, -19.5, 48, 15, 1, materials.hotelStone);
     box(hotel, -23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
     box(hotel, 23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
@@ -1187,6 +1205,7 @@ function startGame(role) {
     for (const x of [-1.4, 2.8, 7]) box(suite, x, 4.8, -8.42, 0.13, 6, 0.18, materials.darkMetal);
 
     box(suite, -3.2, 0.5, -2.4, 5.7, 0.8, 6.6, material(0x25272c, 0.69));
+    decals.floor(suite, 3.7, .03, -1.8, 2.8, 1.8, { kind: 'water', rotation: .2 });
     box(suite, -3.2, 1.02, -2.4, 5.35, 0.42, 6.2, materials.linen);
     box(suite, -3.2, 1.25, -3.65, 5.2, 0.26, 3.2, material(accent, 0.86));
     box(suite, -3.2, 2.8, -5.6, 5.8, 3.5, 0.35, material(0x3a2d2b, 0.74));
@@ -1251,11 +1270,26 @@ function startGame(role) {
     rainDrops.push(points);
   }
 
+  function addIndoorAtmosphere() {
+    const count = quality === 'high' ? 260 : 120;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (seeded() - .5) * 42;
+      positions[i * 3 + 1] = 1 + seeded() * 6;
+      positions[i * 3 + 2] = (seeded() - .5) * 34;
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const dust = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0xffd7a0, size: .035, transparent: true, opacity: .18, depthWrite: false }));
+    hotel.add(dust);
+  }
+
   addSky();
   const environmentLighting = addLighting();
   addCity();
   addHotelInterior();
   addRain();
+  addIndoorAtmosphere();
 
   const player = makeCharacter({
     gender: onlineProfile?.gender || (role === 'manager' ? 'female' : 'male'),
@@ -1384,6 +1418,7 @@ function startGame(role) {
     hotel.visible = nextMode === 'hotel';
     suite.visible = nextMode === 'room';
     environmentLighting.apply(nextMode === 'hotel' ? LightingProfile.HOTEL_LOBBY : nextMode === 'room' ? LightingProfile.HOTEL_ROOM : LightingProfile.CITY);
+    updateAmbienceProfile();
     parent.attach(player);
     player.position.copy(position);
     nearby = null;
@@ -1680,8 +1715,18 @@ function startGame(role) {
     filter.frequency.value = 1400;
     rain.connect(filter).connect(master);
     rain.start();
-    ambience = { context, hum, rain };
+    ambience = { context, hum, rain, filter, humGain, master };
+    updateAmbienceProfile();
     $('#sound-toggle').textContent = 'SOUND: ON';
+  }
+
+  function updateAmbienceProfile() {
+    if (!ambience) return;
+    const profile = mode === 'room' ? { hum: 66, filter: 850, level: .055 } : mode === 'hotel' ? { hum: 58, filter: 1050, level: .06 } : { hum: 52, filter: 1450, level: .07 };
+    const now = ambience.context.currentTime;
+    ambience.hum.frequency.linearRampToValueAtTime(profile.hum, now + .4);
+    ambience.filter.frequency.linearRampToValueAtTime(profile.filter, now + .4);
+    ambience.master.gain.linearRampToValueAtTime(profile.level, now + .4);
   }
 
   function appendChat(displayName, text, system = false) {
@@ -2107,6 +2152,7 @@ function startGame(role) {
     camera.updateProjectionMatrix();
     updateRendererSize();
     composer.setSize(innerWidth, innerHeight);
+    updatePostProcessing();
   });
 
 
