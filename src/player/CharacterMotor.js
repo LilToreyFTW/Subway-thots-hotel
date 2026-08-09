@@ -20,4 +20,10 @@ export class CharacterMotor {
   }
 
   land() { this.grounded = true; this.velocity.y = 0; }
+  knockback(direction, force = 7.5) {
+    this.velocity.x = direction.x * force;
+    this.velocity.z = direction.z * force;
+    this.velocity.y = Math.max(this.velocity.y, 3.2);
+    this.grounded = false;
+  }
 }

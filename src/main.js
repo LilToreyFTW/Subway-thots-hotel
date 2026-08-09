@@ -11,6 +11,7 @@ import { WorldChunkManager } from './world/WorldChunkManager.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
 import { PlayerModel } from './player/PlayerModel.js';
 import { PlayerController } from './player/PlayerController.js';
+import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -209,6 +210,10 @@ function startGame(role) {
   let timeOfNight = 23 * 60 + 48;
   const keys = inputController.keys;
   const cityColliders = [];
+  const hotelColliders = [];
+  const suiteColliders = [];
+  const playerCollision = new CapsuleCollisionWorld({ radius: GameConfig.player.radius, height: GameConfig.player.height });
+  let ragdollUntil = 0;
   const interactables = [];
   const npcs = [];
   const vehicles = [];
@@ -598,6 +603,7 @@ function startGame(role) {
     const metroSign = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 1.1), new THREE.MeshBasicMaterial({ map: labelTexture('24TH STREET', '#d9d9d5', '#20262a') }));
     metroSign.position.set(0, 3.65, 2.82);
     metro.add(metroSign);
+    cityColliders.push({ minX: -49.3, maxX: -40.7, minZ: 2.1, maxZ: 7.9 });
     interactables.push({ mode: 'city', type: 'jobBoard', position: new THREE.Vector3(-45, 0, 8.3), label: 'View courier jobs' });
 
     const foodStand = new THREE.Group();
@@ -609,6 +615,7 @@ function startGame(role) {
     const foodSign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.72), new THREE.MeshBasicMaterial({ map: labelTexture('NIGHT BITES', '#ffe0a0', '#681e2b'), transparent: false }));
     foodSign.position.set(0, 2.75, 0.02);
     foodStand.add(foodSign);
+    cityColliders.push({ minX: 12.1, maxX: 15.9, minZ: -19.1, maxZ: -16.9 });
     interactables.push({ mode: 'city', type: 'foodStand', position: new THREE.Vector3(14, 0, -16.6), label: 'Buy a hot meal · $18' });
 
     const neonWords = ['OPEN LATE', 'CITY CLUB', 'VINYL', '24 HOUR'];
@@ -640,6 +647,9 @@ function startGame(role) {
       bench.position.set(x, 0, z);
       bench.rotation.y = rotation;
       city.add(bench);
+      const halfX = Math.abs(Math.cos(rotation)) * 1.3 + Math.abs(Math.sin(rotation)) * .35;
+      const halfZ = Math.abs(Math.sin(rotation)) * 1.3 + Math.abs(Math.cos(rotation)) * .35;
+      cityColliders.push({ minX: x - halfX, maxX: x + halfX, minZ: z - halfZ, maxZ: z + halfZ });
     }
 
     [[62,-24],[-24,62],[62,62]].forEach(([x,z], index) => {
@@ -725,6 +735,12 @@ function startGame(role) {
     sofa.position.set(x, 0, z);
     sofa.rotation.y = rotation;
     parent.add(sofa);
+    const colliders = parent === hotel ? hotelColliders : parent === suite ? suiteColliders : null;
+    if (colliders) {
+      const halfX = Math.abs(Math.cos(rotation)) * 1.6 + Math.abs(Math.sin(rotation)) * .58;
+      const halfZ = Math.abs(Math.sin(rotation)) * 1.6 + Math.abs(Math.cos(rotation)) * .58;
+      colliders.push({ minX: x - halfX, maxX: x + halfX, minZ: z - halfZ, maxZ: z + halfZ });
+    }
   }
 
   function addHotelInterior() {
@@ -758,6 +774,7 @@ function startGame(role) {
     box(desk, 0, 1.5, 0, 11.3, 0.14, 2.45, materials.gold);
     desk.position.set(0, 0, -12.2);
     hotel.add(desk);
+    hotelColliders.push({ minX: -5.5, maxX: 5.5, minZ: -13.4, maxZ: -11 });
     const deskSign = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.25), new THREE.MeshBasicMaterial({ map: labelTexture('RECEPTION', '#d9b66f', '#171719') }));
     deskSign.position.set(0, 4.9, -19.02);
     hotel.add(deskSign);
@@ -1506,13 +1523,6 @@ function startGame(role) {
     if (nearby) $('#context-action').textContent = nearby.item.label;
   }
 
-  function cityBlocked(x, z) {
-    for (const collider of cityColliders) {
-      if (x > collider.minX && x < collider.maxX && z > collider.minZ && z < collider.maxZ) return true;
-    }
-    return false;
-  }
-
   function movePlayer(delta) {
     let inputX = 0;
     let inputZ = 0;
@@ -1541,11 +1551,13 @@ function startGame(role) {
       jump: jumpQueued,
     });
     jumpQueued = false;
-    const nextX = player.position.x + displacement.x;
-    const nextZ = player.position.z + displacement.z;
+    const activeColliders = mode === 'city' ? cityColliders : mode === 'hotel' ? hotelColliders : suiteColliders;
+    const collision = playerCollision.move(player.position, displacement.x, displacement.z, activeColliders);
+    const nextX = collision.x;
+    const nextZ = collision.z;
     if (mode === 'city') {
-      if (!cityBlocked(nextX, player.position.z)) player.position.x = THREE.MathUtils.clamp(nextX, -100000, 100000);
-      if (!cityBlocked(player.position.x, nextZ)) player.position.z = THREE.MathUtils.clamp(nextZ, -100000, 100000);
+      player.position.x = THREE.MathUtils.clamp(nextX, -100000, 100000);
+      player.position.z = THREE.MathUtils.clamp(nextZ, -100000, 100000);
     } else if (mode === 'hotel') {
       player.position.x = THREE.MathUtils.clamp(nextX, -22, 22);
       player.position.z = THREE.MathUtils.clamp(nextZ, -18, 18);
@@ -1561,8 +1573,9 @@ function startGame(role) {
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
     player.position.y += displacement.y;
-    if (player.position.y <= 0) { player.position.y = 0; playerController.land(); }
-    const grounded = player.position.y <= 0.001;
+    const floor = playerCollision.groundHeightAt(player.position.x, player.position.z);
+    if (player.position.y <= floor) { player.position.y = floor; playerController.land(); }
+    const grounded = player.position.y <= floor + .001;
     const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);
     const walk = moving && grounded ? Math.sin(cycle) * 0.56 : 0;
     const legs = player.userData.legs || [];
@@ -1574,7 +1587,7 @@ function startGame(role) {
     if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7 - idle;
     if (player.userData.torso) player.userData.torso.rotation.x = moving ? Math.min(0.12, Math.abs(walk) * 0.08) : idle * 0.22;
     if (player.userData.head) player.userData.head.rotation.y = moving ? 0 : Math.sin(clock.elapsedTime * 0.55) * 0.06;
-    return { dx, dz, moving, sprinting: canSprint, airborne: !grounded, verticalVelocity: playerController.motor.velocity.y, turnDirection };
+    return { dx, dz, moving, sprinting: canSprint, airborne: !grounded, verticalVelocity: playerController.motor.velocity.y, turnDirection, blocked: collision.hit };
   }
 
   function updateCamera(delta) {
@@ -1631,7 +1644,18 @@ function startGame(role) {
       if (vehicle.position.z > 106) vehicle.position.z = -106;
       if (vehicle.position.z < -106) vehicle.position.z = 106;
       vehicle.rotation.y = vehicle.userData.direction > 0 ? 0 : Math.PI;
+      const hitX = Math.abs(player.position.x - vehicle.position.x) < 1.18;
+      const hitZ = Math.abs(player.position.z - vehicle.position.z) < 2.05;
+      if (mode === 'city' && hitX && hitZ && elapsed > ragdollUntil) {
+        const push = new THREE.Vector3(player.position.x - vehicle.position.x, 0, player.position.z - vehicle.position.z).normalize();
+        if (push.lengthSq() < .01) push.set(0, 0, vehicle.userData.direction);
+        playerController.motor.knockback(push);
+        ragdollUntil = elapsed + .65;
+        toast('Vehicle impact — knocked down');
+      }
     }
+    if (ragdollUntil > elapsed) player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, -.62, .18);
+    else player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, 0, .16);
     for (const rain of rainDrops) {
       const positions = rain.geometry.attributes.position.array;
       for (let i = 1; i < positions.length; i += 3) {
