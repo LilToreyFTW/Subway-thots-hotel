@@ -273,6 +273,42 @@ function startGame(role) {
     return mesh;
   }
 
+  function addCafeTable(parent, x, z, { top = materials.wood, trim = materials.gold } = {}) {
+    const table = new THREE.Group();
+    // A layered tabletop, apron, four legs, cross-braces, and adjustable feet.
+    box(table, 0, 1.02, 0, 1.6, 0.12, 1.05, top);
+    box(table, 0, .93, 0, 1.48, .12, .92, trim, false);
+    for (const sx of [-.63, .63]) for (const sz of [-.38, .38]) {
+      cylinder(table, sx, .49, sz, .055, .9, materials.darkMetal, 10);
+      cylinder(table, sx, .035, sz, .09, .06, trim, 10);
+    }
+    box(table, 0, .42, 0, 1.2, .07, .07, materials.darkMetal, false);
+    box(table, 0, .42, 0, .07, .07, .72, materials.darkMetal, false);
+    table.position.set(x, 0, z);
+    parent.add(table);
+    return table;
+  }
+
+  function addVendingMachine(parent, x, z, accent = 0x4dbbc9) {
+    const machine = new THREE.Group();
+    const cabinet = material(0x20282d, .36, .7);
+    const trim = new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: .75, roughness: .25, metalness: .5 });
+    box(machine, 0, 1.42, 0, 1.34, 2.72, .72, cabinet);
+    box(machine, 0, 1.54, .374, 1.08, 1.64, .035, new THREE.MeshStandardMaterial({ color: 0x10161a, roughness: .12, metalness: .32 }));
+    box(machine, .43, 1.54, .406, .19, 1.48, .055, trim, false);
+    box(machine, 0, .74, .41, 1.05, .34, .07, material(0x101719, .3, .4), false);
+    for (let row = 0; row < 3; row++) for (let column = 0; column < 4; column++) {
+      const product = box(machine, -.33 + column * .22, 1.95 - row * .31, .41, .15, .16, .04, material([0xb34a4d, 0xd29a45, 0x4c92a5, 0x798c4e][(row + column) % 4], .5), false);
+      product.rotation.z = (column % 2 ? .08 : -.05);
+    }
+    const display = box(machine, .42, 2.37, .42, .18, .18, .04, new THREE.MeshBasicMaterial({ color: 0xcdf5ff }), false);
+    box(machine, .42, 1.93, .42, .15, .35, .035, material(0x111416, .3, .65), false);
+    for (const side of [-.47, .47]) box(machine, side, .07, 0, .18, .12, .7, materials.darkMetal, false);
+    machine.position.set(x, 0, z);
+    parent.add(machine);
+    return machine;
+  }
+
   function labelTexture(text, foreground = '#e9c27b', background = '#111519', width = 768, height = 180) {
     const label = document.createElement('canvas');
     label.width = width;
@@ -616,6 +652,9 @@ function startGame(role) {
     foodStand.position.set(14, 0, -18);
     city.add(foodStand);
     box(foodStand, 0, 0.75, 0, 3.4, 1.5, 1.8, material(0x6f3035, 0.55, 0.2));
+    box(foodStand, 0, .78, .93, 3.05, .95, .08, material(0x272324, .4, .35), false);
+    box(foodStand, 0, 1.45, .98, 2.7, .3, .05, material(0xd4a34f, .32, .46), false);
+    for (let i = 0; i < 3; i++) cylinder(foodStand, -1 + i, 1.74, .98, .12, .12, material([0xd16750, 0xe0b657, 0x629e83][i], .5), 12);
     box(foodStand, 0, 2.45, 0, 4.2, 0.18, 2.5, material(0xd4a34f, 0.38, 0.35));
     for (const x of [-1.55, 1.55]) cylinder(foodStand, x, 1.6, 0, 0.07, 3.2, materials.darkMetal, 10);
     const foodSign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.72), new THREE.MeshBasicMaterial({ map: labelTexture('NIGHT BITES', '#ffe0a0', '#681e2b'), transparent: false }));
@@ -650,6 +689,11 @@ function startGame(role) {
       box(bench, 0, 0.55, 0, 2.5, 0.18, 0.55, materials.wood);
       box(bench, 0, 1.05, 0.25, 2.5, 0.75, 0.14, materials.wood);
       for (const side of [-1,1]) box(bench, side * 0.9, 0.28, 0, 0.12, 0.55, 0.45, materials.darkMetal);
+      for (const side of [-1, 1]) {
+        box(bench, side * 1.13, .75, .06, .08, .13, .68, materials.darkMetal, false);
+        cylinder(bench, side * .9, .06, 0, .09, .08, materials.darkMetal, 10);
+      }
+      box(bench, 0, .26, -.05, 1.9, .07, .07, materials.darkMetal, false);
       bench.position.set(x, 0, z);
       bench.rotation.y = rotation;
       city.add(bench);
@@ -779,6 +823,12 @@ function startGame(role) {
     const desk = new THREE.Group();
     box(desk, 0, 0.72, 0, 11, 1.45, 2.2, materials.wood);
     box(desk, 0, 1.5, 0, 11.3, 0.14, 2.45, materials.gold);
+    box(desk, 0, .4, 1.13, 10.25, .68, .09, material(0x262b2d, .48, .35), false);
+    for (const x of [-4.75, -2.4, 0, 2.4, 4.75]) box(desk, x, .7, 1.17, .07, 1.15, .08, materials.gold, false);
+    for (const x of [-3.5, .4, 3.5]) {
+      box(desk, x, 1.68, -.15, .86, .06, .52, material(0x111a1d, .2, .55), false);
+      box(desk, x, 1.72, .14, .64, .04, .04, new THREE.MeshBasicMaterial({ color: 0x84d4e2 }), false);
+    }
     desk.position.set(0, 0, -12.2);
     hotel.add(desk);
     hotelColliders.push({ minX: -5.5, maxX: 5.5, minZ: -13.4, maxZ: -11 });
@@ -795,6 +845,10 @@ function startGame(role) {
     addFurniture(hotel, 13, 6, -Math.PI / 2);
     addFurniture(hotel, -13, -5, Math.PI / 2);
     addFurniture(hotel, 13, -5, -Math.PI / 2);
+    addCafeTable(hotel, -13, 1.2);
+    addCafeTable(hotel, 13, 1.2);
+    addVendingMachine(hotel, -20.6, -7.5, 0xbd6ab5);
+    hotelColliders.push({ minX: -21.35, maxX: -19.85, minZ: -8, maxZ: -7 });
     for (const [x, z] of [[-13,1],[13,1],[-13,-10],[13,-10]]) {
       cylinder(hotel, x, 0.42, z, 0.72, 0.18, materials.gold, 24);
       cylinder(hotel, x, 0.22, z, 0.08, 0.45, materials.darkMetal, 12);
@@ -892,6 +946,7 @@ function startGame(role) {
     suite.add(cityGlow);
 
     addFurniture(suite, 4.8, 2.5, Math.PI);
+    addCafeTable(suite, 4.8, .9, { top: material(0x4b342c, .62), trim: materials.gold });
     box(suite, 4.8, 0.34, -0.2, 2.5, 0.22, 1.3, materials.gold);
     cylinder(suite, 4.8, 0.18, -0.2, 0.09, 0.4, materials.darkMetal, 12);
     const art = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 2.5), new THREE.MeshBasicMaterial({ map: labelTexture(`SUITE ${String(number).padStart(2, '0')}`, '#d2ad6d', '#22272a', 640, 360) }));
