@@ -16,6 +16,7 @@ import { GroundProbe } from './player/GroundProbe.js';
 import { MaterialLibrary } from './rendering/MaterialLibrary.js';
 import { createRoomPlan } from './world/RoomArchetypes.js';
 import { StructuralGrid } from './world/StructuralGrid.js';
+import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -226,6 +227,7 @@ function startGame(role) {
   const vehicles = [];
   const remotePlayers = new Map();
   const rainDrops = [];
+  const doors = [];
   const tempWorld = new THREE.Vector3();
   const targetCamera = new THREE.Vector3();
   const cameraLook = new THREE.Vector3();
@@ -408,6 +410,15 @@ function startGame(role) {
       for (let i = 0; i < 3; i++) box(shelf, -.4 + i * .4, y + .16, .04 + (variant.index - 1.5) * .025, .22, .22 + ((i + variant.index) % 2) * .12, .18, material([0x657687, 0x8b664c, 0x596f58][(i + variant.index) % 3], .55 + variant.wear * .05), false);
     }
     shelf.position.set(x, 0, z); shelf.rotation.y = rotation; shelf.scale.x = variant.width; shelf.userData.variant = variant; parent.add(shelf); return shelf;
+  }
+
+  function addDoor(parent, x, y, z, { style = 'hotel', sliding = false } = {}) {
+    const pivot = new THREE.Group(); pivot.position.set(x, y, z); parent.add(pivot);
+    const materialByStyle = { hotel: materials.wood, glass: materials.glass, metal: materials.darkMetal, service: material(0x4e5c60, .35, .7), subway: material(0x313d44, .32, .72) };
+    const leaf = box(pivot, sliding ? 0 : .58, 1.2, 0, 1.16, 2.4, .13, materialByStyle[style] || materials.wood);
+    if (style !== 'glass') cylinder(pivot, sliding ? .38 : 1.02, 1.2, .1, .06, .08, materials.gold, 10).rotation.z = Math.PI / 2;
+    const controller = new DoorController(pivot, { type: style, mode: sliding ? 'sliding' : 'hinged', openAmount: sliding ? 1.22 : Math.PI / 2 });
+    doors.push({ controller, position: new THREE.Vector3(x, 0, z), style }); return controller;
   }
 
   function labelTexture(text, foreground = '#e9c27b', background = '#111519', width = 768, height = 180) {
@@ -1067,6 +1078,8 @@ function startGame(role) {
       box(hotel, x, 3, -18.92, 6, 5.9, 0.18, elevatorMat);
       box(hotel, x, 6.15, -18.75, 6.4, 0.32, 0.42, materials.gold);
     }
+    addDoor(hotel, -20.7, 0, 1.1, { style: 'service' });
+    addDoor(hotel, 20.7, 0, 1.1, { style: 'metal' });
 
     // Purposeful hotel wings branch off the open main hall; their front edges
     // remain open so every space is discoverable without loading a new scene.
@@ -1196,6 +1209,7 @@ function startGame(role) {
     box(suite, 0, 4.84, 8.5, 2.75, .18, .4, materials.gold, false);
     cylinder(suite, .8, 2.32, 8.34, .08, .08, materials.gold, 10).rotation.z = Math.PI / 2;
     for (const x of [-1.32, 1.32]) box(suite, x, 2.4, 8.43, .16, 4.95, .28, materials.darkMetal, false);
+    addDoor(suite, 0, 0, 8.32, { style: 'hotel' });
     suite.userData.roomPlan = roomPlan;
     interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
     interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
@@ -1436,7 +1450,10 @@ function startGame(role) {
   }
 
   function interact() {
-    if (!nearby || paused) return;
+    if (paused) return;
+    const nearestDoor = doors.filter((door) => door.controller.node.parent?.visible).sort((a, b) => a.position.distanceToSquared(player.position) - b.position.distanceToSquared(player.position))[0];
+    if (nearestDoor && nearestDoor.position.distanceTo(player.position) < 2.5) { nearestDoor.controller.toggle(); toast(`${nearestDoor.style.toUpperCase()} door ${nearestDoor.controller.state === 'opening' ? 'opening' : 'closing'}.`); return; }
+    if (!nearby) return;
     const item = nearby.item;
     if (item.type === 'hotelEntrance') return enterHotel();
     if (item.type === 'subwayInfo') { toast('24th Street Station: ticket concourse, platform, service rooms, active tunnel, and a sealed abandoned spur.'); return; }
@@ -1932,6 +1949,7 @@ function startGame(role) {
   }
 
   function updateWorld(delta, elapsed) {
+    doors.forEach((door) => door.controller.update(delta));
     if (mode === 'city' && Math.max(Math.abs(player.position.x), Math.abs(player.position.z)) > 105) {
       const rebase = worldStreamer.update(player.position);
       if (rebase) {
