@@ -147,19 +147,31 @@ function startGame(role) {
   const cameraController = new ThirdPersonCameraController(camera, GameConfig.camera);
   const audioListener = new THREE.AudioListener();
   camera.add(audioListener);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  const gl = renderer.getContext();
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    depth: true,
+    stencil: false,
+    powerPreference: 'high-performance',
+  });
   const isWebGL2 = renderer.capabilities.isWebGL2;
   const maxTextureSize = renderer.capabilities.maxTextureSize;
   const quality = isWebGL2 && maxTextureSize >= 8192 && innerWidth > 700 ? 'high' : 'balanced';
+  const pixelRatioCap = quality === 'high' ? 2 : 1.35;
+  const updateRendererSize = () => {
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap));
+    renderer.setSize(innerWidth, innerHeight);
+  };
 
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 1.7 : 1.25));
+  THREE.ColorManagement.enabled = true;
+  updateRendererSize();
+  renderer.setClearColor(0x111820, 1);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.92;
+  renderer.toneMappingExposure = quality === 'high' ? 1.04 : 0.98;
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -2081,9 +2093,8 @@ function startGame(role) {
   addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
+    updateRendererSize();
     composer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 1.7 : 1.25));
   });
 
 
