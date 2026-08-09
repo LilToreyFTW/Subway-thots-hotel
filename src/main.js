@@ -14,6 +14,7 @@ import { PlayerController } from './player/PlayerController.js';
 import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { GroundProbe } from './player/GroundProbe.js';
 import { MaterialLibrary } from './rendering/MaterialLibrary.js';
+import { createRoomPlan } from './world/RoomArchetypes.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -1129,6 +1130,7 @@ function startGame(role) {
     suite.clear();
     suiteFloors.length = 0;
     interactables.splice(0, interactables.length, ...interactables.filter((item) => item.mode !== 'room'));
+    const roomPlan = createRoomPlan(number);
     const accent = number % 3 === 0 ? 0x38566b : number % 2 ? 0x64364f : 0x4a5369;
     const suiteFloor = box(suite, 0, -0.28, 0, 18, 0.55, 18, material(0x3e302b, 0.76));
     suiteFloors.push(suiteFloor);
@@ -1153,10 +1155,12 @@ function startGame(role) {
     for (const x of [-4.6, -1.8]) box(suite, x, 1.43, -4.4, 2.1, 0.32, 1.2, materials.linen);
     for (const x of [-5.7, -.7]) cylinder(suite, x, .18, -.15, .09, .24, materials.gold, 10);
     for (const x of [-5.7, -.7]) cylinder(suite, x, .18, -4.6, .09, .24, materials.gold, 10);
-    addWallTV(suite, 8.48, 4.25, 1.3, -Math.PI / 2);
-    addFloorLamp(suite, 6.8, -5.8);
+    if (roomPlan.props.has('tv')) addWallTV(suite, 8.48, 4.25, 1.3, -Math.PI / 2);
+    if (roomPlan.props.has('lamp')) addFloorLamp(suite, 6.8, -5.8);
+    if (roomPlan.props.has('dresser')) addDisplayShelf(suite, 7.55, -4.9, Math.PI / 2);
+    if (roomPlan.props.has('bathroom')) { box(suite, 6.4, 1.6, 5.7, 3.8, 3.2, .22, materials.hotelStone); box(suite, 6.4, .82, 4.18, 1.4, 1.5, .5, material(0xe0e1db, .38)); }
+    if (roomPlan.props.has('closet')) { box(suite, 7.5, 2.3, 6.7, 1.8, 4.5, .45, materials.wood); for (const x of [7.15, 7.85]) box(suite, x, 2.3, 6.45, .04, 3.8, .05, materials.gold, false); }
     addTrashCan(suite, 7.3, 6.4);
-    addDisplayShelf(suite, 7.55, -4.9, Math.PI / 2);
 
     for (const x of [-6.6, 0.2]) {
       box(suite, x, 0.68, -2.6, 1.2, 1.25, 1.25, materials.wood);
@@ -1174,9 +1178,8 @@ function startGame(role) {
     suite.add(cityGlow);
 
     addFurniture(suite, 4.8, 2.5, Math.PI);
-    addCafeTable(suite, 4.8, .9, { top: material(0x4b342c, .62), trim: materials.gold });
-    addChair(suite, 3.75, .9, Math.PI / 2, accent);
-    addChair(suite, 5.85, .9, -Math.PI / 2, accent);
+    if (roomPlan.props.has('desk') || roomPlan.props.has('lounge')) addCafeTable(suite, 4.8, .9, { top: material(0x4b342c, .62), trim: materials.gold });
+    if (roomPlan.props.has('chair')) { addChair(suite, 3.75, .9, Math.PI / 2, accent); addChair(suite, 5.85, .9, -Math.PI / 2, accent); }
     box(suite, 4.8, 0.34, -0.2, 2.5, 0.22, 1.3, materials.gold);
     cylinder(suite, 4.8, 0.18, -0.2, 0.09, 0.4, materials.darkMetal, 12);
     const art = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 2.5), new THREE.MeshBasicMaterial({ map: labelTexture(`SUITE ${String(number).padStart(2, '0')}`, '#d2ad6d', '#22272a', 640, 360) }));
@@ -1189,6 +1192,7 @@ function startGame(role) {
     box(suite, 0, 4.84, 8.5, 2.75, .18, .4, materials.gold, false);
     cylinder(suite, .8, 2.32, 8.34, .08, .08, materials.gold, 10).rotation.z = Math.PI / 2;
     for (const x of [-1.32, 1.32]) box(suite, x, 2.4, 8.43, .16, 4.95, .28, materials.darkMetal, false);
+    suite.userData.roomPlan = roomPlan;
     interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
     interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
   }
