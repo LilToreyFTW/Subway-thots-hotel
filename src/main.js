@@ -695,18 +695,25 @@ function startGame(role) {
       vehicles.push(vehicle);
     }
 
-    const npcNames = ['Elena', 'Maya', 'Jules', 'Naomi', 'Camille', 'Ari', 'Jordan', 'Nico', 'Vivian', 'Tess'];
-    const npcSpots = [[-7,-16],[8,-13],[-32,18],[33,12],[-54,-2],[52,-22],[47,48],[-8,31],[28,-72],[-30,72]];
-    npcSpots.forEach(([x, z], index) => {
-      const npc = makeCharacter({ gender: index === 5 || index === 8 ? 'male' : 'female', coat: [0x4a3131,0x283947,0x4c493f,0x2d4540][index % 4], skin: [0x8c543b,0xc28163,0x6d402f,0xd0a086][index % 4], hair: [0x1a1210,0x42271e,0x15171a][index % 3] });
+    const cityNightlife = [
+      ['Elena', 'Nightlife guest', -7, -16], ['Maya', 'Club regular', 8, -13], ['Jules', 'Fashion stylist', -32, 18],
+      ['Naomi', 'Music promoter', 33, 12], ['Camille', 'Late-night traveler', -54, -2], ['Ari', 'Hotel visitor', 52, -22],
+      ['Vivian', 'Streetwear designer', 47, 48], ['Tess', 'Local creative', -8, 31], ['Sloane', 'VIP guest', 28, -72],
+      ['Raina', 'Nightlife host', -30, 72], ['Kiara', 'Event planner', 14, 39], ['Sabrina', 'DJ', -42, -38],
+      ['Zara', 'Bar regular', 69, 15], ['Nia', 'Photographer', -70, 31], ['Lola', 'Touring artist', 72, -54],
+      ['Brielle', 'Concierge friend', -16, 64], ['Milan', 'Late-night guest', 15, -44], ['Avery', 'Hotel visitor', -61, -63],
+    ];
+    cityNightlife.forEach(([name, socialRole, x, z], index) => {
+      const npc = makeCharacter({ gender: 'female', coat: [0x4a3131,0x283947,0x4c493f,0x2d4540,0x56314f,0x3b2e52][index % 6], skin: [0x8c543b,0xc28163,0x6d402f,0xd0a086,0x9d6045][index % 5], hair: [0x1a1210,0x42271e,0x15171a,0x6a4329][index % 4], accent: [0xd1a15a,0x7db9c2,0xc76a92][index % 3] });
       npc.position.set(x, 0, z);
       npc.rotation.y = seeded() * Math.PI * 2;
-      npc.userData.name = npcNames[index];
+      npc.userData.name = name;
+      npc.userData.socialRole = socialRole;
       npc.userData.base = new THREE.Vector3(x, 0, z);
       npc.userData.radius = 1.4 + seeded() * 2;
       city.add(npc);
       npcs.push(npc);
-      interactables.push({ mode: 'city', type: 'person', object: npc, label: `Talk to ${npcNames[index]}` });
+      interactables.push({ mode: 'city', type: 'person', object: npc, label: `Meet ${name} · ${socialRole}` });
     });
   }
 
@@ -803,20 +810,22 @@ function startGame(role) {
     });
 
     const hotelNpcData = [
-      ['Dahlia', -8, -7, 0x543240, 0xb77755],
-      ['Monique', 8, 6, 0x263b45, 0x71412f],
-      ['Iris', -17, 12, 0x4b4234, 0xd09b79],
-      ['Marcus', 15, -7, 0x2e333b, 0x744631],
+      ['Dahlia', 'Lounge guest', -8, -7, 0x543240, 0xb77755], ['Monique', 'VIP guest', 8, 6, 0x263b45, 0x71412f],
+      ['Iris', 'Hotel regular', -17, 12, 0x4b4234, 0xd09b79], ['Roxy', 'Nightlife host', 15, -7, 0x54283e, 0x9a5a43],
+      ['Selene', 'Suite guest', -13, 7, 0x333e5a, 0xc68167], ['Jade', 'Lounge guest', 13, -3, 0x385144, 0x72422f],
+      ['Mia', 'Independent adult guest', -4, 12, 0x63374d, 0xbc7d5c], ['Nyla', 'Event host', 5, -11, 0x453359, 0x5f3628],
+      ['Carmen', 'Traveling artist', -19, -2, 0x584430, 0xd1a17d], ['Raven', 'Nightlife guest', 19, 12, 0x292f43, 0x7d4b37],
     ];
-    hotelNpcData.forEach(([name, x, z, coat, skin], index) => {
-      const npc = makeCharacter({ gender: index === 3 ? 'male' : 'female', coat, skin });
+    hotelNpcData.forEach(([name, socialRole, x, z, coat, skin], index) => {
+      const npc = makeCharacter({ gender: 'female', coat, skin, hair: [0x1a1210,0x42271e,0x15171a,0x6a4329][index % 4], accent: [0xd1a15a,0x7db9c2,0xc76a92][index % 3] });
       npc.position.set(x, 0, z);
       npc.userData.name = name;
+      npc.userData.socialRole = socialRole;
       npc.userData.base = new THREE.Vector3(x, 0, z);
       npc.userData.radius = 1.3;
       hotel.add(npc);
       npcs.push(npc);
-      interactables.push({ mode: 'hotel', type: 'person', object: npc, label: `Talk to ${name}` });
+      interactables.push({ mode: 'hotel', type: 'person', object: npc, label: `Meet ${name} · ${socialRole}` });
     });
   }
 
@@ -1211,6 +1220,7 @@ function startGame(role) {
     }
     if (item.type === 'person') {
       const name = item.object.userData.name;
+      const socialRole = item.object.userData.socialRole || 'nightlife guest';
       const firstConversation = !item.object.userData.spokeToPlayer;
       item.object.userData.spokeToPlayer = true;
       if (role === 'manager') {
