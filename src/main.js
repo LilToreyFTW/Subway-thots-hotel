@@ -309,6 +309,85 @@ function startGame(role) {
     return machine;
   }
 
+  function addChair(parent, x, z, rotation = 0, upholstery = 0x3b4650) {
+    const chair = new THREE.Group();
+    const fabric = material(upholstery, .82);
+    box(chair, 0, .57, 0, .82, .13, .82, fabric);
+    box(chair, 0, 1.05, .31, .82, .82, .12, fabric);
+    for (const sx of [-.3, .3]) for (const sz of [-.3, .3]) cylinder(chair, sx, .28, sz, .045, .56, materials.darkMetal, 8);
+    box(chair, 0, .42, .31, .7, .06, .06, materials.darkMetal, false);
+    chair.position.set(x, 0, z); chair.rotation.y = rotation; parent.add(chair);
+    return chair;
+  }
+
+  function addFloorLamp(parent, x, z, accent = 0xffc987) {
+    const lamp = new THREE.Group();
+    cylinder(lamp, 0, .05, 0, .3, .1, materials.darkMetal, 16);
+    cylinder(lamp, 0, .88, 0, .045, 1.65, materials.gold, 10);
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(.34, .48, 16, 1, true), new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: .45, roughness: .7, side: THREE.DoubleSide }));
+    shade.position.y = 1.88; lamp.add(shade);
+    const glow = new THREE.PointLight(accent, quality === 'high' ? 2.4 : 1.2, 5, 2); glow.position.y = 1.78; lamp.add(glow);
+    lamp.position.set(x, 0, z); parent.add(lamp); return lamp;
+  }
+
+  function addTrashCan(parent, x, z) {
+    const can = new THREE.Group();
+    cylinder(can, 0, .47, 0, .38, .88, materials.darkMetal, 18);
+    cylinder(can, 0, .94, 0, .4, .09, materials.gold, 18);
+    cylinder(can, 0, 1.03, -.08, .09, .14, materials.darkMetal, 10);
+    for (let i = 0; i < 6; i++) box(can, Math.sin(i) * .34, .49, Math.cos(i) * .34, .025, .65, .025, materials.gold, false);
+    can.position.set(x, 0, z); parent.add(can); return can;
+  }
+
+  function addTicketMachine(parent, x, z) {
+    const kiosk = new THREE.Group();
+    box(kiosk, 0, 1.32, 0, 1.18, 2.48, .78, material(0x263239, .35, .72));
+    box(kiosk, 0, 1.8, .41, .9, .88, .04, material(0x11191e, .18, .52), false);
+    box(kiosk, 0, 2.05, .44, .66, .34, .03, new THREE.MeshBasicMaterial({ color: 0x8bd9e2 }), false);
+    box(kiosk, .31, 1.42, .44, .19, .31, .035, materials.gold, false);
+    for (let i = 0; i < 3; i++) cylinder(kiosk, -.28 + i * .18, 1.39, .45, .055, .03, material(0xd4a34f, .25, .5), 10);
+    for (const sx of [-.42, .42]) box(kiosk, sx, .08, 0, .16, .15, .72, materials.darkMetal, false);
+    kiosk.position.set(x, 0, z); parent.add(kiosk); return kiosk;
+  }
+
+  function addLuggageCart(parent, x, z) {
+    const cart = new THREE.Group();
+    box(cart, 0, .15, 0, 1.4, .12, .9, materials.gold);
+    box(cart, 0, .27, 0, 1.18, .1, .7, material(0x542f2b, .75), false);
+    for (const sx of [-.56, .56]) cylinder(cart, sx, .05, -.32, .1, .08, materials.darkMetal, 12);
+    for (const sx of [-.56, .56]) {
+      cylinder(cart, sx, 1.25, -.34, .05, 2.2, materials.gold, 10);
+      const arch = new THREE.Mesh(new THREE.TorusGeometry(.57, .05, 8, 16, Math.PI), materials.gold); arch.position.set(0, 2.25, -.34); cart.add(arch);
+    }
+    cart.position.set(x, 0, z); parent.add(cart); return cart;
+  }
+
+  function addWallTV(parent, x, y, z, rotation = 0) {
+    const tv = new THREE.Group();
+    box(tv, 0, 0, 0, 2.25, 1.34, .13, material(0x101518, .18, .62));
+    box(tv, 0, .02, .08, 1.98, 1.08, .025, new THREE.MeshBasicMaterial({ color: 0x375864 }), false);
+    box(tv, 0, -.76, -.05, .52, .23, .32, materials.darkMetal, false);
+    tv.position.set(x, y, z); tv.rotation.y = rotation; parent.add(tv); return tv;
+  }
+
+  function addRail(parent, x, z, length, rotation = 0) {
+    const rail = new THREE.Group();
+    for (const side of [-1, 1]) cylinder(rail, side * length / 2, .48, 0, .045, .95, materials.darkMetal, 10);
+    cylinder(rail, 0, .9, 0, .05, length, materials.gold, 10).rotation.z = Math.PI / 2;
+    cylinder(rail, 0, .48, 0, .04, length, materials.darkMetal, 10).rotation.z = Math.PI / 2;
+    rail.position.set(x, 0, z); rail.rotation.y = rotation; parent.add(rail); return rail;
+  }
+
+  function addDisplayShelf(parent, x, z, rotation = 0) {
+    const shelf = new THREE.Group();
+    for (const side of [-.62, .62]) cylinder(shelf, side, 1.15, 0, .045, 2.25, materials.darkMetal, 10);
+    for (const y of [.18, .82, 1.45, 2.08]) {
+      box(shelf, 0, y, 0, 1.42, .08, .42, materials.wood, false);
+      for (let i = 0; i < 3; i++) box(shelf, -.4 + i * .4, y + .16, .04, .22, .22 + (i % 2) * .12, .18, material([0x657687, 0x8b664c, 0x596f58][i], .55), false);
+    }
+    shelf.position.set(x, 0, z); shelf.rotation.y = rotation; parent.add(shelf); return shelf;
+  }
+
   function labelTexture(text, foreground = '#e9c27b', background = '#111519', width = 768, height = 180) {
     const label = document.createElement('canvas');
     label.width = width;
@@ -645,6 +724,10 @@ function startGame(role) {
     const metroSign = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 1.1), new THREE.MeshBasicMaterial({ map: labelTexture('24TH STREET', '#d9d9d5', '#20262a') }));
     metroSign.position.set(0, 3.65, 2.82);
     metro.add(metroSign);
+    addTicketMachine(metro, -2.45, -1.3);
+    addTicketMachine(metro, .15, -1.3);
+    for (let i = 0; i < 4; i++) addChair(metro, -2.55 + i * 1.7, 1.5, Math.PI, 0x334c59);
+    addRail(metro, 0, -2.25, 6.6);
     cityColliders.push({ minX: -49.3, maxX: -40.7, minZ: 2.1, maxZ: 7.9 });
     interactables.push({ mode: 'city', type: 'jobBoard', position: new THREE.Vector3(-45, 0, 8.3), label: 'View courier jobs' });
 
@@ -781,7 +864,9 @@ function startGame(role) {
     const sofa = new THREE.Group();
     box(sofa, 0, 0.52, 0, 3.2, 0.7, 1.15, material(0x3c4142, 0.89));
     box(sofa, 0, 1.02, 0.46, 3.2, 0.85, 0.24, material(0x3c4142, 0.89));
+    for (const sx of [-1.12, -.38, .38, 1.12]) box(sofa, sx, .93, -.14, .52, .11, .92, material(0x47535a, .86), false);
     for (const side of [-1, 1]) box(sofa, side * 1.55, 0.77, 0, 0.25, 0.9, 1.1, material(0x34393a, 0.86));
+    for (const side of [-1, 1]) for (const depth of [-.4, .4]) cylinder(sofa, side * 1.38, .08, depth, .07, .13, materials.gold, 10);
     sofa.position.set(x, 0, z);
     sofa.rotation.y = rotation;
     parent.add(sofa);
@@ -848,6 +933,14 @@ function startGame(role) {
     addCafeTable(hotel, -13, 1.2);
     addCafeTable(hotel, 13, 1.2);
     addVendingMachine(hotel, -20.6, -7.5, 0xbd6ab5);
+    addLuggageCart(hotel, 18.8, 8.5);
+    addLuggageCart(hotel, -18.8, 8.5);
+    addFloorLamp(hotel, -5.7, 9.4);
+    addFloorLamp(hotel, 5.7, 9.4);
+    addTrashCan(hotel, -20.5, 13.5);
+    addTrashCan(hotel, 20.5, 13.5);
+    addDisplayShelf(hotel, -20.9, 2.5, Math.PI / 2);
+    addDisplayShelf(hotel, 20.9, 2.5, -Math.PI / 2);
     hotelColliders.push({ minX: -21.35, maxX: -19.85, minZ: -8, maxZ: -7 });
     for (const [x, z] of [[-13,1],[13,1],[-13,-10],[13,-10]]) {
       cylinder(hotel, x, 0.42, z, 0.72, 0.18, materials.gold, 24);
@@ -929,6 +1022,12 @@ function startGame(role) {
     box(suite, -3.2, 1.25, -3.65, 5.2, 0.26, 3.2, material(accent, 0.86));
     box(suite, -3.2, 2.8, -5.6, 5.8, 3.5, 0.35, material(0x3a2d2b, 0.74));
     for (const x of [-4.6, -1.8]) box(suite, x, 1.43, -4.4, 2.1, 0.32, 1.2, materials.linen);
+    for (const x of [-5.7, -.7]) cylinder(suite, x, .18, -.15, .09, .24, materials.gold, 10);
+    for (const x of [-5.7, -.7]) cylinder(suite, x, .18, -4.6, .09, .24, materials.gold, 10);
+    addWallTV(suite, 8.48, 4.25, 1.3, -Math.PI / 2);
+    addFloorLamp(suite, 6.8, -5.8);
+    addTrashCan(suite, 7.3, 6.4);
+    addDisplayShelf(suite, 7.55, -4.9, Math.PI / 2);
 
     for (const x of [-6.6, 0.2]) {
       box(suite, x, 0.68, -2.6, 1.2, 1.25, 1.25, materials.wood);
@@ -947,6 +1046,8 @@ function startGame(role) {
 
     addFurniture(suite, 4.8, 2.5, Math.PI);
     addCafeTable(suite, 4.8, .9, { top: material(0x4b342c, .62), trim: materials.gold });
+    addChair(suite, 3.75, .9, Math.PI / 2, accent);
+    addChair(suite, 5.85, .9, -Math.PI / 2, accent);
     box(suite, 4.8, 0.34, -0.2, 2.5, 0.22, 1.3, materials.gold);
     cylinder(suite, 4.8, 0.18, -0.2, 0.09, 0.4, materials.darkMetal, 12);
     const art = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 2.5), new THREE.MeshBasicMaterial({ map: labelTexture(`SUITE ${String(number).padStart(2, '0')}`, '#d2ad6d', '#22272a', 640, 360) }));
@@ -956,6 +1057,8 @@ function startGame(role) {
 
     const door = box(suite, 0, 2.4, 8.55, 2.4, 4.8, 0.25, materials.wood);
     door.castShadow = true;
+    box(suite, 0, 4.84, 8.5, 2.75, .18, .4, materials.gold, false);
+    cylinder(suite, .8, 2.32, 8.34, .08, .08, materials.gold, 10).rotation.z = Math.PI / 2;
     interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
     interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
   }
