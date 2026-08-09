@@ -1,0 +1,35 @@
+export const GameConfig = Object.freeze({
+  world: {
+    seed: 47381,
+    unitsPerMeter: 1,
+    chunkSizeMeters: 192,
+    activeChunkRadius: 1,
+    unloadChunkRadius: 2,
+    floatingOriginThresholdMeters: 640,
+    defaultRegion: 'us-seattle-central',
+  },
+  player: {
+    walkSpeed: 4.25,
+    sprintSpeed: 7.2,
+    acceleration: 28,
+    deceleration: 34,
+    gravity: 18,
+    jumpVelocity: 6.4,
+    height: 1.78,
+    radius: 0.32,
+  },
+  camera: {
+    distance: 7.4,
+    minDistance: 1.35,
+    maxDistance: 12,
+    height: 1.35,
+    sensitivity: 0.006,
+    minPitch: 0.05,
+    maxPitch: 1.15,
+    smoothness: 0.0025,
+  },
+  debug: {
+    chunks: new URLSearchParams(location.search).has('debugChunks'),
+    coordinates: new URLSearchParams(location.search).has('debugGeo'),
+  },
+});

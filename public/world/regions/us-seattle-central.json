@@ -1,0 +1,10 @@
+{
+  "id": "us-seattle-central",
+  "coordinateSystem": "WGS84 / local ENU",
+  "source": "Procedural demonstration data anchored to Seattle. Not a street-level OSM extract.",
+  "roads": [
+    { "bearing": 0, "spacingMeters": 48 },
+    { "bearing": 90, "spacingMeters": 48 }
+  ],
+  "districts": ["Pioneer Square", "Waterfront", "Capitol Hill Link"]
+}

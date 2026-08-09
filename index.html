@@ -43,6 +43,7 @@
           <span>CASH <strong>$<b id="cash">240</b></strong></span>
           <span id="role-stat">GUEST</span>
         </div>
+        <button id="world-map-toggle" aria-expanded="false">WORLD MAP</button>
       </header>
 
       <aside id="mission-card">
@@ -67,6 +68,17 @@
         <div class="room-head"><div><small>STH PROPERTY</small><strong>ROOM DIRECTORY</strong></div><button id="close-rooms" aria-label="Close room directory">×</button></div>
         <p>50 private suites · five secured floors · all guests 21+</p>
         <div id="room-list"></div>
+      </aside>
+
+      <aside id="world-panel" aria-label="World streamer" hidden>
+        <div class="room-head"><div><small>GEOSPATIAL WORLD</small><strong>TRAVEL &amp; STREAMING</strong></div><button id="world-panel-close" aria-label="Close world map">×</button></div>
+        <p>Regions use real WGS84 anchors. Nearby chunks stream continuously; detail data can be published region by region.</p>
+        <label for="country-select">COUNTRY</label>
+        <select id="country-select"></select>
+        <label for="region-select">CITY REGION</label>
+        <select id="region-select"></select>
+        <div class="world-meta"><span>COORDINATES</span><strong id="geo-readout">Loading…</strong></div>
+        <button id="travel-region">TRAVEL TO REGION</button>
       </aside>
 
       <aside id="pause-panel">

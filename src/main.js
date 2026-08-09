@@ -5,6 +5,12 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
+import { GameConfig } from './config/GameConfig.js';
+import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
+import { WorldChunkManager } from './world/WorldChunkManager.js';
+import { RegionCatalog } from './world/RegionCatalog.js';
+import { CharacterMotor } from './player/CharacterMotor.js';
+import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -128,6 +134,9 @@ function startGame(role) {
   scene.fog = new THREE.FogExp2(0x111820, 0.009);
 
   const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 310);
+  const inputController = new InputController(canvas);
+  const cameraController = new ThirdPersonCameraController(camera, GameConfig.camera);
+  const playerMotor = new CharacterMotor(GameConfig.player);
   const audioListener = new THREE.AudioListener();
   camera.add(audioListener);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -161,9 +170,9 @@ function startGame(role) {
 
   let mode = role === 'manager' ? 'hotel' : 'city';
   let cameraMode = 'third';
-  let cameraYaw = Math.PI;
-  let cameraPitch = 0.28;
-  let cameraDistance = 7.4;
+  let cameraYaw = cameraController.yaw;
+  let cameraPitch = cameraController.pitch;
+  let cameraDistance = cameraController.distance;
   let cameraDragging = false;
   let jumpQueued = false;
   let verticalVelocity = 0;
@@ -198,7 +207,7 @@ function startGame(role) {
   let lastNetworkSend = 0;
   let ambience = null;
   let timeOfNight = 23 * 60 + 48;
-  const keys = Object.create(null);
+  const keys = inputController.keys;
   const cityColliders = [];
   const interactables = [];
   const npcs = [];
@@ -904,6 +913,29 @@ function startGame(role) {
     hotel.visible = false;
   }
 
+  // The original hotel district remains hand-authored. Beyond it, the streamed
+  // layer uses WGS84 anchored chunks and can later swap procedural lots for
+  // licensed road/building data region by region.
+  const worldStreamer = new WorldChunkManager({
+    parent: city,
+    materials,
+    config: GameConfig.world,
+    onStatus: ({ type, region, geographic }) => {
+      if (type === 'region' && region) {
+        $('#location').textContent = `${region.city.toUpperCase()} · STREAMING`;
+        showGlobalToast(`${region.label} loaded · geographic streaming enabled.`);
+      }
+      if (geographic) $('#geo-readout').textContent = `${geographic.latitude.toFixed(5)}, ${geographic.longitude.toFixed(5)}`;
+      if (type === 'rebase' && GameConfig.debug.coordinates) console.info('Floating origin rebased at', geographic);
+    },
+  });
+  worldStreamer.selectRegion(GameConfig.world.defaultRegion).catch((error) => console.warn('World region fallback:', error));
+  window.sthWorld = {
+    regions: RegionCatalog,
+    selectRegion: async (id) => worldStreamer.selectRegion(id),
+    getPosition: () => worldStreamer.geo?.toGeographic(player.position.clone().add(worldStreamer.originOffset)),
+  };
+
   function showDistrict(name) {
     $('#district-name').textContent = name;
     const card = $('#district-title');
@@ -975,6 +1007,45 @@ function startGame(role) {
     $('#context-card').classList.add('hidden-card');
     updateLocation(nextMode === 'city' ? 'STATION DISTRICT' : nextMode === 'hotel' ? 'HOTEL LOBBY' : `SUITE ${String(currentRoom).padStart(2, '0')}`);
   }
+
+  const worldPanel = $('#world-panel');
+  const countrySelect = $('#country-select');
+  const regionSelect = $('#region-select');
+  const renderRegionOptions = (countryCode) => {
+    regionSelect.innerHTML = '';
+    const country = RegionCatalog.countries.find((item) => item.code === countryCode) || RegionCatalog.countries[0];
+    country.regions.forEach((id) => {
+      const region = RegionCatalog.regions[id];
+      const option = document.createElement('option'); option.value = id; option.textContent = region.label; regionSelect.appendChild(option);
+    });
+  };
+  RegionCatalog.countries.forEach((country) => {
+    const option = document.createElement('option'); option.value = country.code; option.textContent = country.label; countrySelect.appendChild(option);
+  });
+  countrySelect.value = RegionCatalog.regions[GameConfig.world.defaultRegion].country;
+  renderRegionOptions(countrySelect.value);
+  regionSelect.value = GameConfig.world.defaultRegion;
+  countrySelect.addEventListener('change', () => renderRegionOptions(countrySelect.value));
+  $('#world-map-toggle').addEventListener('click', () => {
+    const opening = worldPanel.hidden;
+    worldPanel.hidden = !opening;
+    $('#world-map-toggle').setAttribute('aria-expanded', String(opening));
+  });
+  $('#world-panel-close').addEventListener('click', () => { worldPanel.hidden = true; $('#world-map-toggle').setAttribute('aria-expanded', 'false'); });
+  $('#travel-region').addEventListener('click', () => {
+    const region = RegionCatalog.regions[regionSelect.value];
+    transition('GEOSPATIAL TRAVEL', region.city.toUpperCase(), async () => {
+      city.position.set(0, 0, 0);
+      await worldStreamer.selectRegion(regionSelect.value);
+      switchMode('city', new THREE.Vector3(120, 0, 120), city);
+      worldStreamer.update(player.position);
+      updateLocation(`${region.city.toUpperCase()} · ${region.country}`);
+      showDistrict(region.city.toUpperCase());
+      setObjective(`Explore ${region.label} · streamed region active`, 0.5, 'WORLD TRAVEL');
+      worldPanel.hidden = true;
+      $('#world-map-toggle').setAttribute('aria-expanded', 'false');
+    });
+  });
 
   function enterHotel() {
     transition('S/T/H', 'HOTEL LOBBY', () => {
@@ -1439,28 +1510,34 @@ function startGame(role) {
       const length = Math.hypot(dx, dz);
       dx /= length;
       dz /= length;
-      const needPenalty = needs.energy < 15 || needs.hunger < 10 ? 0.62 : needs.energy < 35 ? 0.82 : 1;
-      const canSprint = keys.shift && needs.energy > 8;
-      const speed = (canSprint ? 7.2 : 4.25) * needPenalty * delta;
-      const nextX = player.position.x + dx * speed;
-      const nextZ = player.position.z + dz * speed;
-      if (mode === 'city') {
-        if (!cityBlocked(nextX, player.position.z)) player.position.x = THREE.MathUtils.clamp(nextX, -103, 103);
-        if (!cityBlocked(player.position.x, nextZ)) player.position.z = THREE.MathUtils.clamp(nextZ, -103, 103);
-      } else if (mode === 'hotel') {
-        player.position.x = THREE.MathUtils.clamp(nextX, -22, 22);
-        player.position.z = THREE.MathUtils.clamp(nextZ, -18, 18);
-      } else {
-        player.position.x = THREE.MathUtils.clamp(nextX, -8, 8);
-        player.position.z = THREE.MathUtils.clamp(nextZ, -7.8, 7.4);
-      }
+    }
+    const needPenalty = needs.energy < 15 || needs.hunger < 10 ? 0.62 : needs.energy < 35 ? 0.82 : 1;
+    const canSprint = keys.shift && needs.energy > 8;
+    const displacement = playerMotor.step({
+      delta,
+      direction: new THREE.Vector3(dx, 0, dz),
+      speed: (canSprint ? GameConfig.player.sprintSpeed : GameConfig.player.walkSpeed) * needPenalty,
+      jump: jumpQueued,
+    });
+    jumpQueued = false;
+    const nextX = player.position.x + displacement.x;
+    const nextZ = player.position.z + displacement.z;
+    if (mode === 'city') {
+      if (!cityBlocked(nextX, player.position.z)) player.position.x = THREE.MathUtils.clamp(nextX, -100000, 100000);
+      if (!cityBlocked(player.position.x, nextZ)) player.position.z = THREE.MathUtils.clamp(nextZ, -100000, 100000);
+    } else if (mode === 'hotel') {
+      player.position.x = THREE.MathUtils.clamp(nextX, -22, 22);
+      player.position.z = THREE.MathUtils.clamp(nextZ, -18, 18);
+    } else {
+      player.position.x = THREE.MathUtils.clamp(nextX, -8, 8);
+      player.position.z = THREE.MathUtils.clamp(nextZ, -7.8, 7.4);
+    }
+    if (moving) {
       const desiredRotation = Math.atan2(dx, dz);
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
-    if (jumpQueued && player.position.y <= 0.001) { verticalVelocity = 6.4; jumpQueued = false; }
-    verticalVelocity -= 18 * delta;
-    player.position.y += verticalVelocity * delta;
-    if (player.position.y <= 0) { player.position.y = 0; verticalVelocity = 0; }
+    player.position.y += displacement.y;
+    if (player.position.y <= 0) { player.position.y = 0; playerMotor.land(); }
     const grounded = player.position.y <= 0.001;
     const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);
     const walk = moving && grounded ? Math.sin(cycle) * 0.56 : 0;
@@ -1489,8 +1566,15 @@ function startGame(role) {
     } else {
       player.visible = true;
       camera.fov = 52;
-      targetCamera.set(player.position.x - viewX * cameraDistance, player.position.y + 1.35 + Math.sin(cameraPitch) * cameraDistance, player.position.z - viewZ * cameraDistance);
-      cameraLook.set(player.position.x, player.position.y + 1.2, player.position.z);
+      cameraController.yaw = cameraYaw;
+      cameraController.pitch = cameraPitch;
+      cameraController.distance = cameraDistance;
+      const collisionRoots = mode === 'city' ? city.children.filter((child) => child !== player) : mode === 'hotel' ? hotel.children.filter((child) => child !== player) : suite.children.filter((child) => child !== player);
+      const state = cameraController.update(player, delta, collisionRoots);
+      cameraYaw = state.yaw;
+      cameraPitch = state.pitch;
+      cameraDistance = state.distance;
+      return;
     }
     camera.updateProjectionMatrix();
     camera.position.lerp(targetCamera, 1 - Math.pow(0.0025, delta));
@@ -1498,6 +1582,13 @@ function startGame(role) {
   }
 
   function updateWorld(delta, elapsed) {
+    if (mode === 'city' && Math.max(Math.abs(player.position.x), Math.abs(player.position.z)) > 105) {
+      const rebase = worldStreamer.update(player.position);
+      if (rebase) {
+        city.position.sub(rebase);
+        scene.attach(player);
+      }
+    }
     for (let index = 0; index < npcs.length; index++) {
       const npc = npcs[index];
       if (!npc.parent?.visible) continue;
@@ -1653,6 +1744,7 @@ function startGame(role) {
       lastNetworkSend = elapsed;
     }
     composer.render();
+    inputController.update();
   }
   loop();
 }
