@@ -18,8 +18,10 @@ export class ThirdPersonCameraController {
   zoom(delta) { this.distance = THREE.MathUtils.clamp(this.distance + delta * 0.01, this.config.minDistance, this.config.maxDistance); }
   update(player, delta, collisionObjects = []) {
     const horizontal = Math.cos(this.pitch);
-    const direction = new THREE.Vector3(Math.sin(this.yaw) * horizontal, Math.sin(this.pitch), Math.cos(this.yaw) * horizontal);
-    const head = this.lookPosition.set(player.position.x, player.position.y + 1.2, player.position.z);
+    // Positive pitch puts the camera above the player. The prior sign was
+    // inverted, which could place the camera below the ground when orbiting.
+    const direction = new THREE.Vector3(Math.sin(this.yaw) * horizontal, -Math.sin(this.pitch), Math.cos(this.yaw) * horizontal);
+    const head = this.lookPosition.set(player.position.x, player.position.y + this.config.targetHeight, player.position.z);
     const desired = this.targetPosition.copy(head).addScaledVector(direction, -this.distance);
     if (collisionObjects.length) {
       this.raycaster.set(head, desired.clone().sub(head).normalize());

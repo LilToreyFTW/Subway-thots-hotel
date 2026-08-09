@@ -1679,8 +1679,9 @@ function startGame(role) {
   });
   canvas.addEventListener('pointermove', (event) => {
     if (!cameraDragging || paused) return;
-    cameraYaw -= event.movementX * 0.006;
-    cameraPitch = THREE.MathUtils.clamp(cameraPitch - event.movementY * 0.004, 0.05, 1.15);
+    cameraController.rotate(event.movementX, event.movementY);
+    cameraYaw = cameraController.yaw;
+    cameraPitch = cameraController.pitch;
   });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
