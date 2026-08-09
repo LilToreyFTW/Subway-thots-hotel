@@ -255,6 +255,20 @@ function startGame(role) {
     return new THREE.MeshStandardMaterial({ color, roughness, metalness });
   }
 
+  // Stable, deliberately narrow variation bands keep procedural rooms cohesive.
+  function propVariant(kind, x, z) {
+    let hash = 2166136261;
+    for (const char of `${kind}:${Math.round(x * 10)}:${Math.round(z * 10)}`) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    hash >>>= 0;
+    return {
+      index: hash % 4,
+      width: .94 + (hash % 5) * .03,
+      depth: .95 + ((hash >>> 3) % 4) * .025,
+      wear: (hash >>> 6) % 3,
+      accent: [0x5db8c7, 0xbe6b9d, 0xd2a95f, 0x7ba77b][hash % 4],
+    };
+  }
+
   function box(parent, x, y, z, sx, sy, sz, meshMaterial, shadows = true) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), meshMaterial);
     mesh.position.set(x, y, z);
@@ -274,6 +288,7 @@ function startGame(role) {
   }
 
   function addCafeTable(parent, x, z, { top = materials.wood, trim = materials.gold } = {}) {
+    const variant = propVariant('table', x, z);
     const table = new THREE.Group();
     // A layered tabletop, apron, four legs, cross-braces, and adjustable feet.
     box(table, 0, 1.02, 0, 1.6, 0.12, 1.05, top);
@@ -285,69 +300,81 @@ function startGame(role) {
     box(table, 0, .42, 0, 1.2, .07, .07, materials.darkMetal, false);
     box(table, 0, .42, 0, .07, .07, .72, materials.darkMetal, false);
     table.position.set(x, 0, z);
+    table.scale.set(variant.width, 1, variant.depth);
+    table.userData.variant = variant;
     parent.add(table);
     return table;
   }
 
   function addVendingMachine(parent, x, z, accent = 0x4dbbc9) {
+    const variant = propVariant('vending', x, z);
     const machine = new THREE.Group();
     const cabinet = material(0x20282d, .36, .7);
-    const trim = new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: .75, roughness: .25, metalness: .5 });
+    const trimColor = accent === 0x4dbbc9 ? variant.accent : accent;
+    const trim = new THREE.MeshStandardMaterial({ color: trimColor, emissive: trimColor, emissiveIntensity: .55 + variant.wear * .1, roughness: .25, metalness: .5 });
     box(machine, 0, 1.42, 0, 1.34, 2.72, .72, cabinet);
     box(machine, 0, 1.54, .374, 1.08, 1.64, .035, new THREE.MeshStandardMaterial({ color: 0x10161a, roughness: .12, metalness: .32 }));
     box(machine, .43, 1.54, .406, .19, 1.48, .055, trim, false);
     box(machine, 0, .74, .41, 1.05, .34, .07, material(0x101719, .3, .4), false);
     for (let row = 0; row < 3; row++) for (let column = 0; column < 4; column++) {
       const product = box(machine, -.33 + column * .22, 1.95 - row * .31, .41, .15, .16, .04, material([0xb34a4d, 0xd29a45, 0x4c92a5, 0x798c4e][(row + column) % 4], .5), false);
-      product.rotation.z = (column % 2 ? .08 : -.05);
+      product.rotation.z = (column % 2 ? .08 : -.05) + (variant.index - 1.5) * .015;
     }
     const display = box(machine, .42, 2.37, .42, .18, .18, .04, new THREE.MeshBasicMaterial({ color: 0xcdf5ff }), false);
     box(machine, .42, 1.93, .42, .15, .35, .035, material(0x111416, .3, .65), false);
     for (const side of [-.47, .47]) box(machine, side, .07, 0, .18, .12, .7, materials.darkMetal, false);
     machine.position.set(x, 0, z);
+    machine.scale.x = variant.width;
+    machine.userData.variant = variant;
     parent.add(machine);
     return machine;
   }
 
   function addChair(parent, x, z, rotation = 0, upholstery = 0x3b4650) {
+    const variant = propVariant('chair', x, z);
     const chair = new THREE.Group();
-    const fabric = material(upholstery, .82);
+    const fabric = material(upholstery === 0x3b4650 ? [0x3b4650, 0x4a3a46, 0x3c4b40, 0x4c4137][variant.index] : upholstery, .78 + variant.wear * .05);
     box(chair, 0, .57, 0, .82, .13, .82, fabric);
     box(chair, 0, 1.05, .31, .82, .82, .12, fabric);
     for (const sx of [-.3, .3]) for (const sz of [-.3, .3]) cylinder(chair, sx, .28, sz, .045, .56, materials.darkMetal, 8);
     box(chair, 0, .42, .31, .7, .06, .06, materials.darkMetal, false);
-    chair.position.set(x, 0, z); chair.rotation.y = rotation; parent.add(chair);
+    chair.position.set(x, 0, z); chair.rotation.y = rotation; chair.scale.set(variant.width, 1, variant.depth); chair.userData.variant = variant; parent.add(chair);
     return chair;
   }
 
   function addFloorLamp(parent, x, z, accent = 0xffc987) {
+    const variant = propVariant('lamp', x, z);
     const lamp = new THREE.Group();
     cylinder(lamp, 0, .05, 0, .3, .1, materials.darkMetal, 16);
     cylinder(lamp, 0, .88, 0, .045, 1.65, materials.gold, 10);
-    const shade = new THREE.Mesh(new THREE.ConeGeometry(.34, .48, 16, 1, true), new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: .45, roughness: .7, side: THREE.DoubleSide }));
+    const lightColor = accent === 0xffc987 ? [0xffc987, 0xf0a9c2, 0x9bc8d5, 0xe7c676][variant.index] : accent;
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(.31 + variant.index * .02, .48, 16, 1, true), new THREE.MeshStandardMaterial({ color: lightColor, emissive: lightColor, emissiveIntensity: .45, roughness: .7, side: THREE.DoubleSide }));
     shade.position.y = 1.88; lamp.add(shade);
-    const glow = new THREE.PointLight(accent, quality === 'high' ? 2.4 : 1.2, 5, 2); glow.position.y = 1.78; lamp.add(glow);
-    lamp.position.set(x, 0, z); parent.add(lamp); return lamp;
+    const glow = new THREE.PointLight(lightColor, quality === 'high' ? 2.1 + variant.index * .14 : 1.1, 5, 2); glow.position.y = 1.78; lamp.add(glow);
+    lamp.position.set(x, 0, z); lamp.userData.variant = variant; parent.add(lamp); return lamp;
   }
 
   function addTrashCan(parent, x, z) {
+    const variant = propVariant('trash', x, z);
     const can = new THREE.Group();
     cylinder(can, 0, .47, 0, .38, .88, materials.darkMetal, 18);
     cylinder(can, 0, .94, 0, .4, .09, materials.gold, 18);
     cylinder(can, 0, 1.03, -.08, .09, .14, materials.darkMetal, 10);
     for (let i = 0; i < 6; i++) box(can, Math.sin(i) * .34, .49, Math.cos(i) * .34, .025, .65, .025, materials.gold, false);
-    can.position.set(x, 0, z); parent.add(can); return can;
+    if (variant.wear === 2) box(can, .18, .72, .37, .15, .22, .02, material(0x82755d, .7), false);
+    can.position.set(x, 0, z); can.scale.x = variant.width; can.userData.variant = variant; parent.add(can); return can;
   }
 
   function addTicketMachine(parent, x, z) {
+    const variant = propVariant('ticket', x, z);
     const kiosk = new THREE.Group();
     box(kiosk, 0, 1.32, 0, 1.18, 2.48, .78, material(0x263239, .35, .72));
     box(kiosk, 0, 1.8, .41, .9, .88, .04, material(0x11191e, .18, .52), false);
-    box(kiosk, 0, 2.05, .44, .66, .34, .03, new THREE.MeshBasicMaterial({ color: 0x8bd9e2 }), false);
+    box(kiosk, 0, 2.05, .44, .66, .34, .03, new THREE.MeshBasicMaterial({ color: variant.accent }), false);
     box(kiosk, .31, 1.42, .44, .19, .31, .035, materials.gold, false);
     for (let i = 0; i < 3; i++) cylinder(kiosk, -.28 + i * .18, 1.39, .45, .055, .03, material(0xd4a34f, .25, .5), 10);
     for (const sx of [-.42, .42]) box(kiosk, sx, .08, 0, .16, .15, .72, materials.darkMetal, false);
-    kiosk.position.set(x, 0, z); parent.add(kiosk); return kiosk;
+    kiosk.position.set(x, 0, z); kiosk.scale.x = variant.width; kiosk.userData.variant = variant; parent.add(kiosk); return kiosk;
   }
 
   function addLuggageCart(parent, x, z) {
@@ -379,13 +406,14 @@ function startGame(role) {
   }
 
   function addDisplayShelf(parent, x, z, rotation = 0) {
+    const variant = propVariant('shelf', x, z);
     const shelf = new THREE.Group();
     for (const side of [-.62, .62]) cylinder(shelf, side, 1.15, 0, .045, 2.25, materials.darkMetal, 10);
     for (const y of [.18, .82, 1.45, 2.08]) {
       box(shelf, 0, y, 0, 1.42, .08, .42, materials.wood, false);
-      for (let i = 0; i < 3; i++) box(shelf, -.4 + i * .4, y + .16, .04, .22, .22 + (i % 2) * .12, .18, material([0x657687, 0x8b664c, 0x596f58][i], .55), false);
+      for (let i = 0; i < 3; i++) box(shelf, -.4 + i * .4, y + .16, .04 + (variant.index - 1.5) * .025, .22, .22 + ((i + variant.index) % 2) * .12, .18, material([0x657687, 0x8b664c, 0x596f58][(i + variant.index) % 3], .55 + variant.wear * .05), false);
     }
-    shelf.position.set(x, 0, z); shelf.rotation.y = rotation; parent.add(shelf); return shelf;
+    shelf.position.set(x, 0, z); shelf.rotation.y = rotation; shelf.scale.x = variant.width; shelf.userData.variant = variant; parent.add(shelf); return shelf;
   }
 
   function labelTexture(text, foreground = '#e9c27b', background = '#111519', width = 768, height = 180) {
@@ -861,13 +889,15 @@ function startGame(role) {
   }
 
   function addFurniture(parent, x, z, rotation = 0) {
+    const variant = propVariant('sofa', x, z);
     const sofa = new THREE.Group();
-    box(sofa, 0, 0.52, 0, 3.2, 0.7, 1.15, material(0x3c4142, 0.89));
-    box(sofa, 0, 1.02, 0.46, 3.2, 0.85, 0.24, material(0x3c4142, 0.89));
-    for (const sx of [-1.12, -.38, .38, 1.12]) box(sofa, sx, .93, -.14, .52, .11, .92, material(0x47535a, .86), false);
+    const upholstery = [0x3c4142, 0x47353e, 0x34473f, 0x464035][variant.index];
+    box(sofa, 0, 0.52, 0, 3.2, 0.7, 1.15, material(upholstery, .84 + variant.wear * .04));
+    box(sofa, 0, 1.02, 0.46, 3.2, 0.85, 0.24, material(upholstery, .84 + variant.wear * .04));
+    for (const sx of [-1.12, -.38, .38, 1.12]) box(sofa, sx, .93, -.14, .52, .11, .92, material([0x47535a, 0x65424d, 0x3d6656, 0x62583f][variant.index], .84), false);
     for (const side of [-1, 1]) box(sofa, side * 1.55, 0.77, 0, 0.25, 0.9, 1.1, material(0x34393a, 0.86));
     for (const side of [-1, 1]) for (const depth of [-.4, .4]) cylinder(sofa, side * 1.38, .08, depth, .07, .13, materials.gold, 10);
-    sofa.position.set(x, 0, z);
+    sofa.position.set(x, 0, z); sofa.scale.set(variant.width, 1, variant.depth); sofa.userData.variant = variant;
     sofa.rotation.y = rotation;
     parent.add(sofa);
     const colliders = parent === hotel ? hotelColliders : parent === suite ? suiteColliders : null;
