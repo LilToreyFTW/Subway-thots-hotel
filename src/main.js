@@ -14,6 +14,7 @@ import { PlayerController } from './player/PlayerController.js';
 import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { GroundProbe } from './player/GroundProbe.js';
 import { MaterialLibrary } from './rendering/MaterialLibrary.js';
+import { EnvironmentLighting, LightingProfile } from './rendering/EnvironmentLighting.js';
 import { createRoomPlan } from './world/RoomArchetypes.js';
 import { StructuralGrid } from './world/StructuralGrid.js';
 import { DoorController } from './world/DoorController.js';
@@ -490,19 +491,7 @@ function startGame(role) {
   }
 
   function addLighting() {
-    const hemisphere = new THREE.HemisphereLight(0x6f8798, 0x16110f, 1.35);
-    scene.add(hemisphere);
-    const moonlight = new THREE.DirectionalLight(0xa8b8c8, 2.2);
-    moonlight.position.set(-55, 85, 35);
-    moonlight.castShadow = true;
-    moonlight.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
-    moonlight.shadow.camera.left = -70;
-    moonlight.shadow.camera.right = 70;
-    moonlight.shadow.camera.top = 70;
-    moonlight.shadow.camera.bottom = -70;
-    moonlight.shadow.camera.far = 190;
-    moonlight.shadow.bias = -0.00018;
-    scene.add(moonlight);
+    return new EnvironmentLighting({ scene, roots: { city, hotel, suite }, quality });
   }
 
   function styleIndex(value, count) {
@@ -1242,7 +1231,7 @@ function startGame(role) {
   }
 
   addSky();
-  addLighting();
+  const environmentLighting = addLighting();
   addCity();
   addHotelInterior();
   addRain();
@@ -1268,6 +1257,7 @@ function startGame(role) {
     city.visible = true;
     hotel.visible = false;
   }
+  environmentLighting.apply(role === 'manager' ? LightingProfile.HOTEL_LOBBY : LightingProfile.CITY);
   const playerFill = new THREE.PointLight(0xffd8b3, 10, 11, 2);
   playerFill.position.set(2.2, 3.1, 3.2);
   playerFill.userData.keepVisible = true;
@@ -1368,6 +1358,7 @@ function startGame(role) {
     city.visible = nextMode === 'city';
     hotel.visible = nextMode === 'hotel';
     suite.visible = nextMode === 'room';
+    environmentLighting.apply(nextMode === 'hotel' ? LightingProfile.HOTEL_LOBBY : nextMode === 'room' ? LightingProfile.HOTEL_ROOM : LightingProfile.CITY);
     parent.attach(player);
     player.position.copy(position);
     nearby = null;
@@ -1951,6 +1942,13 @@ function startGame(role) {
   }
 
   function updateWorld(delta, elapsed) {
+    if (mode === 'city') {
+      const inSubwayConcourse = Math.hypot(player.position.x + 45, player.position.z - 5) < 10;
+      environmentLighting.apply(inSubwayConcourse ? LightingProfile.SUBWAY : LightingProfile.CITY);
+    } else if (mode === 'hotel') {
+      const inServiceWing = player.position.x > 10 && player.position.z > 4;
+      environmentLighting.apply(inServiceWing ? LightingProfile.SERVICE : LightingProfile.HOTEL_LOBBY);
+    }
     doors.forEach((door) => door.controller.update(delta));
     if (mode === 'city' && Math.max(Math.abs(player.position.x), Math.abs(player.position.z)) > 105) {
       const rebase = worldStreamer.update(player.position);
