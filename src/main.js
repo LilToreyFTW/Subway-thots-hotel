@@ -9,6 +9,7 @@ import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
 import { GameConfig } from './config/GameConfig.js';
 import { GameLoop } from './core/GameLoop.js';
+import { DebugVisuals } from './debug/DebugVisuals.js';
 import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
 import { WorldChunkManager } from './world/WorldChunkManager.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
@@ -249,6 +250,8 @@ function startGame(role) {
   const suiteFloors = [];
   const playerCollision = new CapsuleCollisionWorld({ radius: GameConfig.player.radius, height: GameConfig.player.height });
   const groundProbe = new GroundProbe({ radius: GameConfig.player.radius });
+  const debugVisuals = GameConfig.debug.enabled || GameConfig.debug.collisions || GameConfig.debug.player || GameConfig.debug.camera || GameConfig.debug.raycasts
+    ? new DebugVisuals(scene, GameConfig.debug, GameConfig.player) : null;
   let ragdollUntil = 0;
   const interactables = [];
   const interactionSystem = new InteractionSystem({ items: interactables, range: 3.15 });
@@ -1356,12 +1359,12 @@ function startGame(role) {
   playerRim.userData.keepVisible = true;
   player.add(playerRim);
   const playerModel = new PlayerModel(player, { clothing: 0x5d8197, shoes: 0x303940, accessory: 0xe0b96d });
-  playerModel.load().catch((error) => console.warn('GLB player model unavailable; keeping fallback avatar.', error));
+  playerModel.load('/assets/models/soldier.glb').catch((error) => console.error('[asset] Failed to load /assets/models/soldier.glb; keeping fallback avatar.', error));
   const playerController = new PlayerController(GameConfig.player, playerModel);
   const npcModelLibrary = new NpcModelLibrary();
-  npcModelLibrary.load()
+  npcModelLibrary.load('/assets/models/soldier.glb')
     .then(() => npcs.forEach((npc) => npcModelLibrary.attach(npc, npc.userData.appearance)))
-    .catch((error) => console.warn('NPC GLB model unavailable; keeping fallback NPCs.', error));
+    .catch((error) => console.error('[asset] Failed to load /assets/models/soldier.glb for NPCs; keeping fallback NPCs.', error));
 
   // The original hotel district remains hand-authored. Beyond it, the streamed
   // layer uses WGS84 anchored chunks and can later swap procedural lots for
@@ -2010,6 +2013,7 @@ function startGame(role) {
     // Raycast confirms the physical floor under the capsule; the baseline is
     // retained as an infinite-fall safety net while streamed terrain loads.
     const floor = groundProbe.probe(player.position, activeFloors) ?? playerCollision.groundHeightAt(player.position.x, player.position.z);
+    debugVisuals?.update({ player, camera, direction: new THREE.Vector3(dx, 0, dz), floor });
     player.position.y = playerController.motor.resolveVertical(player.position.y, floor, delta);
     const grounded = playerController.motor.grounded;
     const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);

@@ -11,6 +11,7 @@ export const GameConfig = Object.freeze({
     defaultRegion: 'us-seattle-central',
     roomDensity: .72,
     propDensity: .68,
+    scale: { unitsPerMeter: 1, doorwayHeight: 2.2, hallwayHeight: 2.6 },
   },
   player: {
     walkSpeed: 4.25,
@@ -40,7 +41,13 @@ export const GameConfig = Object.freeze({
     balancedPixelRatio: 1.35,
   },
   debug: {
-    chunks: query.has('debugChunks'),
+    enabled: query.has('debug'),
+    collisions: query.get('debug')?.includes('collisions') || query.has('debugCollisions'),
+    player: query.get('debug')?.includes('player') || query.has('debugPlayer'),
+    camera: query.get('debug')?.includes('camera') || query.has('debugCamera'),
+    generation: query.get('debug')?.includes('generation') || query.has('debugGeneration'),
+    raycasts: query.get('debug')?.includes('raycasts') || query.has('debugRaycasts'),
+    chunks: query.get('debug')?.includes('chunks') || query.has('debugChunks'),
     coordinates: query.has('debugGeo'),
   },
 });
