@@ -31,6 +31,7 @@ export class WorldChunkManager {
       ground: new THREE.BoxGeometry(1, 0.22, 1),
       building: new THREE.BoxGeometry(1, 1, 1),
       roof: new THREE.BoxGeometry(1, 1, 1),
+      facade: new THREE.BoxGeometry(1, 1, 1),
     };
     this.materialPool = new Map();
   }
@@ -132,17 +133,8 @@ export class WorldChunkManager {
         const width = random.range(12, 24);
         const depth = random.range(12, 24);
         const height = random.range(9, 42);
-        const building = new THREE.Mesh(this.geometries.building, this.material(random.pick(palette), 0.7, 0.08));
-        building.scale.set(width, height, depth);
-        building.position.set(sx * (roadWidth / 2 + width / 2 + 8 + random.range(0, 16)), height / 2, sz * (roadWidth / 2 + depth / 2 + 8 + random.range(0, 16)));
-        building.castShadow = height < 25;
-        building.receiveShadow = true;
-        chunk.add(building);
-        const roof = new THREE.Mesh(this.geometries.roof, this.material(0x20262b, 0.82, 0.18));
-        roof.scale.set(width + 0.45, 1.15, depth + 0.45);
-        roof.position.set(building.position.x, height + 0.58, building.position.z);
-        roof.castShadow = true;
-        chunk.add(roof);
+        const position = new THREE.Vector3(sx * (roadWidth / 2 + width / 2 + 8 + random.range(0, 16)), 0, sz * (roadWidth / 2 + depth / 2 + 8 + random.range(0, 16)));
+        chunk.add(this.createStructure({ random, width, depth, height, color: random.pick(palette), position }));
       }
     });
 
@@ -152,6 +144,32 @@ export class WorldChunkManager {
     }
     this.root.add(chunk);
     return chunk;
+  }
+
+  createStructure({ random, width, depth, height, color, position }) {
+    const group = new THREE.Group();
+    const facade = this.material(color, .7, .08);
+    const dark = this.material(0x20262b, .82, .18);
+    const trim = this.material(random.pick([0x677078, 0x70685e, 0x4d5961]), .5, .28);
+    const glass = this.material(random.pick([0x6d8790, 0x997c58]), .2, .32);
+    const add = (geometry, material, x, y, z, sx, sy, sz) => {
+      const mesh = new THREE.Mesh(geometry, material); mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz); mesh.castShadow = height < 25; mesh.receiveShadow = true; group.add(mesh); return mesh;
+    };
+    add(this.geometries.building, facade, 0, height / 2, 0, width, height, depth);
+    add(this.geometries.facade, dark, 0, .45, 0, width + .28, .9, depth + .28);
+    add(this.geometries.roof, dark, 0, height + .52, 0, width + .55, 1.04, depth + .55);
+    const floors = Math.max(2, Math.floor(height / 4.2));
+    for (let floor = 1; floor < floors; floor++) add(this.geometries.facade, trim, 0, floor * height / floors, 0, width + .18, .13, depth + .18);
+    for (const cx of [-width / 2 + .22, width / 2 - .22]) for (const cz of [-depth / 2 + .22, depth / 2 - .22]) add(this.geometries.facade, trim, cx, height / 2, cz, .24, height + .1, .24);
+    const bayCount = Math.max(2, Math.floor(width / 3.4));
+    for (let floor = 0; floor < floors; floor++) for (let bay = 0; bay < bayCount; bay++) {
+      const x = -width / 2 + (bay + .5) * width / bayCount;
+      add(this.geometries.facade, glass, x, 1.5 + floor * height / floors, -depth / 2 - .025, width / bayCount * .58, height / floors * .48, .06);
+    }
+    // A shallow, road-facing storefront canopy gives each generated block an entrance hierarchy.
+    add(this.geometries.facade, trim, 0, 2.55, -depth / 2 - .5, Math.min(5.5, width * .4), .16, .85);
+    group.position.copy(position);
+    return group;
   }
 
   clear() {

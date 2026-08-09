@@ -627,6 +627,9 @@ function startGame(role) {
   }
 
   function addBuilding(x, z, width, depth, height, color, allowCollider = true) {
+    const structure = new THREE.Group();
+    structure.position.set(x, 0, z);
+    city.add(structure);
     const texture = windowTexture(color, 0.34 + seeded() * 0.28);
     const buildingMaterial = new THREE.MeshStandardMaterial({
       map: texture,
@@ -636,14 +639,20 @@ function startGame(role) {
       roughness: 0.74,
       metalness: 0.05,
     });
-    const body = box(city, x, height / 2 + 0.35, z, width, height, depth, buildingMaterial);
+    const body = box(structure, 0, height / 2 + 0.35, 0, width, height, depth, buildingMaterial);
     body.castShadow = height < 34;
     const ledgeMat = material(0x272c30, 0.78, 0.12);
-    for (let y = 4.4; y < height - 1; y += 7.2) box(city, x, y, z, width + 0.18, 0.15, depth + 0.18, ledgeMat, false);
-    box(city, x, height + 0.58, z, width + 0.35, 1.15, depth + 0.35, material(0x20262b, 0.85), true);
+    const plinth = material(0x252b2f, .54, .28);
+    box(structure, 0, .42, 0, width + .25, .84, depth + .25, plinth);
+    for (let y = 4.4; y < height - 1; y += 7.2) box(structure, 0, y, 0, width + 0.18, 0.15, depth + 0.18, ledgeMat, false);
+    for (const px of [-width / 2 + .24, width / 2 - .24]) for (const pz of [-depth / 2 + .24, depth / 2 - .24]) box(structure, px, height / 2, pz, .26, height + .12, .26, ledgeMat, false);
+    const bays = Math.max(2, Math.floor(width / 3.2));
+    for (let y = 2.3; y < height - 1.8; y += 4.4) for (let bay = 0; bay < bays; bay++) box(structure, -width / 2 + (bay + .5) * width / bays, y, -depth / 2 - .025, width / bays * .58, 1.65, .05, materials.glass, false);
+    box(structure, 0, 2.65, -depth / 2 - .48, Math.min(width * .42, 6.4), .16, .82, ledgeMat, false);
+    box(structure, 0, height + 0.58, 0, width + 0.35, 1.15, depth + 0.35, material(0x20262b, 0.85), true);
     if (height > 15) {
-      box(city, x + width * 0.18, height + 1.55, z, Math.min(3.5, width * 0.35), 1.2, Math.min(3, depth * 0.34), ledgeMat);
-      if (seeded() > 0.55) cylinder(city, x - width * 0.22, height + 3.1, z, 0.07, 4, materials.darkMetal, 8);
+      box(structure, width * 0.18, height + 1.55, 0, Math.min(3.5, width * 0.35), 1.2, Math.min(3, depth * 0.34), ledgeMat);
+      if (seeded() > 0.55) cylinder(structure, -width * 0.22, height + 3.1, 0, 0.07, 4, materials.darkMetal, 8);
     }
     if (allowCollider) cityColliders.push({ minX: x - width / 2 - 0.5, maxX: x + width / 2 + 0.5, minZ: z - depth / 2 - 0.5, maxZ: z + depth / 2 + 0.5 });
   }
@@ -907,6 +916,8 @@ function startGame(role) {
     box(hotel, 23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
     box(hotel, 0, 7.5, 19.5, 48, 15, 1, materials.hotelStone);
     box(hotel, 0, 0.03, -2, 7, 0.06, 34, materials.carpet, false);
+    for (let z = -15; z <= 15; z += 7.5) box(hotel, 0, 7.2, z, 46, .24, .32, materials.darkMetal, false);
+    for (const x of [-18, -9, 9, 18]) box(hotel, x, 7.2, 0, .32, .24, 38, materials.darkMetal, false);
 
     for (const x of [-9, 9]) {
       cylinder(hotel, x, 3.8, 2, 0.34, 7.6, materials.gold, 24);
@@ -1033,6 +1044,10 @@ function startGame(role) {
     box(suite, -8.8, 4.5, 0, 0.4, 9, 18, material(0x423e3c, 0.88));
     box(suite, 8.8, 4.5, 0, 0.4, 9, 18, material(0x423e3c, 0.88));
     box(suite, 0, 8.8, 0, 18, 0.35, 18, material(0x323435, 0.82));
+    for (const axis of [-5.8, 0, 5.8]) {
+      box(suite, axis, 8.5, 0, .18, .28, 17.4, materials.darkMetal, false);
+      box(suite, 0, 8.5, axis, 17.4, .28, .18, materials.darkMetal, false);
+    }
 
     const window = box(suite, 2.8, 4.8, -8.55, 8.5, 5.8, 0.15, materials.glass);
     window.castShadow = false;
@@ -1080,6 +1095,7 @@ function startGame(role) {
     door.castShadow = true;
     box(suite, 0, 4.84, 8.5, 2.75, .18, .4, materials.gold, false);
     cylinder(suite, .8, 2.32, 8.34, .08, .08, materials.gold, 10).rotation.z = Math.PI / 2;
+    for (const x of [-1.32, 1.32]) box(suite, x, 2.4, 8.43, .16, 4.95, .28, materials.darkMetal, false);
     interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
     interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
   }
