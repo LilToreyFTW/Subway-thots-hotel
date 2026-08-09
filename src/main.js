@@ -8,6 +8,7 @@ import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
 import { GameConfig } from './config/GameConfig.js';
+import { GameLoop } from './core/GameLoop.js';
 import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
 import { WorldChunkManager } from './world/WorldChunkManager.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
@@ -2210,10 +2211,10 @@ function startGame(role) {
   camera.position.set(player.position.x, player.position.y + 4.25, player.position.z + 7.4);
   camera.lookAt(player.position.x, player.position.y + 1.2, player.position.z);
 
-  function loop() {
-    requestAnimationFrame(loop);
-    const delta = Math.min(clock.getDelta(), 0.05);
-    const elapsed = clock.elapsedTime;
+  const gameLoop = new GameLoop({
+    clock,
+    input: inputController,
+    update(delta, elapsed) {
     let movement = { dx: 0, dz: 0, moving: false };
     if (!paused) {
       movement = movePlayer(delta);
@@ -2238,8 +2239,9 @@ function startGame(role) {
       }));
       lastNetworkSend = elapsed;
     }
-    composer.render();
-    inputController.update();
-  }
-  loop();
+    },
+    render: () => composer.render(),
+  });
+  addEventListener('beforeunload', () => { gameLoop.stop(); inputController.dispose(); worldStreamer.dispose(); }, { once: true });
+  gameLoop.start();
 }

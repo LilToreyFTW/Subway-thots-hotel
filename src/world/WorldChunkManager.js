@@ -4,6 +4,7 @@ import { GeoCoordinateSystem } from './GeoCoordinateSystem.js';
 import { RegionCatalog } from './RegionCatalog.js';
 import { StructuralGrid } from './StructuralGrid.js';
 import { createMultiFloorPlan } from './MultiFloorPlan.js';
+import { disposeOwnedResources } from '../core/ResourceCleanup.js';
 
 const disposeChunk = (node) => {
   // Chunk geometry/materials are intentionally shared and owned by the manager;
@@ -25,6 +26,8 @@ export class WorldChunkManager {
     this.root.name = 'streamed-world';
     parent.add(this.root);
     this.activeChunks = new Map();
+    this.loadedChunks = this.activeChunks;
+    this.playerChunk = null;
     this.originOffset = new THREE.Vector3();
     this.currentRegion = null;
     this.geo = null;
@@ -74,6 +77,7 @@ export class WorldChunkManager {
     if (!this.geo) return null;
     const global = playerPosition.clone().add(this.originOffset);
     const playerChunk = this.geo.chunkForLocal(global, this.config.chunkSizeMeters);
+    this.playerChunk = playerChunk;
     const required = new Set();
     for (let z = -this.config.activeChunkRadius; z <= this.config.activeChunkRadius; z++) {
       for (let x = -this.config.activeChunkRadius; x <= this.config.activeChunkRadius; x++) {
@@ -105,7 +109,7 @@ export class WorldChunkManager {
         return rebase;
       }
     }
-    this.onStatus({ type: 'position', chunk: playerChunk, geographic: this.geo.toGeographic(global), activeChunks: this.activeChunks.size });
+    this.onStatus({ type: 'position', chunk: playerChunk, geographic: this.geo.toGeographic(global), activeChunks: this.activeChunks.size, loadedChunks: this.loadedChunks.size });
     return null;
   }
 
@@ -209,7 +213,7 @@ export class WorldChunkManager {
 
   dispose() {
     this.clear();
-    Object.values(this.geometries).forEach((geometry) => geometry.dispose());
-    this.materialPool.forEach((material) => material.dispose());
+    disposeOwnedResources({ geometries: Object.values(this.geometries), materials: [...this.materialPool.values()] });
+    this.root.removeFromParent();
   }
 }
