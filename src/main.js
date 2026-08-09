@@ -176,7 +176,6 @@ function startGame(role) {
   let cameraDistance = cameraController.distance;
   let cameraDragging = false;
   let jumpQueued = false;
-  let verticalVelocity = 0;
   let currentRoom = null;
   let paused = false;
   let rep = 12;
@@ -1572,10 +1571,9 @@ function startGame(role) {
       turnDirection = rotationDelta;
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
-    player.position.y += displacement.y;
     const floor = playerCollision.groundHeightAt(player.position.x, player.position.z);
-    if (player.position.y <= floor) { player.position.y = floor; playerController.land(); }
-    const grounded = player.position.y <= floor + .001;
+    player.position.y = playerController.motor.resolveVertical(player.position.y, floor, delta);
+    const grounded = playerController.motor.grounded;
     const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);
     const walk = moving && grounded ? Math.sin(cycle) * 0.56 : 0;
     const legs = player.userData.legs || [];

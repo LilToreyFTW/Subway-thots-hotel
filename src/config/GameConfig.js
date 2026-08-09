@@ -15,6 +15,7 @@ export const GameConfig = Object.freeze({
     deceleration: 34,
     gravity: 18,
     jumpVelocity: 6.4,
+    terminalFallSpeed: 22,
     height: 1.78,
     radius: 0.32,
   },
