@@ -22,6 +22,7 @@ import { DecalSystem } from './world/DecalSystem.js';
 import { EnvironmentLighting, LightingProfile } from './rendering/EnvironmentLighting.js';
 import { createRoomPlan } from './world/RoomArchetypes.js';
 import { StructuralGrid } from './world/StructuralGrid.js';
+import { NavigationStandards, hasWalkableOpening } from './world/NavigationStandards.js';
 import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import { InteractionSystem } from './interaction/InteractionSystem.js';
@@ -261,8 +262,9 @@ function startGame(role) {
   $('#role-stat').textContent = role === 'manager' ? 'MANAGER' : 'GUEST';
   $('#cash').textContent = cash;
 
+  const worldSeed = Math.max(1, Number(localStorage.getItem('sth-world-seed') || GameConfig.world.seed) >>> 0);
   const seeded = (() => {
-    let seed = 47381;
+    let seed = worldSeed;
     return () => {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
@@ -445,7 +447,9 @@ function startGame(role) {
   function addDoor(parent, x, y, z, { style = 'hotel', sliding = false } = {}) {
     const pivot = new THREE.Group(); pivot.position.set(x, y, z); parent.add(pivot);
     const materialByStyle = { hotel: materials.wood, glass: materials.glass, metal: materials.darkMetal, service: material(0x4e5c60, .35, .7), subway: material(0x313d44, .32, .72) };
-    const leaf = box(pivot, sliding ? 0 : .58, 1.2, 0, 1.16, 2.4, .13, materialByStyle[style] || materials.wood);
+    const doorWidth = structuralGrid.opening(1.2);
+    if (!hasWalkableOpening(doorWidth, NavigationStandards.minimumCeilingHeight)) throw new Error('Door does not meet navigation standards.');
+    const leaf = box(pivot, sliding ? 0 : doorWidth / 2, 1.2, 0, doorWidth, 2.4, .13, materialByStyle[style] || materials.wood);
     if (style !== 'glass') cylinder(pivot, sliding ? .38 : 1.02, 1.2, .1, .06, .08, materials.gold, 10).rotation.z = Math.PI / 2;
     const controller = new DoorController(pivot, { type: style, mode: sliding ? 'sliding' : 'hinged', openAmount: sliding ? 1.22 : Math.PI / 2 });
     const door = { controller, position: new THREE.Vector3(x, 0, z), style };
@@ -479,6 +483,11 @@ function startGame(role) {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
     return texture;
+  }
+
+  function addWayfindingSign(parent, text, x, y, z, rotation = 0, width = 2.8) {
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(width, .5), new THREE.MeshBasicMaterial({ map: labelTexture(text, '#f0dfab', '#151a1d'), depthWrite: false }));
+    sign.position.set(x, y, z); sign.rotation.y = rotation; sign.renderOrder = 3; parent.add(sign); return sign;
   }
 
   function windowTexture(base, warmChance = 0.48) {
@@ -839,6 +848,8 @@ function startGame(role) {
     const metroSign = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 1.1), new THREE.MeshBasicMaterial({ map: labelTexture('24TH STREET', '#d9d9d5', '#20262a') }));
     metroSign.position.set(0, 3.65, 2.82);
     metro.add(metroSign);
+    addWayfindingSign(metro, 'SUBWAY · PLATFORM ↓', 0, 3.1, 2.86, 0, 5.4);
+    addWayfindingSign(metro, 'EXIT ↑', -3, 2.55, -2.8, Math.PI, 1.7);
     addTicketMachine(metro, -2.45, -1.3);
     addTicketMachine(metro, .15, -1.3);
     for (let i = 0; i < 4; i++) addChair(metro, -2.55 + i * 1.7, 1.5, Math.PI, 0x334c59);
@@ -1084,6 +1095,10 @@ function startGame(role) {
     const deskSign = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.25), new THREE.MeshBasicMaterial({ map: labelTexture('RECEPTION', '#d9b66f', '#171719') }));
     deskSign.position.set(0, 4.9, -19.02);
     hotel.add(deskSign);
+    addWayfindingSign(hotel, 'LOBBY · RECEPTION', 0, 3.75, -10.95, 0, 4.5);
+    addWayfindingSign(hotel, 'ELEVATOR →', 15.8, 3, -15.85, 0, 2.8);
+    addWayfindingSign(hotel, 'EXIT → STATION', 0, 3, 18.86, Math.PI, 3.2);
+    addWayfindingSign(hotel, 'STAIRS / ROOF', -18.4, 3, -15.95, 0, 2.8);
 
     for (const x of [-16, -11, 11, 16]) {
       box(hotel, x, 2.45, -18.9, 4.1, 4.7, 0.15, materials.glass);
@@ -1335,7 +1350,7 @@ function startGame(role) {
   const worldStreamer = new WorldChunkManager({
     parent: city,
     materials,
-    config: GameConfig.world,
+    config: { ...GameConfig.world, seed: worldSeed },
     onStatus: ({ type, region, geographic }) => {
       if (type === 'region' && region) {
         $('#location').textContent = `${region.city.toUpperCase()} · STREAMING`;
@@ -1429,6 +1444,15 @@ function startGame(role) {
   const worldPanel = $('#world-panel');
   const countrySelect = $('#country-select');
   const regionSelect = $('#region-select');
+  const worldSeedInput = $('#world-seed');
+  worldSeedInput.value = String(worldSeed);
+  const setWorldSeed = (seed) => {
+    const next = Math.max(1, Number(seed) >>> 0);
+    localStorage.setItem('sth-world-seed', String(next));
+    location.reload();
+  };
+  $('#randomize-world-seed').addEventListener('click', () => setWorldSeed(crypto.getRandomValues(new Uint32Array(1))[0]));
+  $('#regenerate-world').addEventListener('click', () => setWorldSeed(worldSeedInput.value));
   const renderRegionOptions = (countryCode) => {
     regionSelect.innerHTML = '';
     const country = RegionCatalog.countries.find((item) => item.code === countryCode) || RegionCatalog.countries[0];

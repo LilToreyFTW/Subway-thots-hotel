@@ -11,6 +11,12 @@ export class SeededRandom {
   range(min, max) { return min + (max - min) * this.next(); }
   int(min, max) { return Math.floor(this.range(min, max + 1)); }
   pick(values) { return values[Math.floor(this.next() * values.length)]; }
+  weighted(entries) {
+    const total = entries.reduce((sum, entry) => sum + entry.weight, 0);
+    let cursor = this.next() * total;
+    for (const entry of entries) { cursor -= entry.weight; if (cursor <= 0) return entry.value; }
+    return entries.at(-1)?.value;
+  }
 }
 
 export function hashString(value) {

@@ -107,6 +107,9 @@ button { color: inherit; }
 #world-panel p { color: #9ca5a7; font-size: 10px; line-height: 1.55; }
 #world-panel label { display: block; margin: 14px 0 6px; color: var(--cyan); font: 600 8px Inter; letter-spacing: .16em; }
 #world-panel select { width: 100%; padding: 11px; border: 1px solid var(--line); background: #10161b; color: #e6e2dc; font: 500 11px Inter; }
+#world-panel input { width: 100%; box-sizing:border-box; padding: 11px; border: 1px solid var(--line); background: #10161b; color: #e6e2dc; font: 500 11px Inter; }
+.world-seed-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
+.world-seed-actions button { padding:9px 6px; font-size:8px; }
 .world-meta { margin-top: 17px; padding: 10px; border: 1px solid var(--line); background: #0e1317; }
 .world-meta span, .world-meta strong { display: block; }
 .world-meta span { color: #737d80; font: 600 7px Inter; letter-spacing: .16em; }

@@ -37,6 +37,12 @@ export class WorldChunkManager {
     };
     this.materialPool = new Map();
     this.structuralGrid = new StructuralGrid(2, .25);
+    this.worldSeed = config.seed;
+  }
+
+  setSeed(seed) {
+    this.worldSeed = Math.max(1, Number(seed) >>> 0);
+    this.clear();
   }
 
   material(color, roughness = 0.76, metalness = 0.04) {
@@ -107,7 +113,7 @@ export class WorldChunkManager {
     const size = this.config.chunkSizeMeters;
     const centerX = chunkX * size + size / 2;
     const centerZ = chunkZ * size + size / 2;
-    const random = new SeededRandom(hashString(`${this.currentRegion.seed}:${chunkX}:${chunkZ}`));
+    const random = new SeededRandom(hashString(`${this.worldSeed}:${this.currentRegion.seed}:${chunkX}:${chunkZ}`));
     const chunk = new THREE.Group();
     chunk.name = `world-chunk-${chunkX}-${chunkZ}`;
     chunk.position.set(centerX, 0, centerZ);
@@ -131,7 +137,7 @@ export class WorldChunkManager {
     const palette = [0x343b42, 0x4a4640, 0x34424c, 0x4a3e42, 0x303438];
     const corners = [[-1,-1], [1,-1], [-1,1], [1,1]];
     corners.forEach(([sx, sz], index) => {
-      const count = 2 + random.int(0, 2);
+      const count = random.weighted([{ value: 2, weight: 5 }, { value: 3, weight: 3 }, { value: 4, weight: 1 }]);
       for (let i = 0; i < count; i++) {
         const width = this.structuralGrid.snapSize(random.range(12, 24));
         const depth = this.structuralGrid.snapSize(random.range(12, 24));
