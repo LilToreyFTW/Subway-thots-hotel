@@ -9,8 +9,8 @@ import { GameConfig } from './config/GameConfig.js';
 import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
 import { WorldChunkManager } from './world/WorldChunkManager.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
-import { CharacterMotor } from './player/CharacterMotor.js';
 import { PlayerModel } from './player/PlayerModel.js';
+import { PlayerController } from './player/PlayerController.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -137,7 +137,6 @@ function startGame(role) {
   const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 310);
   const inputController = new InputController(canvas);
   const cameraController = new ThirdPersonCameraController(camera, GameConfig.camera);
-  const playerMotor = new CharacterMotor(GameConfig.player);
   const audioListener = new THREE.AudioListener();
   camera.add(audioListener);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -924,6 +923,7 @@ function startGame(role) {
   }
   const playerModel = new PlayerModel(player);
   playerModel.load().catch((error) => console.warn('GLB player model unavailable; keeping fallback avatar.', error));
+  const playerController = new PlayerController(GameConfig.player, playerModel);
 
   // The original hotel district remains hand-authored. Beyond it, the streamed
   // layer uses WGS84 anchored chunks and can later swap procedural lots for
@@ -1526,7 +1526,7 @@ function startGame(role) {
     }
     const needPenalty = needs.energy < 15 || needs.hunger < 10 ? 0.62 : needs.energy < 35 ? 0.82 : 1;
     const canSprint = keys.shift && needs.energy > 8;
-    const displacement = playerMotor.step({
+    const displacement = playerController.step({
       delta,
       direction: new THREE.Vector3(dx, 0, dz),
       speed: (canSprint ? GameConfig.player.sprintSpeed : GameConfig.player.walkSpeed) * needPenalty,
@@ -1550,7 +1550,7 @@ function startGame(role) {
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
     player.position.y += displacement.y;
-    if (player.position.y <= 0) { player.position.y = 0; playerMotor.land(); }
+    if (player.position.y <= 0) { player.position.y = 0; playerController.land(); }
     const grounded = player.position.y <= 0.001;
     const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);
     const walk = moving && grounded ? Math.sin(cycle) * 0.56 : 0;
@@ -1737,7 +1737,7 @@ function startGame(role) {
     let movement = { dx: 0, dz: 0, moving: false };
     if (!paused) {
       movement = movePlayer(delta);
-      playerModel.update(delta, movement);
+      playerController.updateVisual(delta, movement);
       updateNearby();
       updateWorld(delta, elapsed);
       updateMap();
