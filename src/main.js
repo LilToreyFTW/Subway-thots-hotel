@@ -10,6 +10,7 @@ import { ThirdPersonCameraController } from './camera/ThirdPersonCameraControlle
 import { WorldChunkManager } from './world/WorldChunkManager.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
 import { CharacterMotor } from './player/CharacterMotor.js';
+import { PlayerModel } from './player/PlayerModel.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -921,6 +922,8 @@ function startGame(role) {
     city.visible = true;
     hotel.visible = false;
   }
+  const playerModel = new PlayerModel(player);
+  playerModel.load().catch((error) => console.warn('GLB player model unavailable; keeping fallback avatar.', error));
 
   // The original hotel district remains hand-authored. Beyond it, the streamed
   // layer uses WGS84 anchored chunks and can later swap procedural lots for
@@ -1560,7 +1563,7 @@ function startGame(role) {
     if (player.userData.arm1) player.userData.arm1.rotation.x = walk * 0.7 - idle;
     if (player.userData.torso) player.userData.torso.rotation.x = moving ? Math.min(0.12, Math.abs(walk) * 0.08) : idle * 0.22;
     if (player.userData.head) player.userData.head.rotation.y = moving ? 0 : Math.sin(clock.elapsedTime * 0.55) * 0.06;
-    return { dx, dz, moving };
+    return { dx, dz, moving, sprinting: canSprint, airborne: !grounded };
   }
 
   function updateCamera(delta) {
@@ -1734,6 +1737,7 @@ function startGame(role) {
     let movement = { dx: 0, dz: 0, moving: false };
     if (!paused) {
       movement = movePlayer(delta);
+      playerModel.update(delta, movement);
       updateNearby();
       updateWorld(delta, elapsed);
       updateMap();
