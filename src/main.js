@@ -13,6 +13,7 @@ import { PlayerModel } from './player/PlayerModel.js';
 import { PlayerController } from './player/PlayerController.js';
 import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
 import { GroundProbe } from './player/GroundProbe.js';
+import { MaterialLibrary } from './rendering/MaterialLibrary.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -238,21 +239,11 @@ function startGame(role) {
     };
   })();
 
-  const materials = {
-    asphalt: new THREE.MeshStandardMaterial({ color: 0x171d22, roughness: 0.94, metalness: 0.03 }),
-    concrete: new THREE.MeshStandardMaterial({ color: 0x596065, roughness: 0.85 }),
-    wetConcrete: new THREE.MeshPhysicalMaterial({ color: 0x384047, roughness: 0.28, metalness: 0.08, clearcoat: 0.55, clearcoatRoughness: 0.25 }),
-    hotelStone: new THREE.MeshStandardMaterial({ color: 0x776b5b, roughness: 0.72 }),
-    darkMetal: new THREE.MeshStandardMaterial({ color: 0x171c21, roughness: 0.28, metalness: 0.82 }),
-    glass: new THREE.MeshPhysicalMaterial({ color: 0x8ba8b2, roughness: 0.08, metalness: 0.1, transmission: 0.22, transparent: true, opacity: 0.72 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xb98c45, roughness: 0.25, metalness: 0.78 }),
-    carpet: new THREE.MeshStandardMaterial({ color: 0x321c24, roughness: 0.96 }),
-    wood: new THREE.MeshStandardMaterial({ color: 0x4a2f25, roughness: 0.65 }),
-    linen: new THREE.MeshStandardMaterial({ color: 0xd8d0c4, roughness: 0.91 }),
-  };
+  const materialLibrary = new MaterialLibrary();
+  const materials = materialLibrary.named();
 
   function material(color, roughness = 0.66, metalness = 0.05) {
-    return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+    return materialLibrary.standard(color, roughness, metalness);
   }
 
   // Stable, deliberately narrow variation bands keep procedural rooms cohesive.
