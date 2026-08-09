@@ -270,8 +270,9 @@ function startGame(role) {
   function box(parent, x, y, z, sx, sy, sz, meshMaterial, shadows = true) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), meshMaterial);
     mesh.position.set(x, y, z);
-    mesh.castShadow = shadows;
-    mesh.receiveShadow = shadows;
+    const shadowEnabled = shadows && sx * sy * sz >= 0.018;
+    mesh.castShadow = shadowEnabled;
+    mesh.receiveShadow = shadowEnabled;
     parent.add(mesh);
     return mesh;
   }
@@ -279,8 +280,9 @@ function startGame(role) {
   function cylinder(parent, x, y, z, radius, height, meshMaterial, sides = 18) {
     const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, sides), meshMaterial);
     mesh.position.set(x, y, z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    const shadowEnabled = radius * height >= 0.025;
+    mesh.castShadow = shadowEnabled;
+    mesh.receiveShadow = shadowEnabled;
     parent.add(mesh);
     return mesh;
   }
@@ -1942,6 +1944,7 @@ function startGame(role) {
   }
 
   function updateWorld(delta, elapsed) {
+    environmentLighting.updateShadowFocus(player);
     if (mode === 'city') {
       const inSubwayConcourse = Math.hypot(player.position.x + 45, player.position.z - 5) < 10;
       environmentLighting.apply(inSubwayConcourse ? LightingProfile.SUBWAY : LightingProfile.CITY);
