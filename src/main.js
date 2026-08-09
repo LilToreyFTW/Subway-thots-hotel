@@ -12,6 +12,7 @@ import { RegionCatalog } from './world/RegionCatalog.js';
 import { PlayerModel } from './player/PlayerModel.js';
 import { PlayerController } from './player/PlayerController.js';
 import { CapsuleCollisionWorld } from './player/CapsuleCollisionWorld.js';
+import { GroundProbe } from './player/GroundProbe.js';
 import { InputController } from './input/InputController.js';
 import './style.css?v=5';
 
@@ -211,7 +212,11 @@ function startGame(role) {
   const cityColliders = [];
   const hotelColliders = [];
   const suiteColliders = [];
+  const cityFloors = [];
+  const hotelFloors = [];
+  const suiteFloors = [];
   const playerCollision = new CapsuleCollisionWorld({ radius: GameConfig.player.radius, height: GameConfig.player.height });
+  const groundProbe = new GroundProbe({ radius: GameConfig.player.radius });
   let ragdollUntil = 0;
   const interactables = [];
   const npcs = [];
@@ -555,7 +560,8 @@ function startGame(role) {
   }
 
   function addCity() {
-    box(city, 0, -0.36, 0, 220, 0.7, 220, materials.asphalt, false);
+    const cityFloor = box(city, 0, -0.36, 0, 220, 0.7, 220, materials.asphalt, false);
+    cityFloors.push(cityFloor);
     const roadPositions = [-72, -24, 24, 72];
     const roadMaterial = material(0x171c20, 0.34, 0.06);
     for (const p of roadPositions) {
@@ -591,6 +597,7 @@ function startGame(role) {
     addHotelExterior();
 
     const plaza = box(city, 0, 0.12, -27, 30, 0.24, 14, materials.wetConcrete, false);
+    cityFloors.push(plaza);
     plaza.receiveShadow = true;
     for (let x = -12; x <= 12; x += 4) box(city, x, 0.245, -27, 0.065, 0.02, 13.2, material(0x798083, 0.45), false);
 
@@ -743,7 +750,8 @@ function startGame(role) {
   }
 
   function addHotelInterior() {
-    box(hotel, 0, -0.3, 0, 48, 0.6, 40, materials.wetConcrete);
+    const hotelFloor = box(hotel, 0, -0.3, 0, 48, 0.6, 40, materials.wetConcrete);
+    hotelFloors.push(hotelFloor);
     box(hotel, 0, 7.5, -19.5, 48, 15, 1, materials.hotelStone);
     box(hotel, -23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
     box(hotel, 23.5, 7.5, 0, 1, 15, 40, materials.hotelStone);
@@ -847,9 +855,11 @@ function startGame(role) {
 
   function buildSuite(number) {
     suite.clear();
+    suiteFloors.length = 0;
     interactables.splice(0, interactables.length, ...interactables.filter((item) => item.mode !== 'room'));
     const accent = number % 3 === 0 ? 0x38566b : number % 2 ? 0x64364f : 0x4a5369;
-    box(suite, 0, -0.28, 0, 18, 0.55, 18, material(0x3e302b, 0.76));
+    const suiteFloor = box(suite, 0, -0.28, 0, 18, 0.55, 18, material(0x3e302b, 0.76));
+    suiteFloors.push(suiteFloor);
     for (let stripe = -8; stripe <= 8; stripe += 1.1) box(suite, stripe, 0.015, 0, 0.04, 0.025, 17.6, material(0x65534b, 0.78), false);
     box(suite, 0, 4.5, -8.8, 18, 9, 0.4, material(0x4a4643, 0.88));
     box(suite, -8.8, 4.5, 0, 0.4, 9, 18, material(0x423e3c, 0.88));
@@ -1571,7 +1581,10 @@ function startGame(role) {
       turnDirection = rotationDelta;
       player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, desiredRotation, 1 - Math.pow(0.001, delta));
     }
-    const floor = playerCollision.groundHeightAt(player.position.x, player.position.z);
+    const activeFloors = mode === 'city' ? cityFloors : mode === 'hotel' ? hotelFloors : suiteFloors;
+    // Raycast confirms the physical floor under the capsule; the baseline is
+    // retained as an infinite-fall safety net while streamed terrain loads.
+    const floor = groundProbe.probe(player.position, activeFloors) ?? playerCollision.groundHeightAt(player.position.x, player.position.z);
     player.position.y = playerController.motor.resolveVertical(player.position.y, floor, delta);
     const grounded = playerController.motor.grounded;
     const cycle = clock.elapsedTime * (keys.shift ? 12 : 8);
