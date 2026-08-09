@@ -18,6 +18,7 @@ import { createRoomPlan } from './world/RoomArchetypes.js';
 import { StructuralGrid } from './world/StructuralGrid.js';
 import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
+import { InteractionSystem } from './interaction/InteractionSystem.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -223,12 +224,12 @@ function startGame(role) {
   const groundProbe = new GroundProbe({ radius: GameConfig.player.radius });
   let ragdollUntil = 0;
   const interactables = [];
+  const interactionSystem = new InteractionSystem({ items: interactables, range: 3.15 });
   const npcs = [];
   const vehicles = [];
   const remotePlayers = new Map();
   const rainDrops = [];
   const doors = [];
-  const tempWorld = new THREE.Vector3();
   const targetCamera = new THREE.Vector3();
   const cameraLook = new THREE.Vector3();
 
@@ -418,7 +419,17 @@ function startGame(role) {
     const leaf = box(pivot, sliding ? 0 : .58, 1.2, 0, 1.16, 2.4, .13, materialByStyle[style] || materials.wood);
     if (style !== 'glass') cylinder(pivot, sliding ? .38 : 1.02, 1.2, .1, .06, .08, materials.gold, 10).rotation.z = Math.PI / 2;
     const controller = new DoorController(pivot, { type: style, mode: sliding ? 'sliding' : 'hinged', openAmount: sliding ? 1.22 : Math.PI / 2 });
-    doors.push({ controller, position: new THREE.Vector3(x, 0, z), style }); return controller;
+    const door = { controller, position: new THREE.Vector3(x, 0, z), style };
+    doors.push(door);
+    interactionSystem.register({
+      mode: parent === suite ? 'room' : 'hotel',
+      type: 'door',
+      object: pivot,
+      controller,
+      style,
+      label: `Open ${style} door`,
+    });
+    return controller;
   }
 
   function labelTexture(text, foreground = '#e9c27b', background = '#111519', width = 768, height = 180) {
@@ -1451,10 +1462,13 @@ function startGame(role) {
 
   function interact() {
     if (paused) return;
-    const nearestDoor = doors.filter((door) => door.controller.node.parent?.visible).sort((a, b) => a.position.distanceToSquared(player.position) - b.position.distanceToSquared(player.position))[0];
-    if (nearestDoor && nearestDoor.position.distanceTo(player.position) < 2.5) { nearestDoor.controller.toggle(); toast(`${nearestDoor.style.toUpperCase()} door ${nearestDoor.controller.state === 'opening' ? 'opening' : 'closing'}.`); return; }
     if (!nearby) return;
     const item = nearby.item;
+    if (item.type === 'door') {
+      item.controller.toggle();
+      toast(`${item.style.toUpperCase()} door ${item.controller.state === 'opening' ? 'opening' : 'closing'}.`);
+      return;
+    }
     if (item.type === 'hotelEntrance') return enterHotel();
     if (item.type === 'subwayInfo') { toast('24th Street Station: ticket concourse, platform, service rooms, active tunnel, and a sealed abandoned spur.'); return; }
     if (item.type === 'hotelExit') return exitHotel();
@@ -1828,27 +1842,15 @@ function startGame(role) {
     closeChat();
   });
 
-  function itemWorldPosition(item) {
-    if (item.position) return tempWorld.copy(item.position);
-    if (item.object) return item.object.getWorldPosition(tempWorld);
-    return tempWorld.set(0, 0, 0);
-  }
-
   function updateNearby() {
-    let best = null;
-    let bestDistance = 3.15;
-    for (const item of interactables) {
-      if (item.mode !== mode || item.completed || item.active === false || (item.object && !item.object.visible)) continue;
-      const position = itemWorldPosition(item);
-      const distance = Math.hypot(player.position.x - position.x, player.position.z - position.z);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = item;
-      }
-    }
-    nearby = best ? { item: best, distance: bestDistance } : null;
+    nearby = interactionSystem.findNearest(player.position, mode);
     $('#context-card').classList.toggle('hidden-card', !nearby);
-    if (nearby) $('#context-action').textContent = nearby.item.label;
+    if (nearby) {
+      if (nearby.item.type === 'door') {
+        nearby.item.label = `${nearby.item.controller.state === 'open' || nearby.item.controller.state === 'opening' ? 'Close' : 'Open'} ${nearby.item.style} door`;
+      }
+      $('#context-action').textContent = interactionSystem.prompt();
+    }
   }
 
   function movePlayer(delta) {
