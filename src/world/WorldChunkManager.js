@@ -27,6 +27,8 @@ export class WorldChunkManager {
     parent.add(this.root);
     this.activeChunks = new Map();
     this.loadedChunks = this.activeChunks;
+    this.pendingChunks = new Map();
+    this.maxChunkCreatesPerUpdate = config.maxChunkCreatesPerUpdate ?? 1;
     this.playerChunk = null;
     this.originOffset = new THREE.Vector3();
     this.currentRegion = null;
@@ -85,8 +87,13 @@ export class WorldChunkManager {
         const cz = playerChunk.z + z;
         const key = `${cx}:${cz}`;
         required.add(key);
-        if (!this.activeChunks.has(key)) this.activeChunks.set(key, this.createChunk(cx, cz));
+        if (!this.activeChunks.has(key) && !this.pendingChunks.has(key)) this.pendingChunks.set(key, { cx, cz, distance: Math.hypot(x, z) });
       }
+    }
+    const pending = [...this.pendingChunks.entries()].sort((a, b) => a[1].distance - b[1].distance);
+    for (const [key, item] of pending.slice(0, this.maxChunkCreatesPerUpdate)) {
+      this.activeChunks.set(key, this.createChunk(item.cx, item.cz));
+      this.pendingChunks.delete(key);
     }
     for (const [key, chunk] of this.activeChunks) {
       const [cx, cz] = key.split(':').map(Number);
@@ -95,6 +102,9 @@ export class WorldChunkManager {
         disposeChunk(chunk);
         this.activeChunks.delete(key);
       }
+    }
+    for (const [key, item] of this.pendingChunks) {
+      if (Math.abs(item.cx - playerChunk.x) > this.config.unloadChunkRadius || Math.abs(item.cz - playerChunk.z) > this.config.unloadChunkRadius) this.pendingChunks.delete(key);
     }
     if (playerPosition.length() > this.config.floatingOriginThresholdMeters) {
       const rebase = new THREE.Vector3(
@@ -109,7 +119,7 @@ export class WorldChunkManager {
         return rebase;
       }
     }
-    this.onStatus({ type: 'position', chunk: playerChunk, geographic: this.geo.toGeographic(global), activeChunks: this.activeChunks.size, loadedChunks: this.loadedChunks.size });
+    this.onStatus({ type: 'position', chunk: playerChunk, geographic: this.geo.toGeographic(global), activeChunks: this.activeChunks.size, loadedChunks: this.loadedChunks.size, queuedChunks: this.pendingChunks.size });
     return null;
   }
 
@@ -209,6 +219,7 @@ export class WorldChunkManager {
       disposeChunk(chunk);
     }
     this.activeChunks.clear();
+    this.pendingChunks.clear();
   }
 
   dispose() {

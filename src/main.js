@@ -9,6 +9,7 @@ import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
 import { GameConfig } from './config/GameConfig.js';
 import { GameLoop } from './core/GameLoop.js';
+import { PerformanceDiagnostics } from './core/PerformanceDiagnostics.js';
 import { DebugVisuals } from './debug/DebugVisuals.js';
 import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
 import { WorldChunkManager } from './world/WorldChunkManager.js';
@@ -167,6 +168,8 @@ function startGame(role) {
     stencil: false,
     powerPreference: 'high-performance',
   });
+  const diagnostics = new PerformanceDiagnostics({ renderer });
+  window.sthDiagnostics = diagnostics;
   const isWebGL2 = renderer.capabilities.isWebGL2;
   const maxTextureSize = renderer.capabilities.maxTextureSize;
   const quality = isWebGL2 && maxTextureSize >= 8192 && innerWidth > 700 ? 'high' : 'balanced';
@@ -2399,8 +2402,9 @@ function startGame(role) {
       environmentLighting.apply(inServiceWing ? LightingProfile.SERVICE : LightingProfile.HOTEL_LOBBY);
     }
     doors.forEach((door) => door.controller.update(delta));
-    if (mode === 'city' && Math.max(Math.abs(player.position.x), Math.abs(player.position.z)) > 105) {
+    if (mode === 'city' && Math.max(Math.abs(player.position.x), Math.abs(player.position.z)) > 96) {
       const rebase = worldStreamer.update(player.position);
+      diagnostics.syncRendererStats();
       if (rebase) {
         city.position.sub(rebase);
         scene.attach(player);
@@ -2565,34 +2569,39 @@ function startGame(role) {
   camera.position.set(player.position.x, player.position.y + 4.25, player.position.z + 7.4);
   camera.lookAt(player.position.x, player.position.y + 1.2, player.position.z);
 
+  let latestMovement = { dx: 0, dz: 0, moving: false };
   const gameLoop = new GameLoop({
     clock,
     input: inputController,
+    diagnostics,
+    fixedUpdate(delta, elapsed) {
+      let movement = { dx: 0, dz: 0, moving: false };
+      if (!paused) {
+        movement = movePlayer(delta);
+        playerController.updateVisual(delta, movement);
+        updateNearby();
+        updateWorld(delta, elapsed);
+        updateMap();
+      }
+      latestMovement = movement;
+    },
     update(delta, elapsed) {
-    let movement = { dx: 0, dz: 0, moving: false };
-    if (!paused) {
-      movement = movePlayer(delta);
-      playerController.updateVisual(delta, movement);
-      updateNearby();
-      updateWorld(delta, elapsed);
-      updateMap();
-    }
-    updateCamera(delta);
-    voiceClient?.update();
-    if (worldSocket?.readyState === WebSocket.OPEN && elapsed - lastNetworkSend > 0.08) {
-      worldSocket.send(JSON.stringify({
-        type: 'input',
-        x: movement.dx,
-        z: movement.dz,
-        rotation: player.rotation.y,
-        zone: mode,
-        roomId: mode === 'room' ? currentRoom : null,
-        moving: movement.moving,
-        gender: onlineProfile?.gender || (role === 'manager' ? 'female' : 'male'),
-        selections: onlineProfile?.selections || null,
-      }));
-      lastNetworkSend = elapsed;
-    }
+      updateCamera(delta);
+      voiceClient?.update();
+      if (worldSocket?.readyState === WebSocket.OPEN && elapsed - lastNetworkSend > 0.08) {
+        worldSocket.send(JSON.stringify({
+          type: 'input',
+          x: latestMovement.dx,
+          z: latestMovement.dz,
+          rotation: player.rotation.y,
+          zone: mode,
+          roomId: mode === 'room' ? currentRoom : null,
+          moving: latestMovement.moving,
+          gender: onlineProfile?.gender || (role === 'manager' ? 'female' : 'male'),
+          selections: onlineProfile?.selections || null,
+        }));
+        lastNetworkSend = elapsed;
+      }
     },
     render: () => composer.render(),
   });

@@ -7,6 +7,7 @@ export const GameConfig = Object.freeze({
     chunkSizeMeters: 192,
     activeChunkRadius: 1,
     unloadChunkRadius: 2,
+    maxChunkCreatesPerUpdate: 1,
     floatingOriginThresholdMeters: 640,
     defaultRegion: 'us-seattle-central',
     roomDensity: .72,

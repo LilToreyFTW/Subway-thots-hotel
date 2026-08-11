@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { HOTEL_DIRECTION, VENUE_CATALOG, WEAPON_CATALOG, getWeapon } from '../src/content/WorldContent.js';
 import { CAMO_CATALOG, getCamo } from '../src/content/CamoCatalog.js';
 import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from '../src/content/VehicleCatalog.js';
+import { GameLoop } from '../src/core/GameLoop.js';
 
 test('weapon catalog covers the requested fictional equipment categories', () => {
   const categories = new Set(WEAPON_CATALOG.map((weapon) => weapon.category));
@@ -87,4 +88,17 @@ test('Ford vehicle batch has 55 validated manifest entries', () => {
     assert.equal(vehicle.wheelNodes.length, 4);
     assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
   }
+});
+
+test('game loop caps catch-up and separates fixed simulation from render updates', () => {
+  const originalRaf = globalThis.requestAnimationFrame;
+  globalThis.requestAnimationFrame = () => {};
+  let fixedSteps = 0;
+  let renderUpdates = 0;
+  const loop = new GameLoop({ clock: { getDelta: () => 1 }, fixedStep: 1 / 60, fixedUpdate: () => { fixedSteps += 1; }, update: () => { renderUpdates += 1; } });
+  loop.running = true;
+  loop.frame(1000);
+  assert.equal(fixedSteps, 3);
+  assert.equal(renderUpdates, 1);
+  globalThis.requestAnimationFrame = originalRaf;
 });
