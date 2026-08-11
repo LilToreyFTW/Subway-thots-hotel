@@ -911,26 +911,27 @@ function startGame(role) {
       for (const px of [-4.4, 4.4]) addFloorLamp(building, px, -1.2);
     }
     city.add(building);
+    cityColliders.push({ minX: x - width / 2 - 0.55, maxX: x + width / 2 + 0.55, minZ: z - depth / 2 - 0.55, maxZ: z + depth / 2 + 0.55 });
     interactables.push({ mode: 'city', type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'car-dealership' ? 'carDealership' : venue.type === 'car-mod-shop' ? 'carModShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'car-dealership' ? 'Shop Diamond Lane Motors' : venue.type === 'car-mod-shop' ? 'Enter Blacktop Customs' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
   }
 
   function addCity() {
-    const cityFloor = box(city, 0, -0.36, 0, 220, 0.7, 220, textureLibrary.withRepeat(materials.asphalt, 'asphalt', 44), false);
+    const cityFloor = box(city, 0, -0.36, 0, 320, 0.7, 320, textureLibrary.withRepeat(materials.asphalt, 'asphalt', 64), false);
     cityFloors.push(cityFloor);
     decals.floor(city, 7, .03, -23, 8, 4, { kind: 'water', rotation: .35 });
     decals.floor(city, -32, .03, 18, 5, 3, { kind: 'grime', rotation: -.5 });
     decals.floor(city, -45, .04, 7.8, 3.6, 1.2, { kind: 'marking', label: '24' });
-    const roadPositions = [-72, -24, 24, 72];
+    const roadPositions = [-120, -72, -24, 24, 72, 120];
     const roadMaterial = material(0x171c20, 0.34, 0.06);
     for (const p of roadPositions) {
-      box(city, p, -0.02, 0, 13, 0.08, 212, roadMaterial, false);
-      box(city, 0, -0.015, p, 212, 0.08, 13, roadMaterial, false);
+      box(city, p, -0.02, 0, 13, 0.08, 320, roadMaterial, false);
+      box(city, 0, -0.015, p, 320, 0.08, 13, roadMaterial, false);
       const sidewalk = material(0x535b5d, .58, .32);
-      box(city, p - 8.1, 0.01, 0, 2.4, 0.11, 212, sidewalk, false);
-      box(city, p + 8.1, 0.01, 0, 2.4, 0.11, 212, sidewalk, false);
-      box(city, 0, 0.01, p - 8.1, 212, 0.11, 2.4, sidewalk, false);
-      box(city, 0, 0.01, p + 8.1, 212, 0.11, 2.4, sidewalk, false);
-      for (let line = -98; line <= 98; line += 7.5) {
+      box(city, p - 8.1, 0.01, 0, 2.4, 0.11, 320, sidewalk, false);
+      box(city, p + 8.1, 0.01, 0, 2.4, 0.11, 320, sidewalk, false);
+      box(city, 0, 0.01, p - 8.1, 320, 0.11, 2.4, sidewalk, false);
+      box(city, 0, 0.01, p + 8.1, 320, 0.11, 2.4, sidewalk, false);
+      for (let line = -146; line <= 146; line += 7.5) {
         box(city, p, 0.03, line, 0.12, 0.025, 3.4, material(0xc9a95e, 0.7), false);
         box(city, line, 0.035, p, 3.4, 0.025, 0.12, material(0xc9a95e, 0.7), false);
       }
@@ -954,12 +955,12 @@ function startGame(role) {
     }
     // Repeated road reflectors are batched into one draw call instead of
     // hundreds of individual meshes.
-    const reflectorCount = roadPositions.length * 25 * 2;
+    const reflectorCount = roadPositions.length * 39 * 2;
     const reflectors = new THREE.InstancedMesh(new THREE.BoxGeometry(.12, .025, .62), material(0xe1be63, .52, .2), reflectorCount);
     const reflectorMatrix = new THREE.Matrix4();
     let reflectorIndex = 0;
     for (const p of roadPositions) {
-      for (let line = -90; line <= 90; line += 7.5) {
+      for (let line = -144; line <= 144; line += 7.5) {
         reflectorMatrix.makeTranslation(p, .07, line); reflectors.setMatrixAt(reflectorIndex++, reflectorMatrix);
         reflectorMatrix.makeTranslation(line, .07, p); reflectorMatrix.multiply(new THREE.Matrix4().makeRotationY(Math.PI / 2)); reflectors.setMatrixAt(reflectorIndex++, reflectorMatrix);
       }
@@ -967,10 +968,12 @@ function startGame(role) {
     reflectors.count = reflectorIndex; reflectors.instanceMatrix.needsUpdate = true; reflectors.castShadow = false; reflectors.receiveShadow = false;
     city.add(reflectors);
 
-    for (let x = -96; x <= 96; x += 48) {
-      for (let z = -96; z <= 96; z += 48) {
+    const venueReservations = VENUE_CATALOG.filter((venue) => venue.type !== 'hotel-hosting').map((venue) => ({ x: venue.position[0], z: venue.position[2], radius: 30 }));
+    const isVenueLot = (x, z) => venueReservations.some((lot) => Math.abs(x - lot.x) < lot.radius && Math.abs(z - lot.z) < lot.radius);
+    for (let x = -144; x <= 144; x += 48) {
+      for (let z = -144; z <= 144; z += 48) {
         const hotelBlock = x === 0 && (z === -48 || z === -96);
-        if (hotelBlock) continue;
+        if (hotelBlock || isVenueLot(x, z)) continue;
         box(city, x, 0.15, z, 31, 0.3, 31, materials.concrete, false);
         const count = seeded() > 0.48 ? 2 : 1;
         if (count === 1) {
