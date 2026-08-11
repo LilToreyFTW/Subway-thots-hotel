@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "runtime": "threejs-vite",
+  "fictionalEquipment": true,
+  "adultOnly": true,
+  "rooms": 50,
+  "venues": [
+    "neon-arsenal",
+    "velvet-stage",
+    "midnight-mile",
+    "hotel-hosting"
+  ],
+  "assetPolicy": {
+    "shippingFormat": "glb",
+    "proceduralFallback": true,
+    "charactersMustBeAdults": true,
+    "noRealWorldWeaponInstructions": true
+  }
+}
