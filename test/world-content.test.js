@@ -78,3 +78,13 @@ test('Chevrolet vehicle batch has 65 validated manifest entries', () => {
     assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
   }
 });
+
+test('Ford vehicle batch has 55 validated manifest entries', () => {
+  const manifest = JSON.parse(readFileSync('assets/manifests/ford-vehicles.json', 'utf8'));
+  assert.equal(manifest.vehicles.length, 55);
+  for (const vehicle of manifest.vehicles) {
+    assert.equal(vehicle.brand, 'Ford');
+    assert.equal(vehicle.wheelNodes.length, 4);
+    assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
+  }
+});

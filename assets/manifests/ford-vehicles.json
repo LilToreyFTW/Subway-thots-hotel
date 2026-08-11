@@ -1,0 +1,2262 @@
+{
+  "version": 1,
+  "source": "original stylized game interpretations",
+  "brand": "Ford",
+  "vehicles": [
+    {
+      "id": "ford_contour",
+      "displayName": "Contour",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_contour.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_escort",
+      "displayName": "Escort",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_escort.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_zx2",
+      "displayName": "ZX2",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_zx2.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_focus",
+      "displayName": "Focus",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_focus.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_crown_victoria",
+      "displayName": "Crown Victoria",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_crown_victoria.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_taurus",
+      "displayName": "Taurus",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_taurus.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_thunderbird",
+      "displayName": "Thunderbird",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_thunderbird.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_five_hundred",
+      "displayName": "Five Hundred",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_five_hundred.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_ford_gt",
+      "displayName": "Ford GT",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_ford_gt.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_fusion",
+      "displayName": "Fusion",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_fusion.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_fiesta",
+      "displayName": "Fiesta",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_fiesta.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_c_max_hybrid",
+      "displayName": "C-Max Hybrid",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_c_max_hybrid.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_c_max_energi",
+      "displayName": "C-Max Energi",
+      "brand": "Ford",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_c_max_energi.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_mustang",
+      "displayName": "Mustang",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_mustang.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_mustang_mach_e",
+      "displayName": "Mustang Mach-E",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_mustang_mach_e.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_explorer",
+      "displayName": "Explorer",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_explorer.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_expedition",
+      "displayName": "Expedition",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_expedition.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_excursion",
+      "displayName": "Excursion",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_excursion.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_escape",
+      "displayName": "Escape",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_escape.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_freestyle",
+      "displayName": "Freestyle",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_freestyle.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_edge",
+      "displayName": "Edge",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_edge.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_taurus_x",
+      "displayName": "Taurus X",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_taurus_x.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_flex",
+      "displayName": "Flex",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_flex.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_ecosport",
+      "displayName": "EcoSport",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_ecosport.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_bronco",
+      "displayName": "Bronco",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_bronco.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_bronco_sport",
+      "displayName": "Bronco Sport",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_bronco_sport.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_ranger",
+      "displayName": "Ranger",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_ranger.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_explorer_sport_trac",
+      "displayName": "Explorer Sport Trac",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_explorer_sport_trac.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_150",
+      "displayName": "F-150",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_150.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_150_svt_lightning",
+      "displayName": "F-150 SVT Lightning",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_150_svt_lightning.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_150_lightning_ev",
+      "displayName": "F-150 Lightning EV",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_150_lightning_ev.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_250_super_duty",
+      "displayName": "F-250 Super Duty",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_250_super_duty.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_350_super_duty",
+      "displayName": "F-350 Super Duty",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_350_super_duty.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_450_super_duty",
+      "displayName": "F-450 Super Duty",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_450_super_duty.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_550_super_duty",
+      "displayName": "F-550 Super Duty",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_550_super_duty.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_650",
+      "displayName": "F-650",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_650.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_750",
+      "displayName": "F-750",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_750.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_maverick",
+      "displayName": "Maverick",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_maverick.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_windstar",
+      "displayName": "Windstar",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_windstar.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_freestar",
+      "displayName": "Freestar",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_freestar.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_e_series_econoline",
+      "displayName": "E-Series Econoline",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_e_series_econoline.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_e_series_cutaway",
+      "displayName": "E-Series Cutaway",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_e_series_cutaway.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_transit_connect",
+      "displayName": "Transit Connect",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_transit_connect.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_transit",
+      "displayName": "Transit",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_transit.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_e_transit",
+      "displayName": "E-Transit",
+      "brand": "Ford",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_e_transit.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_mustang_gt",
+      "displayName": "Mustang GT",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_mustang_gt.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_mustang_dark_horse",
+      "displayName": "Mustang Dark Horse",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_mustang_dark_horse.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_shelby_gt350",
+      "displayName": "Shelby GT350",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_shelby_gt350.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_shelby_gt500",
+      "displayName": "Shelby GT500",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_shelby_gt500.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_150_raptor",
+      "displayName": "F-150 Raptor",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_150_raptor.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_f_150_raptor_r",
+      "displayName": "F-150 Raptor R",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_f_150_raptor_r.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_ranger_raptor",
+      "displayName": "Ranger Raptor",
+      "brand": "Ford",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_ranger_raptor.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_bronco_raptor",
+      "displayName": "Bronco Raptor",
+      "brand": "Ford",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_bronco_raptor.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_focus_rs",
+      "displayName": "Focus RS",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_focus_rs.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "ford_focus_st",
+      "displayName": "Focus ST",
+      "brand": "Ford",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/ford/ford_focus_st.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.3
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.3,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    }
+  ]
+}
