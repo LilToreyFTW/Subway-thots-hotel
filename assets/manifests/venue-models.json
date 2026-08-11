@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "format": "glb",
+  "generatedBy": "scripts/generate-venue-glbs.mjs",
+  "models": [
+    "public/assets/models/venues/luxury-hotel-lobby.glb",
+    "public/assets/models/venues/hotel-suite-hosting.glb",
+    "public/assets/models/venues/neon-arsenal-shop.glb",
+    "public/assets/models/venues/velvet-stage-club.glb",
+    "public/assets/models/venues/midnight-mile-bar-28.glb"
+  ],
+  "notes": "Original stylized fictional venue kits for the adults-only game world."
+}

@@ -32,3 +32,10 @@ test('standalone weapon model pack contains valid GLB headers', () => {
     assert.equal(header, 'glTF', category);
   }
 });
+
+test('venue model pack contains valid GLB headers', () => {
+  for (const name of ['luxury-hotel-lobby', 'hotel-suite-hosting', 'neon-arsenal-shop', 'velvet-stage-club', 'midnight-mile-bar-28']) {
+    const header = readFileSync(`public/assets/models/venues/${name}.glb`).subarray(0, 4).toString('ascii');
+    assert.equal(header, 'glTF', name);
+  }
+});
