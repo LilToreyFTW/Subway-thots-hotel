@@ -301,6 +301,9 @@ function startGame(role) {
   })();
   const structuralGrid = new StructuralGrid(2, .25);
   const geometryCache = new Map();
+  const cityFootprints = [];
+  const roadwayCenters = [-120, -72, -24, 24, 72, 120];
+  const venueFootprintSizes = { 'gun-shop': [12, 8], 'adult-club': [12, 8], bar: [14, 10], 'car-dealership': [16, 12], 'car-mod-shop': [16, 12] };
   const roadGraph = new RoadGraph();
   window.sthRoadGraph = roadGraph;
 
@@ -715,8 +718,24 @@ function startGame(role) {
     city.add(lamp);
   }
 
+  function footprintsOverlap(a, b) { return a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ; }
+  function canPlaceDefaultBuilding(x, z, width, depth) {
+    const candidate = { minX: x - width / 2 - .7, maxX: x + width / 2 + .7, minZ: z - depth / 2 - .7, maxZ: z + depth / 2 + .7 };
+    for (const road of roadwayCenters) {
+      if (Math.abs(x - road) < width / 2 + 6.5 || Math.abs(z - road) < depth / 2 + 6.5) return false;
+    }
+    for (const venue of VENUE_CATALOG) {
+      const size = venueFootprintSizes[venue.type];
+      if (!size) continue;
+      const [vx, , vz] = venue.position;
+      if (footprintsOverlap(candidate, { minX: vx - size[0] / 2 - 1, maxX: vx + size[0] / 2 + 1, minZ: vz - size[1] / 2 - 1, maxZ: vz + size[1] / 2 + 1 })) return false;
+    }
+    return !cityFootprints.some((existing) => footprintsOverlap(candidate, existing));
+  }
+
   function addBuilding(x, z, width, depth, height, color, allowCollider = true) {
     ({ x, z, width, depth, height } = structuralGrid.footprint({ x, z, width, depth, height }));
+    if (!canPlaceDefaultBuilding(x, z, width, depth)) return null;
     const structure = new THREE.Group();
     structure.position.set(x, 0, z);
     city.add(structure);
@@ -764,6 +783,7 @@ function startGame(role) {
         structure.add(rooftopSign);
       }
     }
+    cityFootprints.push({ minX: x - width / 2 - .7, maxX: x + width / 2 + .7, minZ: z - depth / 2 - .7, maxZ: z + depth / 2 + .7 });
     if (allowCollider) cityColliders.push({ minX: x - width / 2 - 0.5, maxX: x + width / 2 + 0.5, minZ: z - depth / 2 - 0.5, maxZ: z + depth / 2 + 0.5 });
   }
 
