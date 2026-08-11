@@ -1,0 +1,27 @@
+# Caddyfile — SubwayThotsHotel world WebSocket TLS terminator
+#
+# Drop this on the VPS (147.189.172.104). Caddy auto-issues AND auto-renews
+# Let's Encrypt certs for the domain below. Requirements:
+#   - A DNS A record:  world.YOURDOMAIN.com  ->  147.189.172.104
+#   - Provider firewall + Windows firewall: TCP 80 open (ACME http-01 challenge)
+#   - Provider firewall + Windows firewall: TCP 443 open (wss:// traffic)
+#   - The world host (Host.py) already running on 127.0.0.1:7076 (plaintext)
+#
+# Caddy handles the WebSocket Upgrade header automatically, so no extra
+# directives are needed for /ws/sth-city-01.
+
+world.YOURDOMAIN.com {
+    # All traffic (including /ws/*) is reverse-proxied to the local world host.
+    reverse_proxy 127.0.0.1:7076
+}
+
+# ---------------------------------------------------------------------------
+# FALLBACK if you CANNOT open port 443 (provider blocks it):
+# Serve wss:// directly on 7076 with Caddy (still needs port 80 for the cert
+# challenge). The browser accepts wss://domain:7076 as long as the cert is valid.
+# Replace the block above with this and set VITE_STH_WORLD_URL=wss://world.YOURDOMAIN.com:7076
+#
+# world.YOURDOMAIN.com:7076 {
+#     reverse_proxy 127.0.0.1:7076
+# }
+# ---------------------------------------------------------------------------
