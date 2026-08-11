@@ -19,6 +19,19 @@ test('venue catalog contains the shop, adult club, distant bar, and hotel hostin
   assert.deepEqual(new Set(VENUE_CATALOG.map((venue) => venue.type)), new Set(['gun-shop', 'car-dealership', 'car-mod-shop', 'adult-club', 'bar', 'hotel-hosting']));
 });
 
+test('street venues clear the 13 meter roadway bands', () => {
+  const widths = { 'gun-shop': 12, 'adult-club': 12, bar: 14, 'car-dealership': 16, 'car-mod-shop': 16 };
+  const depths = { 'gun-shop': 8, 'adult-club': 8, bar: 10, 'car-dealership': 12, 'car-mod-shop': 12 };
+  const roads = [-120, -72, -24, 24, 72, 120];
+  for (const venue of VENUE_CATALOG.filter((item) => item.type !== 'hotel-hosting')) {
+    const [x, , z] = venue.position;
+    for (const road of roads) {
+      assert.ok(Math.abs(x - road) >= widths[venue.type] / 2 + 6.5, `${venue.name} overlaps vertical road ${road}`);
+      assert.ok(Math.abs(z - road) >= depths[venue.type] / 2 + 6.5, `${venue.name} overlaps horizontal road ${road}`);
+    }
+  }
+});
+
 test('vehicle catalog and upgrade systems cover the dealership and mod shop loop', () => {
   assert.equal(VEHICLE_CATALOG.length, 6);
   assert.equal(getVehicle('rose-runner').class, 'SPORT');

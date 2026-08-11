@@ -1038,7 +1038,7 @@ function startGame(role) {
     interactables.push({ mode: 'city', type: 'subwayInfo', position: new THREE.Vector3(-45, 0, 0), label: 'Explore 24th Street Station' });
 
     const foodStand = new THREE.Group();
-    foodStand.position.set(14, 0, -18);
+    foodStand.position.set(0, 0, -36);
     city.add(foodStand);
     box(foodStand, 0, 0.75, 0, 3.4, 1.5, 1.8, material(0x6f3035, 0.55, 0.2));
     box(foodStand, 0, .78, .93, 3.05, .95, .08, material(0x272324, .4, .35), false);
@@ -1049,8 +1049,8 @@ function startGame(role) {
     const foodSign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.72), new THREE.MeshBasicMaterial({ map: labelTexture('NIGHT BITES', '#ffe0a0', '#681e2b'), transparent: false }));
     foodSign.position.set(0, 2.75, 0.02);
     foodStand.add(foodSign);
-    cityColliders.push({ minX: 12.1, maxX: 15.9, minZ: -19.1, maxZ: -16.9 });
-    interactables.push({ mode: 'city', type: 'foodStand', position: new THREE.Vector3(14, 0, -16.6), label: 'Buy a hot meal · $18' });
+    cityColliders.push({ minX: -1.9, maxX: 1.9, minZ: -36.9, maxZ: -35.1 });
+    interactables.push({ mode: 'city', type: 'foodStand', position: new THREE.Vector3(0, 0, -34.6), label: 'Buy a hot meal · $18' });
 
     const neonWords = ['OPEN LATE', 'CITY CLUB', 'VINYL', '24 HOUR'];
     [[-69,-39,0],[69,9,Math.PI],[9,69,-Math.PI/2],[-39,69,Math.PI/2]].forEach(([x,z,rotation], index) => {
@@ -1073,7 +1073,7 @@ function startGame(role) {
       city.add(puddle);
     }
 
-    for (const [x, z, rotation] of [[-18,-28,0],[18,-28,0],[-55,28,Math.PI/2],[55,28,Math.PI/2]]) {
+    for (const [x, z, rotation] of [[12,-43,0],[-18,-35,0],[-55,28,Math.PI/2],[55,28,Math.PI/2]]) {
       const bench = new THREE.Group();
       box(bench, 0, 0.55, 0, 2.5, 0.18, 0.55, materials.wood);
       box(bench, 0, 1.05, 0.25, 2.5, 0.75, 0.14, materials.wood);

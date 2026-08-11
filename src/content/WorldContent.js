@@ -12,11 +12,11 @@ export const WEAPON_CATALOG = Object.freeze([
 ]);
 
 export const VENUE_CATALOG = Object.freeze([
-  { key: 'neon-arsenal', name: 'Neon Arsenal', type: 'gun-shop', district: 'station', position: [25, 0, -17], tagline: 'Licensed fictional equipment for city contracts.' },
+  { key: 'neon-arsenal', name: 'Neon Arsenal', type: 'gun-shop', district: 'station', position: [10, 0, -36], tagline: 'Licensed fictional equipment for city contracts.' },
   { key: 'diamond-lane-motors', name: 'Diamond Lane Motors', type: 'car-dealership', district: 'station', position: [55, 0, -40], tagline: 'Buy original fictional cars for your city garage.' },
-  { key: 'blacktop-customs', name: 'Blacktop Customs', type: 'car-mod-shop', district: 'station', position: [72, 0, -40], tagline: 'Upgrade engines, drivetrains, stopping power, and stance.' },
-  { key: 'velvet-stage', name: 'Velvet Stage', type: 'adult-club', district: 'station', position: [36, 0, 22], tagline: 'Adults-only nightlife, performances, and host bookings.' },
-  { key: 'midnight-mile', name: 'Midnight Mile Bar 28', type: 'bar', district: 'station', position: [28, 0, 50], tagline: 'A late-night social bar twenty-eight miles down the route.' },
+  { key: 'blacktop-customs', name: 'Blacktop Customs', type: 'car-mod-shop', district: 'station', position: [88, 0, -40], tagline: 'Upgrade engines, drivetrains, stopping power, and stance.' },
+  { key: 'velvet-stage', name: 'Velvet Stage', type: 'adult-club', district: 'station', position: [38, 0, 36], tagline: 'Adults-only nightlife, performances, and host bookings.' },
+  { key: 'midnight-mile', name: 'Midnight Mile Bar 28', type: 'bar', district: 'station', position: [38, 0, 56], tagline: 'A late-night social bar twenty-eight miles down the route.' },
   { key: 'hotel-hosting', name: 'Hotel Hosting Suites', type: 'hotel-hosting', district: 'hotel', position: [0, 0, 0], tagline: 'Private, consent-first adult hosting inside individual guest rooms.' },
 ]);
 
