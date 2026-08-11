@@ -1013,7 +1013,10 @@ function startGame(role) {
       npc.userData.socialRole = socialRole;
       npc.userData.appearance = { skin, clothing: coat, hair, accessory: accent };
       npc.userData.base = new THREE.Vector3(x, 0, z);
-      npc.userData.radius = 1.4 + seeded() * 2;
+      npc.userData.roamRadius = 6 + seeded() * 4;
+      npc.userData.roamSpeed = 1.05 + seeded() * .45;
+      npc.userData.roamTarget = npc.userData.base.clone();
+      npc.userData.roamPause = seeded() * 1.5;
       city.add(npc);
       npcs.push(npc);
       interactables.push({ mode: 'city', type: 'person', object: npc, label: `Meet ${name} · ${socialRole}` });
@@ -1217,7 +1220,10 @@ function startGame(role) {
       npc.userData.socialRole = socialRole;
       npc.userData.appearance = { skin, clothing: coat, hair: [0x1a1210,0x42271e,0x15171a,0x6a4329][index % 4], accessory: [0xd1a15a,0x7db9c2,0xc76a92][index % 3] };
       npc.userData.base = new THREE.Vector3(x, 0, z);
-      npc.userData.radius = 1.3;
+      npc.userData.roamRadius = 2.6 + seeded() * 1.2;
+      npc.userData.roamSpeed = .72 + seeded() * .28;
+      npc.userData.roamTarget = npc.userData.base.clone();
+      npc.userData.roamPause = seeded() * 1.2;
       hotel.add(npc);
       npcs.push(npc);
       interactables.push({ mode: 'hotel', type: 'person', object: npc, label: `Meet ${name} · ${socialRole}` });
@@ -2086,12 +2092,32 @@ function startGame(role) {
       if (!npc.parent?.visible) continue;
       const base = npc.userData.base;
       if (!base) continue;
-      const angle = elapsed * 0.18 + index * 1.7;
-      npc.position.x = base.x + Math.sin(angle) * npc.userData.radius;
-      npc.position.z = base.z + Math.cos(angle * 0.83) * npc.userData.radius;
-      npc.rotation.y = angle + Math.PI / 2;
-      const npcWalk = Math.sin(elapsed * 4.5 + npc.userData.walkPhase) * 0.26;
-      npcModelLibrary.update(npc, delta, true);
+      const target = npc.userData.roamTarget || (npc.userData.roamTarget = base.clone());
+      const distance = Math.hypot(target.x - npc.position.x, target.z - npc.position.z);
+      if (npc.userData.roamPause > 0) {
+        npc.userData.roamPause = Math.max(0, npc.userData.roamPause - delta);
+      } else if (distance < .55) {
+        const angle = elapsed * .37 + index * 2.41;
+        const radius = npc.userData.roamRadius || 3;
+        target.set(
+          base.x + Math.cos(angle) * radius,
+          base.y,
+          base.z + Math.sin(angle * .83) * radius,
+        );
+        npc.userData.roamPause = .35 + ((index * 17) % 5) * .12;
+      }
+      const dx = target.x - npc.position.x;
+      const dz = target.z - npc.position.z;
+      const length = Math.hypot(dx, dz);
+      const moving = npc.userData.roamPause <= 0 && length > .08;
+      if (moving) {
+        const step = Math.min(length, (npc.userData.roamSpeed || 1) * delta);
+        npc.position.x += (dx / length) * step;
+        npc.position.z += (dz / length) * step;
+        npc.rotation.y = Math.atan2(dx, dz);
+      }
+      const npcWalk = moving ? Math.sin(elapsed * 8 + (npc.userData.walkPhase || index)) * 0.26 : 0;
+      npcModelLibrary.update(npc, delta, moving);
       if (npc.userData.legs?.[0]) npc.userData.legs[0].rotation.x = npcWalk;
       if (npc.userData.legs?.[1]) npc.userData.legs[1].rotation.x = -npcWalk;
     }
