@@ -140,6 +140,14 @@
       <div id="hotbar-slots"></div>
     </div>
 
+    <section id="weapon-shop" class="online-modal" aria-modal="true" hidden>
+      <div class="online-card weapon-shop-card">
+        <div class="nui-header"><div><small>NEON ARSENAL · FICTIONAL LOADOUTS</small><h2>GUN SHOP</h2></div><button id="weapon-shop-close" aria-label="Close gun shop">×</button></div>
+        <p>Licensed in-game equipment for city contracts. All items are fictional game content; purchases affect your local loadout and cash only.</p>
+        <div id="weapon-shop-items" class="weapon-shop-items"></div>
+      </div>
+    </section>
+
     <script>
       window.addEventListener('error', function (event) {
         const el = document.getElementById('runtime-error');

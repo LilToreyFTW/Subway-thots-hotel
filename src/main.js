@@ -29,6 +29,7 @@ import { NavigationStandards, hasWalkableOpening } from './world/NavigationStand
 import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import { InteractionSystem } from './interaction/InteractionSystem.js';
+import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -215,6 +216,8 @@ function startGame(role) {
   let paused = false;
   let rep = 12;
   let cash = role === 'manager' ? 420 : 240;
+  const ownedWeapons = new Set(JSON.parse(localStorage.getItem('sth-owned-weapons') || '[]'));
+  let equippedWeaponKey = localStorage.getItem('sth-equipped-weapon') || null;
   let taskCount = 0;
   let frontDeskReviewed = false;
   const inspectedSuites = new Set();
@@ -808,6 +811,44 @@ function startGame(role) {
     interactables.push({ mode: 'city', type: 'hotelEntrance', object: group, position: new THREE.Vector3(0, 0, -34.5), label: 'Enter Subway Thots Hotel' });
   }
 
+  function addCityVenue(venue) {
+    if (!venue) return;
+    const [x, , z] = venue.position;
+    const accent = venue.type === 'gun-shop' ? 0x6fd7e4 : venue.type === 'adult-club' ? 0xf04fb8 : 0xd8a95f;
+    const width = venue.type === 'bar' ? 14 : 12;
+    const depth = venue.type === 'bar' ? 10 : 8;
+    const building = new THREE.Group();
+    building.position.set(x, 0, z);
+    box(building, 0, 2.65, depth / 2, width, 5.3, .35, material(0x151a20, .42, .38));
+    box(building, -width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
+    box(building, width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
+    box(building, 0, 5.3, 0, width, .35, depth, material(0x0b1015, .34, .48));
+    box(building, 0, .35, 0, width - .7, .35, depth - .7, material(0x242a31, .32, .25), false);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(width * .72, 1.15), new THREE.MeshBasicMaterial({ map: labelTexture(venue.name, venue.type === 'gun-shop' ? '#b9f4ff' : venue.type === 'adult-club' ? '#ffd0f0' : '#ffe1a2', '#17121c') }));
+    sign.position.set(0, 4.35, -depth / 2 - .22);
+    sign.rotation.y = Math.PI;
+    building.add(sign);
+    const light = new THREE.PointLight(accent, 7, 18, 2);
+    light.position.set(0, 3.4, -depth / 2 - 1.2);
+    building.add(light);
+    if (venue.type === 'gun-shop') {
+      for (const itemX of [-3.7, -1.2, 1.2, 3.7]) box(building, itemX, 1.7, .3, 1.3, 1.9, .55, material(0x303940, .26, .72));
+      box(building, 0, 1.25, -depth / 2 + .8, width * .7, 1.2, .4, material(0x27343a, .24, .66));
+    } else if (venue.type === 'adult-club') {
+      const stage = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.1, .32, 32), material(0x3c1838, .24, .18));
+      stage.position.set(0, .55, 1.1); building.add(stage);
+      cylinder(building, 0, 2.2, 1.1, .08, 3.2, material(0xd7a8c8, .18, .64), 16);
+      for (const px of [-4.2, 4.2]) addCafeTable(building, px, -1.3);
+      box(building, 0, 1.1, -depth / 2 + .8, width * .68, 1.6, .45, material(0x4c203a, .38, .2));
+    } else {
+      box(building, 0, 1.25, -depth / 2 + .8, width * .72, 1.35, .5, material(0x503b2a, .38, .28));
+      for (const px of [-4.1, -1.4, 1.4, 4.1]) addCafeTable(building, px, 1.5);
+      for (const px of [-4.4, 4.4]) addFloorLamp(building, px, -1.2);
+    }
+    city.add(building);
+    interactables.push({ mode: 'city', type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
+  }
+
   function addCity() {
     const cityFloor = box(city, 0, -0.36, 0, 220, 0.7, 220, textureLibrary.withRepeat(materials.asphalt, 'asphalt', 44), false);
     cityFloors.push(cityFloor);
@@ -861,6 +902,9 @@ function startGame(role) {
     }
 
     addHotelExterior();
+    addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'gun-shop'));
+    addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'adult-club'));
+    addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'bar'));
 
     const plaza = box(city, 0, 0.12, -27, 30, 0.24, 14, materials.wetConcrete, false);
     cityFloors.push(plaza);
@@ -1432,6 +1476,47 @@ function startGame(role) {
     $('#cash').textContent = cash;
   }
 
+  function saveWeaponLoadout() {
+    localStorage.setItem('sth-owned-weapons', JSON.stringify([...ownedWeapons]));
+    if (equippedWeaponKey) localStorage.setItem('sth-equipped-weapon', equippedWeaponKey);
+  }
+
+  function renderWeaponShop() {
+    const root = $('#weapon-shop-items');
+    if (!root) return;
+    root.innerHTML = '';
+    for (const weapon of WEAPON_CATALOG) {
+      const owned = ownedWeapons.has(weapon.key);
+      const equipped = equippedWeaponKey === weapon.key;
+      const card = document.createElement('article');
+      card.className = `weapon-card${equipped ? ' equipped' : ''}`;
+      card.innerHTML = `<div class="weapon-card-head"><span>${weapon.category.toUpperCase()}</span><b>${weapon.name}</b><small>${weapon.rarity.toUpperCase()}</small></div><p>${weapon.description}</p><div class="weapon-stats"><span>DMG <b>${weapon.damage}</b></span><span>RPM <b>${Math.round(weapon.fireRate * 60)}</b></span><span>MAG <b>${weapon.magazine}</b></span></div><button>${equipped ? 'EQUIPPED' : owned ? 'EQUIP WEAPON' : `BUY + EQUIP · $${weapon.price}`}</button>`;
+      card.querySelector('button').onclick = () => {
+        if (!owned) {
+          if (cash < weapon.price) return toast(`You need $${weapon.price} for the ${weapon.name}.`);
+          cash -= weapon.price;
+          ownedWeapons.add(weapon.key);
+        }
+        equippedWeaponKey = weapon.key;
+        saveWeaponLoadout();
+        updateStats();
+        renderWeaponShop();
+        toast(`${weapon.name} equipped. Fictional loadout updated.`);
+      };
+      root.appendChild(card);
+    }
+  }
+
+  function openWeaponShop() {
+    renderWeaponShop();
+    $('#weapon-shop').hidden = false;
+  }
+
+  $('#weapon-shop-close').addEventListener('click', () => { $('#weapon-shop').hidden = true; });
+  addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('#weapon-shop').hidden) $('#weapon-shop').hidden = true;
+  });
+
   function updateNeedsUI() {
     for (const key of ['energy', 'hunger', 'hygiene']) {
       const value = Math.round(THREE.MathUtils.clamp(needs[key], 0, 100));
@@ -1579,6 +1664,13 @@ function startGame(role) {
       return;
     }
     if (item.type === 'hotelEntrance') return enterHotel();
+    if (item.type === 'gunShop') return openWeaponShop();
+    if (item.type === 'adultClub') { rep += 1; updateStats(); return toast('Velvet Stage is open to adults 21+. Host bookings are private, optional, and consent-first.'); }
+    if (item.type === 'cityBar') {
+      if (cash < 14) return toast('You need $14 for a house drink.');
+      cash -= 14; restoreNeed('hunger', 8); rep += 1; updateStats();
+      return toast('House drink served at Midnight Mile Bar 28. -$14 · +1 reputation');
+    }
     if (item.type === 'subwayInfo') { toast('24th Street Station: ticket concourse, platform, service rooms, active tunnel, and a sealed abandoned spur.'); return; }
     if (item.type === 'hotelExit') return exitHotel();
     if (item.type === 'hotelAmenity') {
