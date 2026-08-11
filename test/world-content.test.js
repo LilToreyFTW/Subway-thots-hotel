@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { HOTEL_DIRECTION, VENUE_CATALOG, WEAPON_CATALOG, getWeapon } from '../src/content/WorldContent.js';
 import { CAMO_CATALOG, getCamo } from '../src/content/CamoCatalog.js';
 
@@ -23,4 +24,11 @@ test('every weapon can use the full set of 40 animated camo gradients', () => {
   assert.equal(new Set(CAMO_CATALOG.map((camo) => camo.key)).size, 40);
   assert.equal(getCamo('camo-40').name, 'Black Rose');
   for (const weapon of WEAPON_CATALOG) assert.ok(CAMO_CATALOG.every((camo) => camo.pattern && camo.speed > 0), weapon.key);
+});
+
+test('standalone weapon model pack contains valid GLB headers', () => {
+  for (const category of ['pistol', 'smg', 'ar', 'rifle', 'sniper', 'shotgun', 'minigun', 'rpg', 'emp', 'explosive']) {
+    const header = readFileSync(`public/assets/models/weapons/${category}.glb`).subarray(0, 4).toString('ascii');
+    assert.equal(header, 'glTF', category);
+  }
 });

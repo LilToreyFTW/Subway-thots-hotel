@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "format": "glb",
+  "generatedBy": "scripts/generate-weapon-glbs.mjs",
+  "models": [
+    "public/assets/models/weapons/pistol.glb",
+    "public/assets/models/weapons/smg.glb",
+    "public/assets/models/weapons/ar.glb",
+    "public/assets/models/weapons/rifle.glb",
+    "public/assets/models/weapons/sniper.glb",
+    "public/assets/models/weapons/shotgun.glb",
+    "public/assets/models/weapons/minigun.glb",
+    "public/assets/models/weapons/rpg.glb",
+    "public/assets/models/weapons/emp.glb",
+    "public/assets/models/weapons/explosive.glb"
+  ],
+  "notes": "Original stylized fictional game props; no real-world manufacturing or handling instructions represented."
+}
