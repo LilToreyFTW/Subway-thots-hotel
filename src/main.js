@@ -36,6 +36,7 @@ import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
 import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from './content/VehicleCatalog.js';
 import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import { VehicleController } from './vehicles/VehicleController.js';
+import { CharacterPreview } from './ui/CharacterPreview.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -65,6 +66,7 @@ let started = false;
 let onlineProfile = JSON.parse(localStorage.getItem('sth-online-profile') || 'null');
 let creatorGender = 'female';
 const creatorSelection = { face: 'Face_01', arms: 'Arms_01', torso: 'Torso_01', legs: 'Legs_01' };
+let creatorPreview = null;
 const inventoryItems = [
   { key: 'phone', icon: '▣', name: 'Phone', qty: 1 },
   { key: 'water', icon: '♒', name: 'Water Bottle', qty: 2 },
@@ -108,15 +110,16 @@ function renderCreatorSlots() {
     const prefix = creatorPrefix(category);
     for (let i = 1; i <= 10; i++) {
       const key = `${prefix}_${String(i).padStart(2, '0')}`; const button = document.createElement('button'); button.textContent = key; button.dataset.category = category; button.dataset.key = key; button.classList.toggle('selected', creatorSelection[category] === key);
-      button.onclick = () => { creatorSelection[category] = key; renderCreatorSlots(); updateCreatorSummary(); };
+      button.onclick = () => { creatorSelection[category] = key; renderCreatorSlots(); updateCreatorSummary(); updateCreatorPreview(); };
       grid.appendChild(button);
     }
     group.appendChild(grid); root.appendChild(group);
   }
   updateCreatorSummary();
 }
-function updateCreatorSummary() { $('#creator-selection-summary').textContent = `${creatorGender.toUpperCase()} · ${Object.values(creatorSelection).join(' · ')}`; }
-function openCreatorModal() { $('#creator-modal').hidden = false; $('#creator-tag').textContent = onlineProfile.tag; renderCreatorSlots(); }
+function updateCreatorSummary() { const summary = `${creatorGender.toUpperCase()} · ${Object.values(creatorSelection).join(' · ')}`; $('#creator-selection-summary').textContent = summary; $('#creator-preview-state').textContent = summary; }
+function updateCreatorPreview() { creatorPreview?.apply({ gender: creatorGender, selections: creatorSelection }); }
+function openCreatorModal() { $('#creator-modal').hidden = false; $('#creator-tag').textContent = onlineProfile.tag; if (!creatorPreview) creatorPreview = new CharacterPreview($('#creator-preview-canvas')); creatorPreview.resize(); renderCreatorSlots(); updateCreatorPreview(); }
 function closeOnlinePanels() { $('#friends-panel').hidden = true; $('#inventory-hotbar').hidden = true; }
 function toggleFriends(force) { const panel = $('#friends-panel'); panel.hidden = typeof force === 'boolean' ? !force : !panel.hidden; if (!panel.hidden) renderFriends(); }
 function toggleInventory(force) { const bar = $('#inventory-hotbar'); bar.hidden = typeof force === 'boolean' ? !force : !bar.hidden; if (!bar.hidden) renderHotbar(); }
@@ -147,7 +150,7 @@ $('#enter-btn').addEventListener('click', () => {
 });
 $('#gamertag-input').addEventListener('input', () => { const value = $('#gamertag-input').value.trim(); $('#gamertag-preview').innerHTML = `Your tag: <strong>${/^[A-Za-z0-9._-]{3,16}$/.test(value) ? `${value}#XXXXXX` : '—'}</strong>`; });
 $('#gamertag-submit').addEventListener('click', async () => { const name = $('#gamertag-input').value.trim(); if (!/^[A-Za-z0-9._-]{3,16}$/.test(name)) { $('#gamertag-error').textContent = 'Use 3–16 letters, numbers, dots, underscores, or hyphens.'; return; } const submit = $('#gamertag-submit'); submit.disabled = true; submit.textContent = 'RESERVING TAG…'; const reserved = await reserveGamertag(name); onlineProfile = { ...reserved, gender: creatorGender, selections: { ...creatorSelection }, createdAt: new Date().toISOString() }; submit.disabled = false; submit.textContent = 'CONTINUE TO CHARACTER CREATOR →'; $('#gamertag-error').textContent = ''; openCreatorModal(); $('#gamertag-modal').hidden = true; });
-document.querySelectorAll('.gender-tabs button').forEach((button) => button.addEventListener('click', () => { creatorGender = button.dataset.gender; document.querySelectorAll('.gender-tabs button').forEach((item) => item.classList.toggle('selected', item === button)); creatorSelection.face = creatorGender === 'male' ? 'Male_Face_01' : 'Face_01'; creatorSelection.arms = creatorGender === 'male' ? 'Male_Arms_01' : 'Arms_01'; creatorSelection.torso = creatorGender === 'male' ? 'Male_Torso_01' : 'Torso_01'; creatorSelection.legs = creatorGender === 'male' ? 'Male_Legs_01' : 'Legs_01'; renderCreatorSlots(); }));
+document.querySelectorAll('.gender-tabs button').forEach((button) => button.addEventListener('click', () => { creatorGender = button.dataset.gender; document.querySelectorAll('.gender-tabs button').forEach((item) => item.classList.toggle('selected', item === button)); creatorSelection.face = creatorGender === 'male' ? 'Male_Face_01' : 'Face_01'; creatorSelection.arms = creatorGender === 'male' ? 'Male_Arms_01' : 'Arms_01'; creatorSelection.torso = creatorGender === 'male' ? 'Male_Torso_01' : 'Torso_01'; creatorSelection.legs = creatorGender === 'male' ? 'Male_Legs_01' : 'Legs_01'; renderCreatorSlots(); updateCreatorPreview(); }));
 $('#creator-submit').addEventListener('click', () => { onlineProfile.gender = creatorGender; onlineProfile.selections = { ...creatorSelection }; localStorage.setItem('sth-online-profile', JSON.stringify(onlineProfile)); $('#creator-modal').hidden = true; started = true; startGame(selectedRole); });
 $('#friends-close').addEventListener('click', () => toggleFriends(false)); $('#friend-add-btn').addEventListener('click', addFriendRequest); document.querySelectorAll('[data-friend-tab]').forEach((tab) => tab.addEventListener('click', () => { friendTab = tab.dataset.friendTab; document.querySelectorAll('[data-friend-tab]').forEach((item) => item.classList.toggle('selected', item === tab)); renderFriends(); }));
 addEventListener('keydown', (event) => { if (event.target instanceof Element && event.target.matches('input,textarea')) return; const key = event.key.toLowerCase(); if (key === 'f' && !event.repeat) toggleFriends(); if (key === 'z' && !event.repeat) toggleInventory(); if (key >= '1' && key <= '6' && !event.repeat && !$('#creator-modal')?.hidden) return; if (key >= '1' && key <= '6' && !event.repeat && onlineProfile) useInventorySlot(Number(key) - 1); if (key === 'escape') { if (!$('#friends-panel').hidden || !$('#inventory-hotbar').hidden) closeOnlinePanels(); } });

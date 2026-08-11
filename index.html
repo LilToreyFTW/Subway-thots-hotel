@@ -122,8 +122,17 @@
       <div class="online-card creator-card">
         <div class="creator-head"><div><small class="online-kicker">SUBWAYTHOTSHOTEL ONLINE</small><h2>CUSTOMIZE CHARACTER</h2></div><strong id="creator-tag"></strong></div>
         <p class="creator-intro">Welcome to SubwayThotsHotel. Build your adult online character before entering free roam.</p>
-        <div class="gender-tabs"><button data-gender="female" class="selected">FEMALE</button><button data-gender="male">MALE</button></div>
-        <div id="creator-slots" class="creator-slots"></div>
+        <div class="creator-layout">
+          <div class="creator-controls">
+            <div class="gender-tabs"><button data-gender="female" class="selected">FEMALE</button><button data-gender="male">MALE</button></div>
+            <div id="creator-slots" class="creator-slots"></div>
+          </div>
+          <aside class="creator-preview-panel">
+            <div class="creator-preview-label">LIVE PLAYER PREVIEW <span>UPDATES LIVE</span></div>
+            <canvas id="creator-preview-canvas" aria-label="Live character preview"></canvas>
+            <div id="creator-preview-state">FEMALE · Face_01 · Arms_01 · Torso_01 · Legs_01</div>
+          </aside>
+        </div>
         <div class="creator-footer"><span id="creator-selection-summary"></span><button id="creator-submit">FINISH & SPAWN ONLINE →</button></div>
       </div>
     </section>
