@@ -30,6 +30,7 @@ import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import { InteractionSystem } from './interaction/InteractionSystem.js';
 import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
+import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -260,6 +261,7 @@ function startGame(role) {
   const interactables = [];
   const interactionSystem = new InteractionSystem({ items: interactables, range: 3.15 });
   const npcs = [];
+  const weaponDisplays = [];
   const vehicles = [];
   const remotePlayers = new Map();
   const rainDrops = [];
@@ -811,10 +813,10 @@ function startGame(role) {
     interactables.push({ mode: 'city', type: 'hotelEntrance', object: group, position: new THREE.Vector3(0, 0, -34.5), label: 'Enter Subway Thots Hotel' });
   }
 
-  function addWeaponDisplay(parent, x, y, z, category, accent) {
+  function addWeaponDisplay(parent, x, y, z, category, accent, weaponKey) {
     const display = new THREE.Group();
     const dark = material(0x111820, .24, .78);
-    const metal = material(accent, .25, .72);
+    const metal = new THREE.MeshStandardMaterial({ color: accent, roughness: .25, metalness: .72, emissive: accent, emissiveIntensity: .08 });
     const bodyLength = category === 'sniper' || category === 'rifle' || category === 'ar' ? 2.1 : category === 'rpg' ? 1.8 : 1.35;
     box(display, 0, 0, 0, bodyLength, .24, .28, metal, false);
     box(display, -bodyLength * .28, -.24, 0, .22, .48, .3, dark, false);
@@ -835,7 +837,11 @@ function startGame(role) {
     }
     display.position.set(x, y, z);
     display.rotation.y = -.18;
+    display.userData.weaponKey = weaponKey;
+    display.userData.camoMaterial = metal;
+    display.userData.camoIndex = weaponDisplays.length % CAMO_CATALOG.length;
     parent.add(display);
+    weaponDisplays.push(display);
   }
 
   function addCityVenue(venue) {
@@ -860,7 +866,7 @@ function startGame(role) {
     building.add(light);
     if (venue.type === 'gun-shop') {
       for (const itemX of [-3.7, -1.2, 1.2, 3.7]) box(building, itemX, 1.7, .3, 1.3, 1.9, .55, material(0x303940, .26, .72));
-      WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -4.2 + (index % 5) * 2.1, 2.35 + Math.floor(index / 5) * .48, .04, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3]));
+      WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -4.2 + (index % 5) * 2.1, 2.35 + Math.floor(index / 5) * .48, .04, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3], weapon.key));
       box(building, 0, 1.25, -depth / 2 + .8, width * .7, 1.2, .4, material(0x27343a, .24, .66));
     } else if (venue.type === 'adult-club') {
       const stage = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.1, .32, 32), material(0x3c1838, .24, .18));
@@ -1544,6 +1550,33 @@ function startGame(role) {
       };
       root.appendChild(card);
     }
+    renderCamoLab();
+  }
+
+  function renderCamoLab() {
+    const root = $('#camo-grid');
+    const label = $('#camo-target');
+    if (!root || !label) return;
+    const weaponKey = equippedWeaponKey || WEAPON_CATALOG[0].key;
+    const weapon = WEAPON_CATALOG.find((item) => item.key === weaponKey) || WEAPON_CATALOG[0];
+    label.textContent = `CAMO LAB · ${weapon.name.toUpperCase()} · 40 ANIMATED GRADIENTS`;
+    root.innerHTML = '';
+    const selected = localStorage.getItem(`sth-camo-${weapon.key}`) || CAMO_CATALOG[0].key;
+    CAMO_CATALOG.forEach((camo) => {
+      const button = document.createElement('button');
+      button.className = `camo-swatch${camo.key === selected ? ' selected' : ''}`;
+      button.title = camo.name;
+      button.style.setProperty('--camo-hue', `${camo.hue * 360}deg`);
+      button.style.setProperty('--camo-accent', `${camo.accentHue * 360}deg`);
+      button.innerHTML = `<span></span><b>${String(CAMO_CATALOG.indexOf(camo) + 1).padStart(2, '0')}</b><small>${camo.name}</small>`;
+      button.onclick = () => {
+        if (!equippedWeaponKey) return toast('Buy and equip a weapon before selecting its camo.');
+        localStorage.setItem(`sth-camo-${weapon.key}`, camo.key);
+        renderCamoLab();
+        toast(`${camo.name} camo applied to ${weapon.name}.`);
+      };
+      root.appendChild(button);
+    });
   }
 
   function openWeaponShop() {
@@ -2206,7 +2239,27 @@ function startGame(role) {
     camera.lookAt(cameraLook);
   }
 
+  function updateWeaponCamos(elapsed) {
+    for (const display of weaponDisplays) {
+      const saved = localStorage.getItem(`sth-camo-${display.userData.weaponKey}`);
+      const camo = getCamo(saved || CAMO_CATALOG[display.userData.camoIndex].key);
+      const wave = Math.sin(elapsed * camo.speed + display.userData.camoIndex * .7) * camo.swing;
+      const drift = (camo.hue + wave + 1) % 1;
+      const material = display.children.find((child) => child.userData?.camoMetal)?.material || display.userData.camoMaterial;
+      if (!material) {
+        display.traverse((node) => { if (node.isMesh && node.material?.metalness > .5 && !display.userData.camoMaterial) display.userData.camoMaterial = node.material; });
+      }
+      const target = display.userData.camoMaterial || material;
+      if (target?.color) target.color.setHSL(drift, .72, .39 + Math.sin(elapsed * camo.speed * 1.7) * .05);
+      if (target?.emissive) {
+        target.emissive.setHSL((camo.accentHue - wave + 1) % 1, .72, .16);
+        target.emissiveIntensity = camo.glow * (.72 + Math.sin(elapsed * camo.speed * 2.2) * .22);
+      }
+    }
+  }
+
   function updateWorld(delta, elapsed) {
+    updateWeaponCamos(elapsed);
     environmentLighting.updateShadowFocus(player);
     if (mode === 'city') {
       const inSubwayConcourse = Math.hypot(player.position.x + 45, player.position.z - 5) < 10;

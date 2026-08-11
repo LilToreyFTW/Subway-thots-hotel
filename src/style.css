@@ -202,6 +202,15 @@ kbd { display: inline-block; min-width: 43px; margin-right: 8px; color: #e5dfd5;
 .weapon-stats b { color:#f3e3c0; }
 .weapon-card button { width:100%; border:1px solid rgba(231,183,100,.5); padding:10px; background:#241b11; color:var(--gold); cursor:pointer; font:700 9px Inter; letter-spacing:.11em; }
 .weapon-card.equipped button { border-color:rgba(96,216,226,.7); background:#12262b; color:var(--cyan); }
+.camo-lab-head { display:flex; justify-content:space-between; margin:20px 0 9px; padding-top:14px; border-top:1px solid var(--line); color:var(--gold); font:700 9px Inter; letter-spacing:.16em; }
+.camo-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; max-height:260px; overflow:auto; }
+.camo-swatch { position:relative; min-height:58px; overflow:hidden; border:1px solid rgba(255,255,255,.14); padding:5px; background:#11171c; color:#e6e9e7; cursor:pointer; text-align:left; }
+.camo-swatch span { position:absolute; inset:0; background:linear-gradient(120deg, hsl(var(--camo-hue),78%,28%), hsl(var(--camo-accent),88%,55%), hsl(var(--camo-hue),68%,14%)); background-size:230% 230%; animation:camoFlow 2.8s ease-in-out infinite alternate; opacity:.9; }
+.camo-swatch b, .camo-swatch small { position:relative; z-index:1; display:block; text-shadow:0 1px 4px #000; }
+.camo-swatch b { font:700 10px Inter; color:#fff; }
+.camo-swatch small { margin-top:8px; color:#fff; font-size:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.camo-swatch.selected { border-color:var(--cyan); box-shadow:0 0 14px rgba(96,216,226,.38); }
+@keyframes camoFlow { from { background-position:0% 50%; filter:hue-rotate(-8deg) saturate(1); } to { background-position:100% 50%; filter:hue-rotate(8deg) saturate(1.35); } }
 #gpu-gate { position: fixed; inset: 0; z-index: 250; display: none; place-items: center; padding: 24px; text-align: center; background: radial-gradient(circle at 50% 35%, #32183c, #090914 70%); color: #fff; } #gpu-gate.open { display: grid; } #gpu-gate strong { display: block; color: var(--pink, #ff39b5); font: 700 clamp(24px, 4vw, 48px) Unbounded, sans-serif; letter-spacing: .12em; } #gpu-gate p { max-width: 620px; color: #d9c9e8; line-height: 1.6; }
 #runtime-error { position: fixed; z-index: 200; left: 50%; top: 50%; display: none; max-width: min(680px, 90vw); padding: 20px 24px; transform: translate(-50%,-50%); border: 1px solid #d96363; background: #280f12; box-shadow: 0 20px 80px #000; line-height: 1.5; }
 #runtime-error.show { display: block; }
@@ -223,6 +232,7 @@ kbd { display: inline-block; min-width: 43px; margin-right: 8px; color: #e5dfd5;
   .gate-scene::before { left: 34%; width: 90%; opacity: .45; }
   .weapon-shop-items { grid-template-columns:1fr; max-height:58vh; }
   .weapon-card-head b { font-size:17px; }
+  .camo-grid { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:220px; }
 }
 
 @media (max-width: 510px) {
