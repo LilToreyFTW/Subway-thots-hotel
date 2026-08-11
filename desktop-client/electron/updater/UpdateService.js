@@ -15,7 +15,7 @@ class UpdateService {
     autoUpdater.on('error', (error) => this.handleError(error));
   }
   set(state) { this.state = state; this.log?.(`[update] ${state.state} ${state.availableVersion || ''}`); this.send(this.state); }
-  handleError(error) { const message = error?.message || String(error); const unavailable = /latest\.yml|404|no published|cannot find/i.test(message); this.set(makeState(unavailable ? 'OFFLINE' : 'ERROR', { errorMessage: unavailable ? 'No GitHub release is published yet. Offline play is available.' : message })); }
+  handleError(error) { const message = error?.message || String(error); this.log?.(`[update-error] ${message}`); const unavailable = /latest\.yml|404|no published|cannot find/i.test(message); this.set(makeState(unavailable ? 'OFFLINE' : 'ERROR', { errorMessage: unavailable ? 'No GitHub release is published yet. Offline play is available.' : message })); }
   async check() { if (!this.production) return this.set(makeState('OFFLINE', { errorMessage: 'Development mode has no release updater.' })); this.set(makeState('CHECKING')); try { await autoUpdater.checkForUpdates(); } catch (e) { this.handleError(e); } return this.state; }
   async download() { if (!this.production) return this.state; try { await autoUpdater.downloadUpdate(); } catch (e) { this.handleError(e); } return this.state; }
   install() { if (this.state.state !== 'DOWNLOADED') throw new Error('Update is not downloaded yet.'); this.set(makeState('INSTALLING', { availableVersion: this.state.availableVersion })); autoUpdater.quitAndInstall(false, true); }
