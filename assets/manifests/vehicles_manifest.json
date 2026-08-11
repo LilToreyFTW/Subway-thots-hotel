@@ -6,7 +6,7 @@
   "batches": [
     { "brand": "Lamborghini", "manifest": "assets/manifests/lamborghini-vehicles.json", "status": "generated-and-validated", "count": 20 },
     { "brand": "Rolls-Royce", "manifest": "assets/manifests/rolls-royce-vehicles.json", "status": "generated-and-validated", "count": 27 },
-    { "brand": "Chevrolet", "status": "queued", "count": 75 },
+    { "brand": "Chevrolet", "manifest": "assets/manifests/chevrolet-vehicles.json", "status": "generated-and-validated", "count": 65 },
     { "brand": "Ford", "status": "queued", "count": 54 }
   ]
 }

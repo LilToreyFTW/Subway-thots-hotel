@@ -1,0 +1,2672 @@
+{
+  "version": 1,
+  "source": "original stylized game interpretations",
+  "brand": "Chevrolet",
+  "vehicles": [
+    {
+      "id": "chevy_metro",
+      "displayName": "Metro",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_metro.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_prizm",
+      "displayName": "Prizm",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_prizm.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_lumina",
+      "displayName": "Lumina",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_lumina.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_cavalier",
+      "displayName": "Cavalier",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_cavalier.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_malibu",
+      "displayName": "Malibu",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_malibu.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_malibu_maxx",
+      "displayName": "Malibu Maxx",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_malibu_maxx.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_chevrolet_classic",
+      "displayName": "Chevrolet Classic",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_chevrolet_classic.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_impala",
+      "displayName": "Impala",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_impala.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_monte_carlo",
+      "displayName": "Monte Carlo",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_monte_carlo.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_camaro",
+      "displayName": "Camaro",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_camaro.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_corvette",
+      "displayName": "Corvette",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_corvette.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_aveo",
+      "displayName": "Aveo",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_aveo.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_cobalt",
+      "displayName": "Cobalt",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_cobalt.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_hhr",
+      "displayName": "HHR",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_hhr.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_volt",
+      "displayName": "Volt",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_volt.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_cruze",
+      "displayName": "Cruze",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_cruze.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_sonic",
+      "displayName": "Sonic",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_sonic.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_spark",
+      "displayName": "Spark",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_spark.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_ss",
+      "displayName": "SS",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_ss.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_bolt_ev",
+      "displayName": "Bolt EV",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_bolt_ev.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_bolt_euv",
+      "displayName": "Bolt EUV",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_bolt_euv.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_tracker",
+      "displayName": "Tracker",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_tracker.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_blazer",
+      "displayName": "Blazer",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_blazer.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_trailblazer",
+      "displayName": "TrailBlazer",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_trailblazer.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_tahoe",
+      "displayName": "Tahoe",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_tahoe.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_suburban",
+      "displayName": "Suburban",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_suburban.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_equinox",
+      "displayName": "Equinox",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_equinox.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_traverse",
+      "displayName": "Traverse",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_traverse.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_captiva_sport",
+      "displayName": "Captiva Sport",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_captiva_sport.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_trax",
+      "displayName": "Trax",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_trax.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_blazer_ev",
+      "displayName": "Blazer EV",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_blazer_ev.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_equinox_ev",
+      "displayName": "Equinox EV",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_equinox_ev.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_c_k_legacy_truck",
+      "displayName": "C/K Legacy Truck",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_c_k_legacy_truck.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_s_10",
+      "displayName": "S-10",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_s_10.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_1500",
+      "displayName": "Silverado 1500",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_1500.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_1500hd",
+      "displayName": "Silverado 1500HD",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_1500hd.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_2500hd",
+      "displayName": "Silverado 2500HD",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_2500hd.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_3500hd",
+      "displayName": "Silverado 3500HD",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_3500hd.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_colorado",
+      "displayName": "Colorado",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_colorado.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_avalanche",
+      "displayName": "Avalanche",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_avalanche.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_ssr",
+      "displayName": "SSR",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_ssr.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_ev",
+      "displayName": "Silverado EV",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_ev.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_4500hd",
+      "displayName": "Silverado 4500HD",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_4500hd.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_5500hd",
+      "displayName": "Silverado 5500HD",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_5500hd.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_6500hd",
+      "displayName": "Silverado 6500HD",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_6500hd.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_kodiak",
+      "displayName": "Kodiak",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_kodiak.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_low_cab_forward",
+      "displayName": "Low Cab Forward",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_low_cab_forward.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_astro",
+      "displayName": "Astro",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_astro.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_venture",
+      "displayName": "Venture",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_venture.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_uplander",
+      "displayName": "Uplander",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_uplander.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_express_cargo",
+      "displayName": "Express Cargo",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_express_cargo.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_express_passenger",
+      "displayName": "Express Passenger",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_express_passenger.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_express_cutaway",
+      "displayName": "Express Cutaway",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_express_cutaway.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_city_express",
+      "displayName": "City Express",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_city_express.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_brightdrop_400",
+      "displayName": "BrightDrop 400",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_brightdrop_400.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_brightdrop_600",
+      "displayName": "BrightDrop 600",
+      "brand": "Chevrolet",
+      "category": "van",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_brightdrop_600.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.2,
+        "width": 2,
+        "height": 2.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.2,
+          2.1,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_caprice_ppv",
+      "displayName": "Caprice PPV",
+      "brand": "Chevrolet",
+      "category": "car",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_caprice_ppv.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.6,
+        "width": 1.86,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.6,
+          1.45,
+          1.86
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_camaro_ss",
+      "displayName": "Camaro SS",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_camaro_ss.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_camaro_zl1",
+      "displayName": "Camaro ZL1",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_camaro_zl1.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_corvette_z06",
+      "displayName": "Corvette Z06",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_corvette_z06.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_corvette_zr1",
+      "displayName": "Corvette ZR1",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_corvette_zr1.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_corvette_e_ray",
+      "displayName": "Corvette E-Ray",
+      "brand": "Chevrolet",
+      "category": "performance",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_corvette_e_ray.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 1.95,
+        "height": 1.28
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.28,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_silverado_zr2",
+      "displayName": "Silverado ZR2",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_silverado_zr2.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_colorado_zr2",
+      "displayName": "Colorado ZR2",
+      "brand": "Chevrolet",
+      "category": "truck",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_colorado_zr2.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.7,
+        "width": 2.05,
+        "height": 1.9
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.7,
+          1.9,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "chevy_tahoe_rst",
+      "displayName": "Tahoe RST",
+      "brand": "Chevrolet",
+      "category": "suv",
+      "years": "2000-2026",
+      "file": "public/assets/models/vehicles/chevrolet/chevy_tahoe_rst.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 4.9,
+        "width": 2,
+        "height": 1.72
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.9,
+          1.72,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    }
+  ]
+}
