@@ -14,6 +14,7 @@ import { PerformanceDiagnostics } from './core/PerformanceDiagnostics.js';
 import { DebugVisuals } from './debug/DebugVisuals.js';
 import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
 import { WorldChunkManager } from './world/WorldChunkManager.js';
+import { RoadGraph } from './world/RoadGraph.js';
 import { RegionCatalog } from './world/RegionCatalog.js';
 import { PlayerModel } from './player/PlayerModel.js';
 import { NpcModelLibrary } from './npc/NpcModelLibrary.js';
@@ -297,6 +298,8 @@ function startGame(role) {
   })();
   const structuralGrid = new StructuralGrid(2, .25);
   const geometryCache = new Map();
+  const roadGraph = new RoadGraph();
+  window.sthRoadGraph = roadGraph;
 
   const materialLibrary = new MaterialLibrary();
   const materials = materialLibrary.named();
@@ -1134,6 +1137,8 @@ function startGame(role) {
       vehicle.position.set(lane, 0, -95 + i * 24);
       vehicle.userData.speed = 4.5 + (i % 3) * 1.1;
       vehicle.userData.direction = i % 2 ? 1 : -1;
+      vehicle.userData.route = roadGraph.route(new THREE.Vector3(lane, 0, -96), new THREE.Vector3(lane, 0, 96));
+      vehicle.userData.routeIndex = 0;
       city.add(vehicle);
       vehicles.push(vehicle);
     }
@@ -2543,10 +2548,27 @@ function startGame(role) {
       if (npc.userData.legs?.[1]) npc.userData.legs[1].rotation.x = -npcWalk;
     }
     for (const vehicle of vehicles) {
-      vehicle.position.z += vehicle.userData.speed * vehicle.userData.direction * delta;
-      if (vehicle.position.z > 106) vehicle.position.z = -106;
-      if (vehicle.position.z < -106) vehicle.position.z = 106;
-      vehicle.rotation.y = vehicle.userData.direction > 0 ? 0 : Math.PI;
+      const route = vehicle.userData.route;
+      if (route?.length > 1) {
+        let target = route[Math.min(vehicle.userData.routeIndex + 1, route.length - 1)];
+        let dx = target.x - vehicle.position.x;
+        let dz = target.z - vehicle.position.z;
+        if (Math.hypot(dx, dz) < 1.5) {
+          vehicle.userData.routeIndex = vehicle.userData.routeIndex + 1 >= route.length - 1 ? 0 : vehicle.userData.routeIndex + 1;
+          target = route[Math.min(vehicle.userData.routeIndex + 1, route.length - 1)];
+          dx = target.x - vehicle.position.x;
+          dz = target.z - vehicle.position.z;
+        }
+        const length = Math.hypot(dx, dz) || 1;
+        vehicle.position.x += dx / length * vehicle.userData.speed * delta;
+        vehicle.position.z += dz / length * vehicle.userData.speed * delta;
+        vehicle.rotation.y = Math.atan2(dx, dz);
+      } else {
+        vehicle.position.z += vehicle.userData.speed * vehicle.userData.direction * delta;
+        if (vehicle.position.z > 106) vehicle.position.z = -106;
+        if (vehicle.position.z < -106) vehicle.position.z = 106;
+        vehicle.rotation.y = vehicle.userData.direction > 0 ? 0 : Math.PI;
+      }
       const hitX = Math.abs(player.position.x - vehicle.position.x) < 1.18;
       const hitZ = Math.abs(player.position.z - vehicle.position.z) < 2.05;
       if (mode === 'city' && hitX && hitZ && elapsed > ragdollUntil) {

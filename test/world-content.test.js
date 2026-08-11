@@ -7,6 +7,7 @@ import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from '../src/content/Ve
 import { GameLoop } from '../src/core/GameLoop.js';
 import * as THREE from 'three';
 import { VehicleController, VehicleState } from '../src/vehicles/VehicleController.js';
+import { RoadGraph } from '../src/world/RoadGraph.js';
 
 test('weapon catalog covers the requested fictional equipment categories', () => {
   const categories = new Set(WEAPON_CATALOG.map((weapon) => weapon.category));
@@ -122,4 +123,14 @@ test('vehicle controller supports enter, fixed-step handling, wheel steering, an
   assert.equal(controller.completeExit(), true);
   assert.equal(controller.state, VehicleState.PARKED);
   assert.equal(controller.speed, 0);
+});
+
+test('road graph exposes deterministic nodes, edges, nearest lookup, and routes', () => {
+  const graph = new RoadGraph({ positions: [0, 48, 96] });
+  assert.equal(graph.nodes.size, 9);
+  assert.ok(graph.edges.get('0:0').length >= 2);
+  const route = graph.route(new THREE.Vector3(0, 0, 0), new THREE.Vector3(96, 0, 96));
+  assert.equal(route[0].x, 0);
+  assert.equal(route.at(-1).z, 96);
+  assert.ok(route.length >= 5);
 });
