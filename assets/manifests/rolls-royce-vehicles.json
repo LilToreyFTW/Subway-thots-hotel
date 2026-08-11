@@ -1,0 +1,1114 @@
+{
+  "version": 1,
+  "source": "original stylized game interpretations",
+  "brand": "Rolls-Royce",
+  "vehicles": [
+    {
+      "id": "rr_silver_seraph",
+      "displayName": "Silver Seraph",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2000-2002",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_silver_seraph.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.39,
+        "width": 1.93,
+        "height": 1.51
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.39,
+          1.51,
+          1.93
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_silver_seraph_park_ward",
+      "displayName": "Silver Seraph Park Ward",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2000-2002",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_silver_seraph_park_ward.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.64,
+        "width": 1.94,
+        "height": 1.52
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.64,
+          1.52,
+          1.94
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_corniche",
+      "displayName": "Corniche",
+      "brand": "Rolls-Royce",
+      "category": "convertible",
+      "years": "2000-2002",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_corniche.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.39,
+        "width": 1.94,
+        "height": 1.45
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.39,
+          1.45,
+          1.94
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_phantom_vii",
+      "displayName": "Phantom VII",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2003-2017",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_phantom_vii.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.83,
+        "width": 1.99,
+        "height": 1.63
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.83,
+          1.63,
+          1.99
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_phantom_vii_ewb",
+      "displayName": "Phantom Extended Wheelbase",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2005-2017",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_phantom_vii_ewb.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 6.08,
+        "width": 2,
+        "height": 1.64
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          6.08,
+          1.64,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_phantom_drophead_coupe",
+      "displayName": "Phantom Drophead Coupé",
+      "brand": "Rolls-Royce",
+      "category": "convertible",
+      "years": "2007-2016",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_phantom_drophead_coupe.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.61,
+        "width": 1.99,
+        "height": 1.58
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.61,
+          1.58,
+          1.99
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_phantom_coupe",
+      "displayName": "Phantom Coupé",
+      "brand": "Rolls-Royce",
+      "category": "grand-tourer",
+      "years": "2008-2016",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_phantom_coupe.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.61,
+        "width": 1.99,
+        "height": 1.56
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.61,
+          1.56,
+          1.99
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_ghost_i",
+      "displayName": "Ghost I",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2010-2020",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_ghost_i.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.4,
+        "width": 1.95,
+        "height": 1.55
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.4,
+          1.55,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_ghost_ewb",
+      "displayName": "Ghost Extended Wheelbase",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2011-2020",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_ghost_ewb.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.57,
+        "width": 1.95,
+        "height": 1.55
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.57,
+          1.55,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_wraith",
+      "displayName": "Wraith",
+      "brand": "Rolls-Royce",
+      "category": "grand-tourer",
+      "years": "2013-2023",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_wraith.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.27,
+        "width": 1.95,
+        "height": 1.51
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.27,
+          1.51,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_dawn",
+      "displayName": "Dawn",
+      "brand": "Rolls-Royce",
+      "category": "convertible",
+      "years": "2016-2023",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_dawn.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.29,
+        "width": 1.95,
+        "height": 1.5
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.29,
+          1.5,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_phantom_viii",
+      "displayName": "Phantom VIII",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2017-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_phantom_viii.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.76,
+        "width": 2.02,
+        "height": 1.65
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.76,
+          1.65,
+          2.02
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_cullinan",
+      "displayName": "Cullinan",
+      "brand": "Rolls-Royce",
+      "category": "suv",
+      "years": "2018-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_cullinan.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.34,
+        "width": 2,
+        "height": 1.84
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.34,
+          1.84,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_ghost_ii",
+      "displayName": "Ghost II",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2020-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_ghost_ii.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.55,
+        "width": 1.98,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.55,
+          1.57,
+          1.98
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_ghost_extended",
+      "displayName": "Ghost Extended",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2020-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_ghost_extended.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.72,
+        "width": 1.98,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.72,
+          1.57,
+          1.98
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_spectre",
+      "displayName": "Spectre",
+      "brand": "Rolls-Royce",
+      "category": "grand-tourer",
+      "years": "2023-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_spectre.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.45,
+        "width": 2.08,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.45,
+          1.57,
+          2.08
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_cullinan_series_ii",
+      "displayName": "Cullinan Series II",
+      "brand": "Rolls-Royce",
+      "category": "suv",
+      "years": "2025-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_cullinan_series_ii.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.34,
+        "width": 2,
+        "height": 1.84
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.34,
+          1.84,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_ghost_series_ii",
+      "displayName": "Ghost Series II",
+      "brand": "Rolls-Royce",
+      "category": "luxury-sedan",
+      "years": "2025-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_ghost_series_ii.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.55,
+        "width": 1.98,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.55,
+          1.57,
+          1.98
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_spectre_series_ii",
+      "displayName": "Spectre Series II",
+      "brand": "Rolls-Royce",
+      "category": "grand-tourer",
+      "years": "2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_spectre_series_ii.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.45,
+        "width": 2.08,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.45,
+          1.57,
+          2.08
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_sweptail",
+      "displayName": "Sweptail",
+      "brand": "Rolls-Royce",
+      "category": "coachbuilt",
+      "years": "2017",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_sweptail.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.79,
+        "width": 2.1,
+        "height": 1.47
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.79,
+          1.47,
+          2.1
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_boat_tail",
+      "displayName": "Boat Tail",
+      "brand": "Rolls-Royce",
+      "category": "coachbuilt",
+      "years": "2021-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_boat_tail.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.79,
+        "width": 2,
+        "height": 1.49
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.79,
+          1.49,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_droptail",
+      "displayName": "Droptail",
+      "brand": "Rolls-Royce",
+      "category": "coachbuilt",
+      "years": "2023-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_droptail.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 1.36
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          1.36,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_la_rose_noire_droptail",
+      "displayName": "La Rose Noire Droptail",
+      "brand": "Rolls-Royce",
+      "category": "coachbuilt",
+      "years": "2023-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_la_rose_noire_droptail.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 1.36
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          1.36,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_amethyst_droptail",
+      "displayName": "Amethyst Droptail",
+      "brand": "Rolls-Royce",
+      "category": "coachbuilt",
+      "years": "2024-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_amethyst_droptail.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 1.36
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          1.36,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_arcadia_droptail",
+      "displayName": "Arcadia Droptail",
+      "brand": "Rolls-Royce",
+      "category": "coachbuilt",
+      "years": "2024-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_arcadia_droptail.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.3,
+        "width": 2,
+        "height": 1.36
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.3,
+          1.36,
+          2
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_black_badge_ghost",
+      "displayName": "Black Badge Ghost",
+      "brand": "Rolls-Royce",
+      "category": "performance-luxury",
+      "years": "2021-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_black_badge_ghost.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.55,
+        "width": 1.98,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.55,
+          1.57,
+          1.98
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    },
+    {
+      "id": "rr_black_badge_spectre",
+      "displayName": "Black Badge Spectre",
+      "brand": "Rolls-Royce",
+      "category": "performance-luxury",
+      "years": "2024-2026",
+      "file": "public/assets/models/vehicles/rolls-royce/rr_black_badge_spectre.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue"
+      ],
+      "dimensionsMeters": {
+        "length": 5.45,
+        "width": 2.08,
+        "height": 1.57
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.45,
+          1.57,
+          2.08
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ]
+    }
+  ]
+}
