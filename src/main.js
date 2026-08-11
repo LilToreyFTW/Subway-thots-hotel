@@ -717,12 +717,32 @@ function startGame(role) {
     for (let y = 4.4; y < height - 1; y += 7.2) box(structure, 0, y, 0, width + 0.18, 0.15, depth + 0.18, ledgeMat, false);
     for (const px of [-width / 2 + .24, width / 2 - .24]) for (const pz of [-depth / 2 + .24, depth / 2 - .24]) box(structure, px, height / 2, pz, .26, height + .12, .26, ledgeMat, false);
     const bays = Math.max(2, Math.floor(width / 3.2));
-    for (let y = 2.3; y < height - 1.8; y += 4.4) for (let bay = 0; bay < bays; bay++) box(structure, -width / 2 + (bay + .5) * width / bays, y, -depth / 2 - .025, width / bays * .58, 1.65, .05, materials.glass, false);
+    const facadeGlass = [materials.glass, material(0x6b8291, .28, .18), material(0x8e7652, .18, .28)][Math.floor(seeded() * 3)];
+    for (let y = 2.3; y < height - 1.8; y += 4.4) {
+      for (let bay = 0; bay < bays; bay++) {
+        const window = box(structure, -width / 2 + (bay + .5) * width / bays, y, -depth / 2 - .025, width / bays * .58, 1.65, .05, facadeGlass, false);
+        window.material = facadeGlass;
+        if ((bay + Math.round(y)) % 3 === 0) box(structure, -width / 2 + (bay + .5) * width / bays, y, depth / 2 + .025, width / bays * .48, 1.35, .05, materials.glass, false);
+      }
+    }
+    if (width > 18 && height > 16) {
+      const balconyMat = material(0x31383d, .72, .16);
+      for (let y = 6.2; y < height - 2; y += 6.8) {
+        box(structure, 0, y, -depth / 2 - .45, Math.min(width * .52, 8), .12, 1.05, balconyMat, false);
+        box(structure, -Math.min(width * .26, 4), y + .55, -depth / 2 - .92, .08, 1.05, .08, balconyMat, false);
+        box(structure, Math.min(width * .26, 4), y + .55, -depth / 2 - .92, .08, 1.05, .08, balconyMat, false);
+      }
+    }
     box(structure, 0, 2.65, -depth / 2 - .48, Math.min(width * .42, 6.4), .16, .82, ledgeMat, false);
     box(structure, 0, height + 0.58, 0, width + 0.35, 1.15, depth + 0.35, material(0x20262b, 0.85), true);
     if (height > 15) {
       box(structure, width * 0.18, height + 1.55, 0, Math.min(3.5, width * 0.35), 1.2, Math.min(3, depth * 0.34), ledgeMat);
       if (seeded() > 0.55) cylinder(structure, -width * 0.22, height + 3.1, 0, 0.07, 4, materials.darkMetal, 8);
+      if (seeded() > 0.45) {
+        const rooftopSign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(width * .45, 5.5), .75), new THREE.MeshBasicMaterial({ map: labelTexture(['LOFTS', 'STUDIO', 'MARKET', 'SUITES'][Math.floor(seeded() * 4)], '#f4cf8a', '#171b20') }));
+        rooftopSign.position.set(0, height + 1.3, -depth / 2 - .06);
+        structure.add(rooftopSign);
+      }
     }
     if (allowCollider) cityColliders.push({ minX: x - width / 2 - 0.5, maxX: x + width / 2 + 0.5, minZ: z - depth / 2 - 0.5, maxZ: z + depth / 2 + 0.5 });
   }
@@ -894,9 +914,31 @@ function startGame(role) {
     for (const p of roadPositions) {
       box(city, p, -0.02, 0, 13, 0.08, 212, roadMaterial, false);
       box(city, 0, -0.015, p, 212, 0.08, 13, roadMaterial, false);
+      const sidewalk = material(0x535b5d, .58, .32);
+      box(city, p - 8.1, 0.01, 0, 2.4, 0.11, 212, sidewalk, false);
+      box(city, p + 8.1, 0.01, 0, 2.4, 0.11, 212, sidewalk, false);
+      box(city, 0, 0.01, p - 8.1, 212, 0.11, 2.4, sidewalk, false);
+      box(city, 0, 0.01, p + 8.1, 212, 0.11, 2.4, sidewalk, false);
       for (let line = -98; line <= 98; line += 7.5) {
         box(city, p, 0.03, line, 0.12, 0.025, 3.4, material(0xc9a95e, 0.7), false);
         box(city, line, 0.035, p, 3.4, 0.025, 0.12, material(0xc9a95e, 0.7), false);
+      }
+    }
+    const crosswalkMat = material(0xd5d0bb, .42, .38);
+    for (const x of roadPositions) for (const z of roadPositions) {
+      for (let stripe = -4.8; stripe <= 4.8; stripe += 1.6) {
+        box(city, x + stripe, 0.055, z - 9.2, 0.72, 0.025, 3.2, crosswalkMat, false);
+        box(city, x + stripe, 0.055, z + 9.2, 0.72, 0.025, 3.2, crosswalkMat, false);
+        box(city, x - 9.2, 0.055, z + stripe, 3.2, 0.025, 0.72, crosswalkMat, false);
+        box(city, x + 9.2, 0.055, z + stripe, 3.2, 0.025, 0.72, crosswalkMat, false);
+      }
+      for (const [dx, dz] of [[-7.1, -7.1], [7.1, -7.1], [-7.1, 7.1], [7.1, 7.1]]) {
+        const planter = new THREE.Group();
+        box(planter, 0, .28, 0, .78, .56, .78, material(0x3a3030, .22, .5), false);
+        cylinder(planter, 0, 1.05, 0, .28, 1.1, material(0x4a3025, .16, .58), 10);
+        const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(.78, 1), material(0x255344, .18, .76));
+        crown.position.y = 1.65; planter.add(crown);
+        planter.position.set(x + dx, 0, z + dz); city.add(planter);
       }
     }
     // Repeated road reflectors are batched into one draw call instead of
