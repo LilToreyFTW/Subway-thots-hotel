@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "project": "Subway-Thots-Hotel",
+  "assetPolicy": "original stylized game interpretations; not manufacturer CAD or official brand assets",
+  "scale": "1 unit = 1 meter",
+  "batches": [
+    { "brand": "Lamborghini", "manifest": "assets/manifests/lamborghini-vehicles.json", "status": "generated-and-validated", "count": 20 },
+    { "brand": "Rolls-Royce", "status": "queued", "count": 26 },
+    { "brand": "Chevrolet", "status": "queued", "count": 75 },
+    { "brand": "Ford", "status": "queued", "count": 54 }
+  ]
+}

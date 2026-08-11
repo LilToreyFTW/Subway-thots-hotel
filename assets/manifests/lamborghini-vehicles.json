@@ -1,0 +1,867 @@
+{
+  "version": 1,
+  "source": "original stylized game interpretations",
+  "brand": "Lamborghini",
+  "vehicles": [
+    {
+      "id": "lambo_diablo_2000",
+      "displayName": "Diablo",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2000-2001",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_diablo_2000.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.47,
+        "width": 1.94,
+        "height": 1.12
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.47,
+          1.12,
+          1.94
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_murcielago",
+      "displayName": "Murciélago",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2001-2010",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_murcielago.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.58,
+        "width": 2.05,
+        "height": 1.13
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.58,
+          1.13,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_gallardo",
+      "displayName": "Gallardo",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2003-2013",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_gallardo.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.34,
+        "width": 1.9,
+        "height": 1.16
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.34,
+          1.16,
+          1.9
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_reventon",
+      "displayName": "Reventón",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2007-2009",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_reventon.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.7,
+        "width": 2.05,
+        "height": 1.13
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.7,
+          1.13,
+          2.05
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_sesto_elemento",
+      "displayName": "Sesto Elemento",
+      "brand": "Lamborghini",
+      "category": "hypercar",
+      "years": "2010-2012",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_sesto_elemento.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.48,
+        "width": 1.95,
+        "height": 1.05
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.48,
+          1.05,
+          1.95
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_aventador",
+      "displayName": "Aventador",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2011-2022",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_aventador.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.78,
+        "width": 2.03,
+        "height": 1.14
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.78,
+          1.14,
+          2.03
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_veneno",
+      "displayName": "Veneno",
+      "brand": "Lamborghini",
+      "category": "hypercar",
+      "years": "2013-2014",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_veneno.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.02,
+        "width": 2.1,
+        "height": 1.08
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.02,
+          1.08,
+          2.1
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_huracan",
+      "displayName": "Huracán",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2014-2024",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_huracan.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.52,
+        "width": 1.94,
+        "height": 1.16
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.52,
+          1.16,
+          1.94
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_centenario",
+      "displayName": "Centenario",
+      "brand": "Lamborghini",
+      "category": "hypercar",
+      "years": "2016-2017",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_centenario.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.92,
+        "width": 2.07,
+        "height": 1.1
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.92,
+          1.1,
+          2.07
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_urus",
+      "displayName": "Urus",
+      "brand": "Lamborghini",
+      "category": "suv",
+      "years": "2018-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_urus.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.11,
+        "width": 2.02,
+        "height": 1.64
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.11,
+          1.64,
+          2.02
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_sian_fkp_37",
+      "displayName": "Sián FKP 37",
+      "brand": "Lamborghini",
+      "category": "hypercar",
+      "years": "2019-2022",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_sian_fkp_37.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.98,
+        "width": 2.08,
+        "height": 1.13
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.98,
+          1.13,
+          2.08
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_sian_roadster",
+      "displayName": "Sián Roadster",
+      "brand": "Lamborghini",
+      "category": "roadster",
+      "years": "2020-2022",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_sian_roadster.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.98,
+        "width": 2.08,
+        "height": 1.12
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.98,
+          1.12,
+          2.08
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_countach_lpi_800_4",
+      "displayName": "Countach LPI 800-4",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2021-2022",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_countach_lpi_800_4.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.87,
+        "width": 2.1,
+        "height": 1.14
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.87,
+          1.14,
+          2.1
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_revuelto",
+      "displayName": "Revuelto",
+      "brand": "Lamborghini",
+      "category": "hypercar",
+      "years": "2023-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_revuelto.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.95,
+        "width": 2.03,
+        "height": 1.16
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.95,
+          1.16,
+          2.03
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_urus_s",
+      "displayName": "Urus S",
+      "brand": "Lamborghini",
+      "category": "suv",
+      "years": "2022-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_urus_s.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.14,
+        "width": 2.02,
+        "height": 1.64
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.14,
+          1.64,
+          2.02
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_urus_performante",
+      "displayName": "Urus Performante",
+      "brand": "Lamborghini",
+      "category": "suv",
+      "years": "2022-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_urus_performante.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.14,
+        "width": 2.03,
+        "height": 1.6
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.14,
+          1.6,
+          2.03
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_urus_se",
+      "displayName": "Urus SE",
+      "brand": "Lamborghini",
+      "category": "suv",
+      "years": "2024-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_urus_se.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.14,
+        "width": 2.03,
+        "height": 1.66
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.14,
+          1.66,
+          2.03
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_temperario",
+      "displayName": "Temerario",
+      "brand": "Lamborghini",
+      "category": "supercar",
+      "years": "2024-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_temperario.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 4.75,
+        "width": 2.02,
+        "height": 1.2
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          4.75,
+          1.2,
+          2.02
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_fenomeno",
+      "displayName": "Fenomeno",
+      "brand": "Lamborghini",
+      "category": "hypercar",
+      "years": "2025-2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_fenomeno.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": false,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.05,
+        "width": 2.1,
+        "height": 1.08
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.05,
+          1.08,
+          2.1
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    },
+    {
+      "id": "lambo_fenomeno_roadster",
+      "displayName": "Fenomeno Roadster",
+      "brand": "Lamborghini",
+      "category": "roadster",
+      "years": "2026",
+      "file": "public/assets/models/vehicles/lamborghini/lambo_fenomeno_roadster.glb",
+      "lods": [
+        "lod0"
+      ],
+      "drivable": true,
+      "trafficEligible": true,
+      "parkedEligible": true,
+      "colorOptions": [
+        "black",
+        "white",
+        "silver",
+        "gray",
+        "red",
+        "blue",
+        "yellow"
+      ],
+      "dimensionsMeters": {
+        "length": 5.05,
+        "width": 2.1,
+        "height": 1.07
+      },
+      "collision": {
+        "type": "box",
+        "size": [
+          5.05,
+          1.07,
+          2.1
+        ]
+      },
+      "wheelNodes": [
+        "front_left_wheel",
+        "front_right_wheel",
+        "rear_left_wheel",
+        "rear_right_wheel"
+      ],
+      "polycountNote": "Procedural real-time mesh; inspect GLB for exact primitive counts."
+    }
+  ]
+}

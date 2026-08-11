@@ -47,3 +47,14 @@ test('venue model pack contains valid GLB headers', () => {
     assert.equal(header, 'glTF', name);
   }
 });
+
+test('Lamborghini vehicle batch has 20 validated manifest entries', () => {
+  const manifest = JSON.parse(readFileSync('assets/manifests/lamborghini-vehicles.json', 'utf8'));
+  assert.equal(manifest.vehicles.length, 20);
+  for (const vehicle of manifest.vehicles) {
+    assert.equal(vehicle.brand, 'Lamborghini');
+    assert.equal(vehicle.wheelNodes.length, 4);
+    assert.equal(vehicle.drivable, true);
+    assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
+  }
+});
