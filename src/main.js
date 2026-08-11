@@ -5,6 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
 import { GameConfig } from './config/GameConfig.js';
@@ -33,6 +34,7 @@ import { InteractionSystem } from './interaction/InteractionSystem.js';
 import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
 import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from './content/VehicleCatalog.js';
 import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
+import { VehicleController } from './vehicles/VehicleController.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -271,6 +273,9 @@ function startGame(role) {
   const npcs = [];
   const weaponDisplays = [];
   const vehicles = [];
+  let activeVehicle = null;
+  let activeVehicleController = null;
+  let driving = false;
   let dealershipVehicles = [...VEHICLE_CATALOG];
   const remotePlayers = new Map();
   const rainDrops = [];
@@ -1687,6 +1692,58 @@ function startGame(role) {
     }
   }
 
+  async function spawnEquippedVehicle() {
+    const vehicle = vehicleFromKey(equippedVehicleKey);
+    if (!vehicle?.modelPath) return toast('Load a verified vehicle from Diamond Lane Motors first.');
+    if (activeVehicleController) return toast('You already have an active vehicle. Press X to exit.');
+    try {
+      const loaded = await new GLTFLoader().loadAsync(vehicle.modelPath);
+      const model = loaded.scene;
+      const dimensions = vehicle.dimensionsMeters || { length: 4.6, width: 1.9, height: 1.5 };
+      const scale = 1;
+      model.scale.setScalar(scale);
+      model.position.copy(player.position);
+      model.position.x += Math.sin(player.rotation.y) * 4.2;
+      model.position.z += Math.cos(player.rotation.y) * 4.2;
+      model.rotation.y = player.rotation.y;
+      model.traverse((node) => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
+      city.add(model);
+      const wheelNodes = [];
+      model.traverse((node) => { if (node.name.includes('wheel')) wheelNodes.push(node); });
+      activeVehicle = model;
+      activeVehicleController = new VehicleController({ vehicle: model, stats: vehicleStats(vehicle), dimensions });
+      activeVehicleController.wheelNodes = wheelNodes;
+      activeVehicleController.enter();
+      activeVehicleController.completeEntry();
+      driving = true;
+      player.visible = false;
+      toast(`${vehicle.name} loaded · W/A/S/D drive · X exit.`);
+    } catch (error) {
+      console.error('[vehicle-runtime] failed to load equipped GLB', vehicle.modelPath, error);
+      toast('Vehicle asset failed to load. Check the runtime asset path.');
+    }
+  }
+  function exitActiveVehicle() {
+    if (!activeVehicleController || !activeVehicle) return;
+    activeVehicleController.exit();
+    activeVehicleController.completeExit();
+    player.position.set(activeVehicle.position.x + 2.2, 0, activeVehicle.position.z);
+    player.rotation.y = activeVehicle.rotation.y;
+    city.remove(activeVehicle);
+    activeVehicle = null;
+    activeVehicleController = null;
+    driving = false;
+    player.visible = true;
+    toast('Exited vehicle.');
+  }
+  function updateActiveVehicle(delta) {
+    if (!activeVehicleController || !driving) return;
+    activeVehicleController.update({ throttle: keys.w || keys.arrowup ? 1 : keys.s || keys.arrowdown ? -1 : 0, brake: keys[' '] ? 1 : 0, steer: keys.a || keys.arrowleft ? 1 : keys.d || keys.arrowright ? -1 : 0 }, delta);
+    player.position.copy(activeVehicle.position);
+    player.position.y = 0;
+    player.rotation.y = activeVehicle.rotation.y;
+  }
+
   function vehicleStats(vehicle) {
     const upgrades = vehicleUpgrades[vehicle.key] || {};
     const totals = { topSpeed: vehicle.topSpeed, acceleration: vehicle.acceleration, handling: vehicle.handling };
@@ -2557,6 +2614,8 @@ function startGame(role) {
     if (event.key === 'Enter' && !event.repeat) { event.preventDefault(); openChat(); return; }
     if (event.key === ' ' && !event.repeat) jumpQueued = true;
     if (event.key.toLowerCase() === 'e' && !event.repeat) interact();
+    if (event.key.toLowerCase() === 'v' && !event.repeat) spawnEquippedVehicle();
+    if (event.key.toLowerCase() === 'x' && !event.repeat) exitActiveVehicle();
     if (event.key.toLowerCase() === 'r' && !event.repeat && mode !== 'city') $('#room-panel').classList.toggle('open');
     if (event.key === 'Escape' && !event.repeat) {
       if ($('#room-panel').classList.contains('open')) $('#room-panel').classList.remove('open');
@@ -2618,11 +2677,15 @@ function startGame(role) {
     fixedUpdate(delta, elapsed) {
       let movement = { dx: 0, dz: 0, moving: false };
       if (!paused) {
-        movement = movePlayer(delta);
-        playerController.updateVisual(delta, movement);
-        updateNearby();
-        updateWorld(delta, elapsed);
-        updateMap();
+        if (driving) updateActiveVehicle(delta);
+        else {
+          movement = movePlayer(delta);
+          playerController.updateVisual(delta, movement);
+          updateNearby();
+          updateWorld(delta, elapsed);
+          updateMap();
+        }
+        if (driving) updateWorld(delta, elapsed);
       }
       latestMovement = movement;
     },

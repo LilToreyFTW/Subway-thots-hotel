@@ -5,6 +5,8 @@ import { HOTEL_DIRECTION, VENUE_CATALOG, WEAPON_CATALOG, getWeapon } from '../sr
 import { CAMO_CATALOG, getCamo } from '../src/content/CamoCatalog.js';
 import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from '../src/content/VehicleCatalog.js';
 import { GameLoop } from '../src/core/GameLoop.js';
+import * as THREE from 'three';
+import { VehicleController, VehicleState } from '../src/vehicles/VehicleController.js';
 
 test('weapon catalog covers the requested fictional equipment categories', () => {
   const categories = new Set(WEAPON_CATALOG.map((weapon) => weapon.category));
@@ -101,4 +103,23 @@ test('game loop caps catch-up and separates fixed simulation from render updates
   assert.equal(fixedSteps, 3);
   assert.equal(renderUpdates, 1);
   globalThis.requestAnimationFrame = originalRaf;
+});
+
+test('vehicle controller supports enter, fixed-step handling, wheel steering, and exit', () => {
+  const vehicle = new THREE.Group();
+  const wheels = [new THREE.Object3D(), new THREE.Object3D(), new THREE.Object3D(), new THREE.Object3D()];
+  const controller = new VehicleController({ vehicle, stats: { topSpeed: 100, acceleration: 80, handling: 90 }, dimensions: { length: 4.8, width: 1.9, height: 1.4 } });
+  controller.wheelNodes = wheels;
+  assert.equal(controller.state, VehicleState.PARKED);
+  assert.equal(controller.enter(), true);
+  assert.equal(controller.completeEntry(), true);
+  const result = controller.update({ throttle: 1, steer: .6 }, .5);
+  assert.equal(result.state, VehicleState.DRIVING);
+  assert.ok(result.speed > 0);
+  assert.notEqual(vehicle.position.lengthSq(), 0);
+  assert.notEqual(wheels[0].rotation.y, 0);
+  assert.equal(controller.exit(), true);
+  assert.equal(controller.completeExit(), true);
+  assert.equal(controller.state, VehicleState.PARKED);
+  assert.equal(controller.speed, 0);
 });
