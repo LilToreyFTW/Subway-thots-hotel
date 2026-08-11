@@ -43,7 +43,7 @@ const $ = (selector) => document.querySelector(selector);
 const PUBLIC_WORLD_HOST = '147.189.172.104:7076';
 const localDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
 const desktopRuntime = location.protocol === 'sth:';
-const worldOverride = localDevelopment ? new URLSearchParams(location.search).get('world') : null;
+const worldOverride = localDevelopment || desktopRuntime ? new URLSearchParams(location.search).get('world') : null;
 const WORLD_URL = window.STH_WORLD_URL || import.meta.env.VITE_STH_WORLD_URL || worldOverride || (!desktopRuntime && location.protocol === 'http:' ? `ws://${PUBLIC_WORLD_HOST}` : null);
 const voiceOverride = localDevelopment ? new URLSearchParams(location.search).get('voice') : null;
 const VOICE_URL = resolveVoiceServerUrl({
