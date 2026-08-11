@@ -811,6 +811,33 @@ function startGame(role) {
     interactables.push({ mode: 'city', type: 'hotelEntrance', object: group, position: new THREE.Vector3(0, 0, -34.5), label: 'Enter Subway Thots Hotel' });
   }
 
+  function addWeaponDisplay(parent, x, y, z, category, accent) {
+    const display = new THREE.Group();
+    const dark = material(0x111820, .24, .78);
+    const metal = material(accent, .25, .72);
+    const bodyLength = category === 'sniper' || category === 'rifle' || category === 'ar' ? 2.1 : category === 'rpg' ? 1.8 : 1.35;
+    box(display, 0, 0, 0, bodyLength, .24, .28, metal, false);
+    box(display, -bodyLength * .28, -.24, 0, .22, .48, .3, dark, false);
+    cylinder(display, bodyLength * .56, 0, 0, .08, category === 'minigun' ? .7 : .95, metal, 12);
+    if (category === 'sniper' || category === 'rifle' || category === 'ar') {
+      box(display, -bodyLength * .55, .02, 0, .46, .34, .36, dark, false);
+      if (category !== 'ar') cylinder(display, 0, .22, 0, .06, .45, metal, 10);
+    }
+    if (category === 'minigun') {
+      for (let i = 0; i < 6; i++) {
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, .62, 8), metal);
+        barrel.rotation.z = Math.PI / 2; barrel.position.set(.48, Math.cos(i / 6 * Math.PI * 2) * .13, Math.sin(i / 6 * Math.PI * 2) * .13); display.add(barrel);
+      }
+    }
+    if (category === 'emp' || category === 'explosive') {
+      const device = new THREE.Mesh(new THREE.SphereGeometry(.24, 14, 10), new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 1.8, roughness: .3 }));
+      device.position.set(0, .18, 0); display.add(device);
+    }
+    display.position.set(x, y, z);
+    display.rotation.y = -.18;
+    parent.add(display);
+  }
+
   function addCityVenue(venue) {
     if (!venue) return;
     const [x, , z] = venue.position;
@@ -833,6 +860,7 @@ function startGame(role) {
     building.add(light);
     if (venue.type === 'gun-shop') {
       for (const itemX of [-3.7, -1.2, 1.2, 3.7]) box(building, itemX, 1.7, .3, 1.3, 1.9, .55, material(0x303940, .26, .72));
+      WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -4.2 + (index % 5) * 2.1, 2.35 + Math.floor(index / 5) * .48, .04, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3]));
       box(building, 0, 1.25, -depth / 2 + .8, width * .7, 1.2, .4, material(0x27343a, .24, .66));
     } else if (venue.type === 'adult-club') {
       const stage = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.1, .32, 32), material(0x3c1838, .24, .18));
