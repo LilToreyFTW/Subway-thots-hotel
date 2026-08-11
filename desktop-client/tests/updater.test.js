@@ -1,0 +1,4 @@
+const test = require('node:test'); const assert = require('node:assert/strict'); const { compareVersions } = require('../electron/updater/VersionService'); const { sanitizeReleaseNotes } = require('../electron/updater/ReleaseNotesService'); const { makeState } = require('../electron/updater/UpdateState');
+test('semantic versions compare numerically', () => { assert.equal(compareVersions('0.1.10', '0.1.9'), 1); assert.equal(compareVersions('0.1.0', '0.1.0'), 0); assert.equal(compareVersions('0.2.0', '0.10.0'), -1); });
+test('release notes are sanitized and bounded', () => { assert.equal(sanitizeReleaseNotes('<b>Ready</b>'), 'Ready'); assert.ok(sanitizeReleaseNotes('x'.repeat(13000)).length <= 12000); });
+test('update state rejects unknown states', () => { assert.equal(makeState('AVAILABLE', { availableVersion: '0.1.2' }).state, 'AVAILABLE'); assert.throws(() => makeState('BROKEN')); });

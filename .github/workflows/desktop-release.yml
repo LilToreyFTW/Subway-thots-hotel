@@ -1,0 +1,59 @@
+name: Desktop Windows Release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install desktop dependencies
+        working-directory: desktop-client
+        run: npm ci
+      - name: Root tests
+        run: npm test
+      - name: Desktop tests
+        run: npm run desktop:test
+      - name: Set CI release version
+        shell: pwsh
+        run: |
+          $version = "0.1.${{ github.run_number }}"
+          npm version $version --no-git-tag-version --prefix desktop-client
+          "DESKTOP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Build and verify desktop game
+        run: npm run desktop:build
+      - name: Build Windows installer and portable client
+        run: npm run desktop:dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify release artifacts
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem desktop-client/dist -Filter '*Setup*.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'Installer EXE missing' }
+          if (-not (Test-Path desktop-client/dist/latest.yml)) { throw 'latest.yml missing' }
+          Get-FileHash $setup.FullName -Algorithm SHA256 | Format-List
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-v${{ env.DESKTOP_VERSION }}
+          name: Subway Thots Hotel ${{ env.DESKTOP_VERSION }}
+          generate_release_notes: true
+          prerelease: false
+          files: |
+            desktop-client/dist/*Setup*.exe
+            desktop-client/dist/*portable*.exe
+            desktop-client/dist/latest.yml
+            desktop-client/dist/*.blockmap

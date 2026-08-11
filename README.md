@@ -66,3 +66,16 @@ Production microphone access requires HTTPS, a TLS-enabled Socket.io URL in `VIT
 - Neon storefronts, reflective puddles, street furniture, and an upgraded hotel district
 
 See `WORLD_ARCHITECTURE.md` for the persistent-world roadmap and `VPS_DEPLOYMENT.md` for later hosting notes.
+
+## Windows desktop client
+
+The canonical Vite game can also be packaged as a Windows desktop application. The desktop client uses Electron security isolation, a local `sth://` protocol for packaged game files, Electron Builder NSIS installers, and GitHub Releases through `electron-updater`.
+
+```bash
+npm install
+npm run desktop:test
+npm run desktop:dev
+npm run desktop:dist
+```
+
+`npm run desktop:dist` produces the Windows installer and portable EXE under `desktop-client/dist/` when run with a Windows-capable Electron Builder environment. GitHub Actions publishes stable releases on successful pushes to `main`; the installed client checks those releases, displays real download progress, and supports restart-and-install. Player settings and browser-origin data remain under Electron's stable user-data directory, not the install folder.

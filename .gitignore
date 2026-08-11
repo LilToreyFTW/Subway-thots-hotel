@@ -23,3 +23,12 @@ discord-bot-sth/server-python/__pycache__/
 discord-bot-sth/server-python/*.db
 discord-bot-sth/frontend/node_modules/
 discord-bot-sth/frontend/dist/
+
+# Windows game client build outputs and copied runtime
+game-client/node_modules/
+game-client/runtime/
+game-client/dist/
+desktop-client/node_modules/
+desktop-client/game-runtime/
+desktop-client/dist/
+desktop-client/dist-fixed/
