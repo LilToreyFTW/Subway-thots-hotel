@@ -271,6 +271,7 @@ function startGame(role) {
   const npcs = [];
   const weaponDisplays = [];
   const vehicles = [];
+  let dealershipVehicles = [...VEHICLE_CATALOG];
   const remotePlayers = new Map();
   const rainDrops = [];
   const doors = [];
@@ -1545,6 +1546,7 @@ function startGame(role) {
     },
   });
   worldStreamer.selectRegion(GameConfig.world.defaultRegion).catch((error) => console.warn('World region fallback:', error));
+  loadVehicleLibrary();
   window.sthWorld = {
     regions: RegionCatalog,
     selectRegion: async (id) => worldStreamer.selectRegion(id),
@@ -1646,6 +1648,45 @@ function startGame(role) {
     localStorage.setItem('sth-vehicle-upgrades', JSON.stringify(vehicleUpgrades));
   }
 
+  function vehicleFromKey(key) { return dealershipVehicles.find((vehicle) => vehicle.key === key) || null; }
+  function normalizeManifestVehicle(vehicle, index) {
+    const category = vehicle.category === 'performance' ? 'SPORT' : vehicle.category.toUpperCase();
+    const base = category === 'SPORT' ? 92 : category === 'TRUCK' ? 68 : category === 'SUV' ? 76 : category === 'VAN' ? 64 : 72;
+    return {
+      key: vehicle.id,
+      name: vehicle.displayName,
+      class: category,
+      price: Math.round((base * 1000 + index * 137) / 100) * 100,
+      topSpeed: base + 18,
+      acceleration: category === 'SPORT' ? 88 : base - 5,
+      handling: category === 'SPORT' ? 86 : category === 'SUV' ? 68 : 64,
+      description: `${vehicle.displayName} · original stylized ${vehicle.brand} game interpretation.`,
+      modelPath: `/${vehicle.file}`,
+      brand: vehicle.brand,
+      dimensionsMeters: vehicle.dimensionsMeters,
+      wheelNodes: vehicle.wheelNodes,
+      sourceManifest: vehicle.file,
+    };
+  }
+  async function loadVehicleLibrary() {
+    const manifests = ['lamborghini', 'rolls-royce', 'chevrolet', 'ford'];
+    try {
+      const results = await Promise.all(manifests.map(async (brand) => {
+        const response = await fetch(`/assets/manifests/${brand}-vehicles.json`);
+        if (!response.ok) throw new Error(`${brand} manifest HTTP ${response.status}`);
+        return response.json();
+      }));
+      const imported = results.flatMap((manifest) => manifest.vehicles.map((vehicle, index) => normalizeManifestVehicle(vehicle, index)));
+      dealershipVehicles = [...VEHICLE_CATALOG, ...imported.filter((vehicle) => !VEHICLE_CATALOG.some((base) => base.key === vehicle.key))];
+      window.sthVehicleLibrary = { count: dealershipVehicles.length, imported: imported.length, vehicles: dealershipVehicles };
+      showGlobalToast(`${imported.length} verified vehicle assets loaded into Diamond Lane Motors.`);
+      if (!$('#vehicle-shop').hidden) renderVehicleShop('dealership');
+    } catch (error) {
+      console.error('[vehicle-library] manifest load failed; using starter catalog.', error);
+      window.sthVehicleLibrary = { count: dealershipVehicles.length, imported: 0, vehicles: dealershipVehicles, error: String(error) };
+    }
+  }
+
   function vehicleStats(vehicle) {
     const upgrades = vehicleUpgrades[vehicle.key] || {};
     const totals = { topSpeed: vehicle.topSpeed, acceleration: vehicle.acceleration, handling: vehicle.handling };
@@ -1678,7 +1719,7 @@ function startGame(role) {
     root.innerHTML = '';
     if (isMods && !equippedVehicleKey) { root.innerHTML = '<div class="garage-empty">Buy and equip a vehicle at Diamond Lane Motors first.</div>'; return; }
     if (isMods) {
-      const vehicle = getVehicle(equippedVehicleKey);
+      const vehicle = vehicleFromKey(equippedVehicleKey);
       const stats = vehicleStats(vehicle);
       const summary = document.createElement('div'); summary.className = 'garage-summary';
       summary.innerHTML = `<b>${vehicle.name}</b><span>TOP SPEED <strong>${stats.topSpeed}</strong></span><span>ACCEL <strong>${stats.acceleration}</strong></span><span>HANDLING <strong>${stats.handling}</strong></span>`; root.appendChild(summary);
@@ -1694,7 +1735,7 @@ function startGame(role) {
       }
       return;
     }
-    for (const vehicle of VEHICLE_CATALOG) {
+    for (const vehicle of dealershipVehicles) {
       const owned = ownedVehicles.has(vehicle.key); const equipped = equippedVehicleKey === vehicle.key; const stats = vehicleStats(vehicle);
       const card = document.createElement('article'); card.className = `vehicle-card${equipped ? ' equipped' : ''}`;
       card.innerHTML = `<div class="vehicle-card-head"><span>${vehicle.class}</span><b>${vehicle.name}</b><small>${owned ? 'OWNED' : `$${vehicle.price}`}</small></div><p>${vehicle.description}</p><div class="vehicle-stats"><span>TOP <b>${stats.topSpeed}</b></span><span>ACCEL <b>${stats.acceleration}</b></span><span>GRIP <b>${stats.handling}</b></span></div><button>${equipped ? 'EQUIPPED' : owned ? 'EQUIP VEHICLE' : `BUY + EQUIP · $${vehicle.price}`}</button>`;
