@@ -1126,6 +1126,8 @@ function startGame(role) {
   function addHotelInterior() {
     const hotelFloor = box(hotel, 0, -0.3, 0, 48, 0.6, 40, textureLibrary.withRepeat(materials.wetConcrete, 'tile', 12, 10));
     hotelFloors.push(hotelFloor);
+    box(hotel, 0, .012, -1.5, 9.5, .035, 32, material(0x5b3d50, .44, .08), false);
+    for (const z of [-15, -7.5, 0, 7.5, 15]) box(hotel, 0, .055, z, 9.5, .018, .08, materials.gold, false);
     decals.floor(hotel, 0, .03, 8, 5, 2.5, { kind: 'marking', label: 'S / T / H' });
     decals.floor(hotel, 15.8, .03, 10.5, 3.2, 2.2, { kind: 'grime' });
     box(hotel, 0, 7.5, -19.5, 48, 15, 1, materials.hotelStone);
@@ -1139,6 +1141,14 @@ function startGame(role) {
     for (const x of [-9, 9]) {
       cylinder(hotel, x, 3.8, 2, 0.34, 7.6, materials.gold, 24);
       cylinder(hotel, x, 3.8, -10, 0.34, 7.6, materials.gold, 24);
+    }
+    for (const [x, z, accent] of [[-21.8, -2, 0xd7a35e], [21.8, -2, 0x69d3df], [-21.8, 11, 0xe55da8], [21.8, 11, 0xd7a35e]]) {
+      const sconce = new THREE.Group();
+      box(sconce, 0, 1.1, 0, .18, 2.2, .24, materials.gold, false);
+      const shade = new THREE.Mesh(new THREE.ConeGeometry(.32, .62, 12), new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 1.6, roughness: .3 }));
+      shade.position.y = 1.55; sconce.add(shade);
+      const glow = new THREE.PointLight(accent, 2.2, 7, 2); glow.position.y = 1.45; sconce.add(glow);
+      sconce.position.set(x, 2.2, z); hotel.add(sconce);
     }
     const chandelier = new THREE.Group();
     cylinder(chandelier, 0, 7.3, 0, 0.05, 3.2, materials.gold, 12);
@@ -1345,6 +1355,7 @@ function startGame(role) {
     suite.userData.roomPlan = roomPlan;
     interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
     interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
+    interactables.push({ mode: 'room', type: 'roomHosting', position: new THREE.Vector3(2.8, 0, 1.7), label: 'Host a private consenting adult guest' });
   }
 
   function addRain() {
@@ -1670,6 +1681,11 @@ function startGame(role) {
       if (cash < 14) return toast('You need $14 for a house drink.');
       cash -= 14; restoreNeed('hunger', 8); rep += 1; updateStats();
       return toast('House drink served at Midnight Mile Bar 28. -$14 · +1 reputation');
+    }
+    if (item.type === 'roomHosting') {
+      if (role !== 'guest' || !checkedIn) return toast('Check in first. Private hosting is optional and consent-first.');
+      cash += 80; rep += 4; updateStats();
+      return toast(`Suite ${String(currentRoom).padStart(2, '0')} hosting completed privately. +$80 · +4 reputation`);
     }
     if (item.type === 'subwayInfo') { toast('24th Street Station: ticket concourse, platform, service rooms, active tunnel, and a sealed abandoned spur.'); return; }
     if (item.type === 'hotelExit') return exitHotel();
