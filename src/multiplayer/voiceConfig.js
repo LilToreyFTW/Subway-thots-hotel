@@ -16,6 +16,6 @@ export function resolveVoiceServerUrl({ protocol, hostname, configuredUrl = null
   const local = ['localhost', '127.0.0.1'].includes(hostname);
   const override = local ? safeUrl(queryOverride) : null;
   if (override) return override;
-  if (protocol === 'https:') return null;
+  if (protocol === 'https:' || protocol === 'sth:') return null;
   return PUBLIC_VOICE_GATEWAY;
 }

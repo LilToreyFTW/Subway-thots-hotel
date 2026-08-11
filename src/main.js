@@ -42,8 +42,9 @@ import './style.css?v=5';
 const $ = (selector) => document.querySelector(selector);
 const PUBLIC_WORLD_HOST = '147.189.172.104:7076';
 const localDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
+const desktopRuntime = location.protocol === 'sth:';
 const worldOverride = localDevelopment ? new URLSearchParams(location.search).get('world') : null;
-const WORLD_URL = window.STH_WORLD_URL || import.meta.env.VITE_STH_WORLD_URL || worldOverride || (location.protocol === 'http:' ? `ws://${PUBLIC_WORLD_HOST}` : null);
+const WORLD_URL = window.STH_WORLD_URL || import.meta.env.VITE_STH_WORLD_URL || worldOverride || (!desktopRuntime && location.protocol === 'http:' ? `ws://${PUBLIC_WORLD_HOST}` : null);
 const voiceOverride = localDevelopment ? new URLSearchParams(location.search).get('voice') : null;
 const VOICE_URL = resolveVoiceServerUrl({
   protocol: location.protocol,
@@ -2266,9 +2267,9 @@ function startGame(role) {
   function connectWorld() {
     const base = WORLD_URL;
     if (!base) {
-      $('#server-status').textContent = 'SECURE HOST REQUIRED';
+      $('#server-status').textContent = desktopRuntime ? 'OFFLINE WORLD' : 'SECURE HOST REQUIRED';
       $('#server-status').dataset.endpoint = '';
-      appendChat('WORLD', 'This HTTPS build needs a trusted wss:// endpoint configured by the host.', true);
+      appendChat('WORLD', desktopRuntime ? 'Desktop offline mode is ready. Configure a trusted wss:// world endpoint for multiplayer.' : 'This HTTPS build needs a trusted wss:// endpoint configured by the host.', !desktopRuntime);
       return;
     }
     const tag = onlineProfile?.tag || (role === 'manager' ? 'Manager' : 'Guest');

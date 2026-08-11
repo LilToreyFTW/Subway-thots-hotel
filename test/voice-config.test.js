@@ -7,8 +7,9 @@ test('uses the VPS voice gateway for HTTP builds', () => {
   assert.equal(resolveVoiceServerUrl({ protocol: 'http:', hostname: 'game.example' }), 'http://147.189.172.104:7077');
 });
 
-test('requires an explicit secure voice URL for HTTPS builds', () => {
+test('requires an explicit secure voice URL for HTTPS and desktop builds', () => {
   assert.equal(resolveVoiceServerUrl({ protocol: 'https:', hostname: 'game.example' }), null);
+  assert.equal(resolveVoiceServerUrl({ protocol: 'sth:', hostname: 'game' }), null);
   assert.equal(resolveVoiceServerUrl({ protocol: 'https:', hostname: 'game.example', configuredUrl: 'wss://voice.example' }), 'wss://voice.example');
 });
 
