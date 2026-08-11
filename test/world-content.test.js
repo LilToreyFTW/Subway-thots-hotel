@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { HOTEL_DIRECTION, VENUE_CATALOG, WEAPON_CATALOG, getWeapon } from '../src/content/WorldContent.js';
 import { CAMO_CATALOG, getCamo } from '../src/content/CamoCatalog.js';
+import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from '../src/content/VehicleCatalog.js';
 
 test('weapon catalog covers the requested fictional equipment categories', () => {
   const categories = new Set(WEAPON_CATALOG.map((weapon) => weapon.category));
@@ -11,7 +12,14 @@ test('weapon catalog covers the requested fictional equipment categories', () =>
 });
 
 test('venue catalog contains the shop, adult club, distant bar, and hotel hosting spaces', () => {
-  assert.deepEqual(new Set(VENUE_CATALOG.map((venue) => venue.type)), new Set(['gun-shop', 'adult-club', 'bar', 'hotel-hosting']));
+  assert.deepEqual(new Set(VENUE_CATALOG.map((venue) => venue.type)), new Set(['gun-shop', 'car-dealership', 'car-mod-shop', 'adult-club', 'bar', 'hotel-hosting']));
+});
+
+test('vehicle catalog and upgrade systems cover the dealership and mod shop loop', () => {
+  assert.equal(VEHICLE_CATALOG.length, 6);
+  assert.equal(getVehicle('rose-runner').class, 'SPORT');
+  assert.deepEqual(Object.keys(VEHICLE_UPGRADES), ['engine', 'transmission', 'turbo', 'brakes', 'suspension', 'wheels']);
+  for (const upgrade of Object.values(VEHICLE_UPGRADES)) assert.equal(upgrade.levels.length, 3);
 });
 
 test('hotel remodel direction preserves the existing room count', () => {

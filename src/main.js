@@ -30,6 +30,7 @@ import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import { InteractionSystem } from './interaction/InteractionSystem.js';
 import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
+import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from './content/VehicleCatalog.js';
 import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import './style.css?v=5';
 
@@ -219,6 +220,10 @@ function startGame(role) {
   let cash = role === 'manager' ? 420 : 240;
   const ownedWeapons = new Set(JSON.parse(localStorage.getItem('sth-owned-weapons') || '[]'));
   let equippedWeaponKey = localStorage.getItem('sth-equipped-weapon') || null;
+  const ownedVehicles = new Set(JSON.parse(localStorage.getItem('sth-owned-vehicles') || '[]'));
+  let equippedVehicleKey = localStorage.getItem('sth-equipped-vehicle') || null;
+  let vehicleUpgrades = {};
+  try { vehicleUpgrades = JSON.parse(localStorage.getItem('sth-vehicle-upgrades') || '{}') || {}; } catch { localStorage.removeItem('sth-vehicle-upgrades'); }
   let taskCount = 0;
   let frontDeskReviewed = false;
   const inspectedSuites = new Set();
@@ -867,9 +872,9 @@ function startGame(role) {
   function addCityVenue(venue) {
     if (!venue) return;
     const [x, , z] = venue.position;
-    const accent = venue.type === 'gun-shop' ? 0x6fd7e4 : venue.type === 'adult-club' ? 0xf04fb8 : 0xd8a95f;
-    const width = venue.type === 'bar' ? 14 : 12;
-    const depth = venue.type === 'bar' ? 10 : 8;
+    const accent = venue.type === 'gun-shop' ? 0x6fd7e4 : venue.type === 'adult-club' ? 0xf04fb8 : venue.type === 'car-dealership' ? 0xf0c05a : venue.type === 'car-mod-shop' ? 0x91d8e8 : 0xd8a95f;
+    const width = venue.type === 'bar' ? 14 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 16 : 12;
+    const depth = venue.type === 'bar' ? 10 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 12 : 8;
     const building = new THREE.Group();
     building.position.set(x, 0, z);
     box(building, 0, 2.65, depth / 2, width, 5.3, .35, material(0x151a20, .42, .38));
@@ -877,7 +882,7 @@ function startGame(role) {
     box(building, width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
     box(building, 0, 5.3, 0, width, .35, depth, material(0x0b1015, .34, .48));
     box(building, 0, .35, 0, width - .7, .35, depth - .7, material(0x242a31, .32, .25), false);
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(width * .72, 1.15), new THREE.MeshBasicMaterial({ map: labelTexture(venue.name, venue.type === 'gun-shop' ? '#b9f4ff' : venue.type === 'adult-club' ? '#ffd0f0' : '#ffe1a2', '#17121c') }));
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(width * .72, 1.15), new THREE.MeshBasicMaterial({ map: labelTexture(venue.name, venue.type === 'gun-shop' ? '#b9f4ff' : venue.type === 'adult-club' ? '#ffd0f0' : venue.type === 'car-mod-shop' ? '#b8f5ff' : '#ffe1a2', '#17121c') }));
     sign.position.set(0, 4.35, -depth / 2 - .22);
     sign.rotation.y = Math.PI;
     building.add(sign);
@@ -888,6 +893,12 @@ function startGame(role) {
       for (const itemX of [-3.7, -1.2, 1.2, 3.7]) box(building, itemX, 1.7, .3, 1.3, 1.9, .55, material(0x303940, .26, .72));
       WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -4.2 + (index % 5) * 2.1, 2.35 + Math.floor(index / 5) * .48, .04, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3], weapon.key));
       box(building, 0, 1.25, -depth / 2 + .8, width * .7, 1.2, .4, material(0x27343a, .24, .66));
+    } else if (venue.type === 'car-dealership') {
+      box(building, 0, 1.1, -depth / 2 + .8, width * .75, 1.5, .45, material(0x2a3036, .42, .28));
+      VEHICLE_CATALOG.forEach((vehicle, index) => addVehicleDisplay(building, -5.1 + (index % 3) * 5.1, -2.2 + Math.floor(index / 3) * 3.1, vehicle));
+    } else if (venue.type === 'car-mod-shop') {
+      box(building, 0, 1.0, -depth / 2 + .8, width * .75, 1.4, .5, material(0x263d45, .45, .24));
+      for (const px of [-5.2, 0, 5.2]) { box(building, px, .2, 1.2, 3.3, .12, 5.2, material(0x3e474c, .52, .24), false); cylinder(building, px, 2.4, 1.2, 1.5, .12, material(0x8ed8e5, .28, .3, 0x1a5a68), 24); }
     } else if (venue.type === 'adult-club') {
       const stage = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.1, .32, 32), material(0x3c1838, .24, .18));
       stage.position.set(0, .55, 1.1); building.add(stage);
@@ -900,7 +911,7 @@ function startGame(role) {
       for (const px of [-4.4, 4.4]) addFloorLamp(building, px, -1.2);
     }
     city.add(building);
-    interactables.push({ mode: 'city', type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
+    interactables.push({ mode: 'city', type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'car-dealership' ? 'carDealership' : venue.type === 'car-mod-shop' ? 'carModShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'car-dealership' ? 'Shop Diamond Lane Motors' : venue.type === 'car-mod-shop' ? 'Enter Blacktop Customs' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
   }
 
   function addCity() {
@@ -979,6 +990,8 @@ function startGame(role) {
 
     addHotelExterior();
     addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'gun-shop'));
+    addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'car-dealership'));
+    addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'car-mod-shop'));
     addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'adult-club'));
     addCityVenue(VENUE_CATALOG.find((venue) => venue.type === 'bar'));
 
@@ -1621,6 +1634,76 @@ function startGame(role) {
     });
   }
 
+  function saveVehicleGarage() {
+    localStorage.setItem('sth-owned-vehicles', JSON.stringify([...ownedVehicles]));
+    if (equippedVehicleKey) localStorage.setItem('sth-equipped-vehicle', equippedVehicleKey);
+    localStorage.setItem('sth-vehicle-upgrades', JSON.stringify(vehicleUpgrades));
+  }
+
+  function vehicleStats(vehicle) {
+    const upgrades = vehicleUpgrades[vehicle.key] || {};
+    const totals = { topSpeed: vehicle.topSpeed, acceleration: vehicle.acceleration, handling: vehicle.handling };
+    for (const [slot, level] of Object.entries(upgrades)) {
+      const upgrade = VEHICLE_UPGRADES[slot]?.levels[level - 1];
+      if (upgrade) totals[VEHICLE_UPGRADES[slot].stat] += upgrade.value;
+    }
+    return totals;
+  }
+
+  function addVehicleDisplay(parent, x, z, vehicle) {
+    const display = new THREE.Group();
+    const paint = material([0x6f2c70, 0x252d38, 0xb58b42, 0x992e52, 0x4a5f68, 0x11151b][VEHICLE_CATALOG.indexOf(vehicle) % 6], .52, .24);
+    box(display, 0, .62, 0, 2.9, .58, 5.1, paint);
+    box(display, 0, 1.08, -.2, 2.35, .54, 2.25, materials.glass);
+    for (const sx of [-1.18, 1.18]) for (const sz of [-1.65, 1.65]) { const wheel = cylinder(display, sx, .3, sz, .38, .22, materials.darkMetal, 16); wheel.rotation.z = Math.PI / 2; }
+    box(display, -.88, .7, 2.5, .38, .18, .06, material(0xff4f6e, .1, .2), false);
+    box(display, .88, .7, 2.5, .38, .18, .06, material(0xff4f6e, .1, .2), false);
+    display.position.set(x, .15, z); display.rotation.y = Math.PI / 2;
+    parent.add(display);
+  }
+
+  function renderVehicleShop(shopMode = 'dealership') {
+    const root = $('#vehicle-shop-items');
+    if (!root) return;
+    const isMods = shopMode === 'mods';
+    $('#vehicle-shop-kicker').textContent = isMods ? 'BLACKTOP CUSTOMS · PERFORMANCE & STYLE' : 'DIAMOND LANE MOTORS · ORIGINAL FICTIONAL VEHICLES';
+    $('#vehicle-shop-title').textContent = isMods ? 'CAR MOD SHOP' : 'CAR DEALERSHIP';
+    $('#vehicle-shop-copy').textContent = isMods ? 'Build your ride one part at a time. Every upgrade changes the saved performance stats.' : 'Buy a car, equip it to your garage, and keep your ride saved locally.';
+    root.innerHTML = '';
+    if (isMods && !equippedVehicleKey) { root.innerHTML = '<div class="garage-empty">Buy and equip a vehicle at Diamond Lane Motors first.</div>'; return; }
+    if (isMods) {
+      const vehicle = getVehicle(equippedVehicleKey);
+      const stats = vehicleStats(vehicle);
+      const summary = document.createElement('div'); summary.className = 'garage-summary';
+      summary.innerHTML = `<b>${vehicle.name}</b><span>TOP SPEED <strong>${stats.topSpeed}</strong></span><span>ACCEL <strong>${stats.acceleration}</strong></span><span>HANDLING <strong>${stats.handling}</strong></span>`; root.appendChild(summary);
+      for (const [slot, config] of Object.entries(VEHICLE_UPGRADES)) {
+        const current = vehicleUpgrades[vehicle.key]?.[slot] || 0;
+        const next = config.levels[current];
+        const card = document.createElement('article'); card.className = 'vehicle-card mod-card';
+        card.innerHTML = `<div class="vehicle-card-head"><span>${config.label.toUpperCase()}</span><b>${current >= 3 ? 'MAXED' : next.name}</b><small>LEVEL ${current}/3</small></div><p>${current >= 3 ? 'This system is fully tuned.' : `+${next.value} ${config.stat.replace('topSpeed', 'top speed').replace('acceleration', 'accel')}`}</p><button>${current >= 3 ? 'MAXED' : `INSTALL · $${next.price}`}</button>`;
+        card.querySelector('button').onclick = () => {
+          if (!next || cash < next.price) return toast(`You need $${next?.price || 0} for the ${config.label.toLowerCase()} upgrade.`);
+          cash -= next.price; vehicleUpgrades[vehicle.key] = { ...(vehicleUpgrades[vehicle.key] || {}), [slot]: current + 1 }; saveVehicleGarage(); updateStats(); renderVehicleShop('mods'); toast(`${config.label} upgraded on ${vehicle.name}.`);
+        }; root.appendChild(card);
+      }
+      return;
+    }
+    for (const vehicle of VEHICLE_CATALOG) {
+      const owned = ownedVehicles.has(vehicle.key); const equipped = equippedVehicleKey === vehicle.key; const stats = vehicleStats(vehicle);
+      const card = document.createElement('article'); card.className = `vehicle-card${equipped ? ' equipped' : ''}`;
+      card.innerHTML = `<div class="vehicle-card-head"><span>${vehicle.class}</span><b>${vehicle.name}</b><small>${owned ? 'OWNED' : `$${vehicle.price}`}</small></div><p>${vehicle.description}</p><div class="vehicle-stats"><span>TOP <b>${stats.topSpeed}</b></span><span>ACCEL <b>${stats.acceleration}</b></span><span>GRIP <b>${stats.handling}</b></span></div><button>${equipped ? 'EQUIPPED' : owned ? 'EQUIP VEHICLE' : `BUY + EQUIP · $${vehicle.price}`}</button>`;
+      card.querySelector('button').onclick = () => {
+        if (!owned) { if (cash < vehicle.price) return toast(`You need $${vehicle.price} for the ${vehicle.name}.`); cash -= vehicle.price; ownedVehicles.add(vehicle.key); }
+        equippedVehicleKey = vehicle.key; saveVehicleGarage(); updateStats(); renderVehicleShop('dealership'); toast(`${vehicle.name} is now your active garage vehicle.`);
+      }; root.appendChild(card);
+    }
+  }
+
+  function openVehicleShop(shopMode) { renderVehicleShop(shopMode); $('#vehicle-shop').hidden = false; }
+
+  $('#vehicle-shop-close').addEventListener('click', () => { $('#vehicle-shop').hidden = true; });
+  addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('#vehicle-shop').hidden) $('#vehicle-shop').hidden = true; });
+
   function openWeaponShop() {
     renderWeaponShop();
     $('#weapon-shop').hidden = false;
@@ -1779,6 +1862,8 @@ function startGame(role) {
     }
     if (item.type === 'hotelEntrance') return enterHotel();
     if (item.type === 'gunShop') return openWeaponShop();
+    if (item.type === 'carDealership') return openVehicleShop('dealership');
+    if (item.type === 'carModShop') return openVehicleShop('mods');
     if (item.type === 'adultClub') { rep += 1; updateStats(); return toast('Velvet Stage is open to adults 21+. Host bookings are private, optional, and consent-first.'); }
     if (item.type === 'cityBar') {
       if (cash < 14) return toast('You need $14 for a house drink.');

@@ -167,7 +167,7 @@ button { color: inherit; }
 kbd { display: inline-block; min-width: 43px; margin-right: 8px; color: #e5dfd5; font: 600 9px Inter; }
 #resume-btn { width: 100%; margin-top: 18px; padding: 12px; border: 0; background: var(--gold); color: #17130d; cursor: pointer; font: 700 9px Inter; letter-spacing: .16em; }
 
-.online-modal[hidden], .nui-panel[hidden], #inventory-hotbar[hidden], #weapon-shop[hidden] { display: none !important; }
+.online-modal[hidden], .nui-panel[hidden], #inventory-hotbar[hidden], #weapon-shop[hidden], #vehicle-shop[hidden] { display: none !important; }
 .online-modal { position: fixed; inset: 0; z-index: 160; display: grid; place-items: center; padding: 20px; background: rgba(4,7,10,.88); backdrop-filter: blur(12px); }
 .online-card { width: min(560px, 94vw); padding: 28px; border: 1px solid rgba(231,183,100,.55); background: linear-gradient(135deg, rgba(15,19,24,.98), rgba(25,12,25,.98)); box-shadow: 0 24px 90px #000, 0 0 45px rgba(231,60,177,.14); }
 .online-kicker { color: var(--gold); font: 600 9px Inter; letter-spacing: .2em; }
@@ -211,6 +211,23 @@ kbd { display: inline-block; min-width: 43px; margin-right: 8px; color: #e5dfd5;
 .camo-swatch small { margin-top:8px; color:#fff; font-size:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .camo-swatch.selected { border-color:var(--cyan); box-shadow:0 0 14px rgba(96,216,226,.38); }
 @keyframes camoFlow { from { background-position:0% 50%; filter:hue-rotate(-8deg) saturate(1); } to { background-position:100% 50%; filter:hue-rotate(8deg) saturate(1.35); } }
+.vehicle-shop-card { width:min(1040px,96vw); max-height:88vh; overflow:auto; }
+.vehicle-shop-items { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-height:68vh; overflow:auto; padding:4px 2px 4px 0; }
+.vehicle-card { border:1px solid rgba(255,255,255,.13); padding:13px; background:linear-gradient(145deg,#131a20,#201625); }
+.vehicle-card.equipped { border-color:var(--gold); box-shadow:0 0 18px rgba(231,183,100,.2); }
+.vehicle-card-head { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:8px; }
+.vehicle-card-head span, .vehicle-card-head small { color:var(--cyan); font:700 8px Inter; letter-spacing:.12em; }
+.vehicle-card-head small { color:var(--gold); }
+.vehicle-card-head b { font:600 20px Oswald; letter-spacing:.04em; }
+.vehicle-card p { min-height:32px; margin:10px 0; color:#9ca7a6; font-size:10px; line-height:1.45; }
+.vehicle-stats, .garage-summary { display:flex; gap:14px; margin-bottom:11px; color:#7e8988; font:700 8px Inter; letter-spacing:.1em; }
+.vehicle-stats b, .garage-summary strong { color:#f3e3c0; }
+.vehicle-card button { width:100%; border:1px solid rgba(231,183,100,.5); padding:10px; background:#241b11; color:var(--gold); cursor:pointer; font:700 9px Inter; letter-spacing:.11em; }
+.vehicle-card.equipped button { border-color:rgba(96,216,226,.7); background:#12262b; color:var(--cyan); }
+.garage-summary { grid-column:1 / -1; align-items:center; flex-wrap:wrap; padding:12px; border:1px solid rgba(231,183,100,.35); background:#111920; }
+.garage-summary b { flex:1 1 100%; color:var(--gold); font:600 22px Oswald; letter-spacing:.05em; }
+.garage-empty { grid-column:1 / -1; padding:28px; border:1px dashed rgba(231,183,100,.4); color:#b0b8b5; text-align:center; }
+.mod-card { background:linear-gradient(145deg,#102126,#151b22); }
 #gpu-gate { position: fixed; inset: 0; z-index: 250; display: none; place-items: center; padding: 24px; text-align: center; background: radial-gradient(circle at 50% 35%, #32183c, #090914 70%); color: #fff; } #gpu-gate.open { display: grid; } #gpu-gate strong { display: block; color: var(--pink, #ff39b5); font: 700 clamp(24px, 4vw, 48px) Unbounded, sans-serif; letter-spacing: .12em; } #gpu-gate p { max-width: 620px; color: #d9c9e8; line-height: 1.6; }
 #runtime-error { position: fixed; z-index: 200; left: 50%; top: 50%; display: none; max-width: min(680px, 90vw); padding: 20px 24px; transform: translate(-50%,-50%); border: 1px solid #d96363; background: #280f12; box-shadow: 0 20px 80px #000; line-height: 1.5; }
 #runtime-error.show { display: block; }
@@ -233,6 +250,8 @@ kbd { display: inline-block; min-width: 43px; margin-right: 8px; color: #e5dfd5;
   .weapon-shop-items { grid-template-columns:1fr; max-height:58vh; }
   .weapon-card-head b { font-size:17px; }
   .camo-grid { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:220px; }
+  .vehicle-shop-items { grid-template-columns:1fr; max-height:58vh; }
+  .vehicle-card-head b { font-size:17px; }
 }
 
 @media (max-width: 510px) {
