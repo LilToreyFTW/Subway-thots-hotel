@@ -200,6 +200,8 @@
               // it; also collapse the age gate once authenticated.
               window.STH_AUTH_TICKET = ticket;
               window.STH_AUTH_READY = true;
+              window.STH_START_AUTHENTICATED_WORLD?.();
+              window.STH_RECONNECT_WORLD?.();
               if (gate && !window.STH_AUTH_BYPASS_GATE) {
                 // Keep gate hidden behind auth until onReady; main.js launches
                 // the world only after this signal.

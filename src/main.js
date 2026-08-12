@@ -43,10 +43,12 @@ import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
 const PUBLIC_WORLD_HOST = '147.189.172.104:7076';
+const PRODUCTION_WORLD_URL = 'wss://world.subwaythotshotel.com';
+const AUTH_REQUIRED = import.meta.env.VITE_STH_AUTH === 'on';
 const localDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
 const desktopRuntime = location.protocol === 'sth:';
 const worldOverride = localDevelopment || desktopRuntime ? new URLSearchParams(location.search).get('world') : null;
-const WORLD_URL = window.STH_WORLD_URL || import.meta.env.VITE_STH_WORLD_URL || worldOverride || (!desktopRuntime && location.protocol === 'http:' ? `ws://${PUBLIC_WORLD_HOST}` : null);
+const WORLD_URL = window.STH_WORLD_URL || import.meta.env.VITE_STH_WORLD_URL || worldOverride || (desktopRuntime || location.protocol === 'https:' ? PRODUCTION_WORLD_URL : location.protocol === 'http:' ? `ws://${PUBLIC_WORLD_HOST}` : null);
 const voiceOverride = localDevelopment ? new URLSearchParams(location.search).get('voice') : null;
 const VOICE_URL = resolveVoiceServerUrl({
   protocol: location.protocol,
@@ -148,9 +150,17 @@ roleCards.forEach((card) => {
 
 $('#enter-btn').addEventListener('click', () => {
   if (started) return;
+  if (AUTH_REQUIRED) return showGlobalToast('Sign in with Discord to enter the world.');
   if (onlineProfile) { started = true; ageGate.classList.add('hidden'); startGame(selectedRole); return; }
   ageGate.classList.add('hidden'); openGamertagModal();
 });
+function launchAuthenticatedWorld() {
+  if (started || !AUTH_REQUIRED || !window.STH_AUTH_READY) return;
+  started = true;
+  ageGate.classList.add('hidden');
+  startGame(selectedRole);
+}
+window.STH_START_AUTHENTICATED_WORLD = launchAuthenticatedWorld;
 $('#gamertag-input').addEventListener('input', () => { const value = $('#gamertag-input').value.trim(); $('#gamertag-preview').innerHTML = `Your tag: <strong>${/^[A-Za-z0-9._-]{3,16}$/.test(value) ? `${value}#XXXXXX` : '—'}</strong>`; });
 $('#gamertag-submit').addEventListener('click', async () => { const name = $('#gamertag-input').value.trim(); if (!/^[A-Za-z0-9._-]{3,16}$/.test(name)) { $('#gamertag-error').textContent = 'Use 3–16 letters, numbers, dots, underscores, or hyphens.'; return; } const submit = $('#gamertag-submit'); submit.disabled = true; submit.textContent = 'RESERVING TAG…'; const reserved = await reserveGamertag(name); onlineProfile = { ...reserved, gender: creatorGender, selections: { ...creatorSelection }, createdAt: new Date().toISOString() }; submit.disabled = false; submit.textContent = 'CONTINUE TO CHARACTER CREATOR →'; $('#gamertag-error').textContent = ''; openCreatorModal(); $('#gamertag-modal').hidden = true; });
 document.querySelectorAll('.gender-tabs button').forEach((button) => button.addEventListener('click', () => { creatorGender = button.dataset.gender; document.querySelectorAll('.gender-tabs button').forEach((item) => item.classList.toggle('selected', item === button)); creatorSelection.face = creatorGender === 'male' ? 'Male_Face_01' : 'Face_01'; creatorSelection.arms = creatorGender === 'male' ? 'Male_Arms_01' : 'Arms_01'; creatorSelection.torso = creatorGender === 'male' ? 'Male_Torso_01' : 'Torso_01'; creatorSelection.legs = creatorGender === 'male' ? 'Male_Legs_01' : 'Legs_01'; renderCreatorSlots(); updateCreatorPreview(); }));
@@ -2304,9 +2314,15 @@ function startGame(role) {
       appendChat('WORLD', desktopRuntime ? 'Desktop offline mode is ready. Configure a trusted wss:// world endpoint for multiplayer.' : 'This HTTPS build needs a trusted wss:// endpoint configured by the host.', !desktopRuntime);
       return;
     }
+    if (AUTH_REQUIRED && !window.STH_AUTH_TICKET) {
+      $('#server-status').textContent = 'AUTHENTICATING';
+      appendChat('WORLD', 'Sign in with Discord to receive a secure multiplayer ticket.', true);
+      return;
+    }
     const tag = onlineProfile?.tag || (role === 'manager' ? 'Manager' : 'Guest');
     const params = new URLSearchParams({ player_id: localPlayerId, display_name: tag });
-    if (sessionToken) params.set('session_token', sessionToken);
+    if (window.STH_AUTH_TICKET) params.set('ticket', window.STH_AUTH_TICKET);
+    else if (sessionToken) params.set('session_token', sessionToken);
     const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?${params}`;
     $('#server-status').textContent = 'CONNECTING';
     $('#server-status').dataset.endpoint = base;
@@ -2342,8 +2358,8 @@ function startGame(role) {
           return;
         }
         if (event.code === 4401) {
-          $('#server-status').textContent = 'SESSION AUTH FAILED';
-          appendChat('WORLD', 'The saved world-session token was rejected.', true);
+          $('#server-status').textContent = AUTH_REQUIRED ? 'AUTH TICKET EXPIRED' : 'SESSION AUTH FAILED';
+          appendChat('WORLD', AUTH_REQUIRED ? 'Waiting for a fresh secure multiplayer ticket.' : 'The saved world-session token was rejected.', true);
           return;
         }
         scheduleReconnect();
@@ -2355,6 +2371,11 @@ function startGame(role) {
     }
   }
   connectWorld();
+  window.STH_RECONNECT_WORLD = () => {
+    if (worldSocket?.readyState === WebSocket.OPEN || worldSocket?.readyState === WebSocket.CONNECTING) return;
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    connectWorld();
+  };
 
   const micButton = $('#mic-toggle');
   const voiceStatus = $('#voice-status');

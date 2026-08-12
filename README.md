@@ -21,7 +21,9 @@ cp .env.example .env
 ./.venv/bin/uvicorn main:app --host 0.0.0.0 --port 7076
 ```
 
-The multiplayer client connects HTTP players to `147.189.172.104:7076` and displays `ONLINE WORLD` when connected. A self-contained Windows/Linux deployment package is available in `vps_connection/`; move that folder to the VPS and run `Host.py` through the included launcher. HTTPS deployments fail closed until `VITE_STH_WORLD_URL` points to a trusted `wss://` endpoint.
+The multiplayer client connects HTTP players to `147.189.172.104:7076` and displays `ONLINE WORLD` when connected. HTTPS/Vercel builds and the Windows EXE use the production `wss://world.subwaythotshotel.com` endpoint by default; set `VITE_STH_WORLD_URL` explicitly if the host domain changes. The game server remains external to Vercel—the Vercel site only serves the client.
+
+For authenticated production multiplayer, set `VITE_STH_AUTH=on` and `VITE_AUTH_API=https://auth.subwaythotshotel.com/api` in the Vercel build environment. Players sign in with Discord, receive a short-lived single-use world ticket, and the client sends that ticket to the authoritative WebSocket host. The EXE uses the same flow when built with those production variables.
 
 For local testing, override the world without editing source:
 
