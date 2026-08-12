@@ -19,6 +19,8 @@ from sqlalchemy import Float, Integer, String, create_engine, inspect, select, t
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
+from anti_cheat import AntiCheat, AntiCheatState
+
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./subway_thots_hotel.db")
@@ -70,10 +72,15 @@ class LivePlayer:
     moving: bool = False
     last_chat: float = 0.0
     last_input: float = field(default_factory=time.monotonic)
+    anti_cheat: AntiCheatState = field(default_factory=AntiCheatState)
+    health: int = 100
+    money: int = 0
+    weapons: set[str] = field(default_factory=set)
 
 
 regions: dict[str, dict[str, LivePlayer]] = defaultdict(dict)
 region_locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+anti_cheat = AntiCheat()
 
 
 def load_profile(player_id: str, display_name: str, region_id: str, presented_token: str) -> tuple[LivePlayer | None, str | None]:
@@ -219,6 +226,8 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
         await websocket.close(code=4401, reason="Invalid session token")
         return
     live.websocket = websocket
+    debug_token = websocket.query_params.get("debug_token", "")
+    live.anti_cheat.debug_mode = anti_cheat.debug_enabled(player_id, debug_token)
     async with region_locks[region_id]:
         previous = regions[region_id].get(player_id)
         if previous and previous.websocket is not None and previous.websocket is not websocket:
@@ -229,7 +238,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
         regions[region_id][player_id] = live
         if region_id not in region_tasks or region_tasks[region_id].done():
             region_tasks[region_id] = asyncio.create_task(region_loop(region_id))
-    await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE})
+    await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode})
     await broadcast(region_id, {"type": "presence", "action": "join", "playerId": player_id, "displayName": live.display_name})
     try:
         while True:
@@ -245,6 +254,12 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 continue
             message_type = message.get("type")
             if message_type == "input":
+                if not live.anti_cheat.debug_mode and not anti_cheat.input_allowed(player_id, live.anti_cheat, time.monotonic()):
+                    await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Input rate exceeded."})
+                    if live.anti_cheat.strikes >= anti_cheat.config.max_strikes:
+                        await websocket.close(code=4003, reason="Anti-cheat violation")
+                        break
+                    continue
                 try:
                     input_x = float(message.get("x", 0.0))
                     input_z = float(message.get("z", 0.0))
@@ -252,7 +267,18 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                     await websocket.send_json({"type": "error", "code": "INVALID_INPUT", "message": "Input axes must be numeric."})
                     continue
                 if not math.isfinite(input_x) or not math.isfinite(input_z):
-                    await websocket.send_json({"type": "error", "code": "INVALID_INPUT", "message": "Input axes must be finite."})
+                    should_close = anti_cheat.violation(player_id, live.anti_cheat, "NON_FINITE_INPUT")
+                    await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Input axes must be finite."})
+                    if should_close:
+                        await websocket.close(code=4003, reason="Anti-cheat violation")
+                        break
+                    continue
+                if abs(input_x) > 1.0 or abs(input_z) > 1.0:
+                    should_close = anti_cheat.violation(player_id, live.anti_cheat, "INVALID_INPUT_RANGE", {"x": input_x, "z": input_z})
+                    await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Input axes exceeded the allowed range."})
+                    if should_close:
+                        await websocket.close(code=4003, reason="Anti-cheat violation")
+                        break
                     continue
                 live.dx = max(-1.0, min(1.0, input_x))
                 live.dz = max(-1.0, min(1.0, input_z))
@@ -263,6 +289,14 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 if requested_zone == "room" and requested_room is None:
                     requested_zone = "hotel"
                 if requested_zone != live.zone or requested_room != live.room_id:
+                    valid_transition = ((live.zone, requested_zone) in {("city", "hotel"), ("hotel", "city"), ("hotel", "room"), ("room", "hotel")})
+                    if not valid_transition and not live.anti_cheat.debug_mode:
+                        should_close = anti_cheat.violation(player_id, live.anti_cheat, "INVALID_ZONE_TRANSITION", {"from": live.zone, "to": requested_zone})
+                        await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Invalid zone transition."})
+                        if should_close:
+                            await websocket.close(code=4003, reason="Anti-cheat violation")
+                            break
+                        continue
                     live.zone = requested_zone
                     live.room_id = requested_room
                     live.x, live.y, live.z = (0.0, 0.0, 8.0 if requested_zone == "city" else 12.0 if requested_zone == "hotel" else 7.0)
@@ -280,6 +314,21 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 live.last_input = time.monotonic()
             elif message_type == "state":
                 await websocket.send_json({"type": "error", "code": "STATE_NOT_ALLOWED", "message": "Send movement input instead of absolute position state."})
+            elif anti_cheat.forbidden_message(str(message_type)):
+                should_close = anti_cheat.violation(player_id, live.anti_cheat, "FORBIDDEN_STATE_MUTATION", {"type": message_type})
+                await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "This state is server-authoritative."})
+                if should_close:
+                    await websocket.close(code=4003, reason="Anti-cheat violation")
+                    break
+            elif message_type == "admin_debug":
+                if not live.anti_cheat.debug_mode:
+                    should_close = anti_cheat.violation(player_id, live.anti_cheat, "UNAUTHORIZED_DEBUG")
+                    await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Debug mode is admin-only."})
+                    if should_close:
+                        await websocket.close(code=4003, reason="Anti-cheat violation")
+                        break
+                else:
+                    await websocket.send_json({"type": "debug_ack", "enabled": True, "serverAuthoritative": True})
             elif message_type == "chat":
                 text = str(message.get("text", "")).strip()[:240]
                 if text:

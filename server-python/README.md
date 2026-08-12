@@ -31,4 +31,16 @@ Set `DATABASE_URL` to a PostgreSQL URL before launch. Tables are created automat
 
 ## Authority model
 
+Anti-cheat is enforced by the host: position, movement, money, inventory,
+weapons, health, damage, god mode, noclip, teleport, and admin commands are
+server-only state. Invalid input and impossible zone transitions accumulate
+strikes; repeated violations close the connection. Violations are written to
+the `sth.anti_cheat` logger.
+
+For update work, an operator may create a short-lived HMAC debug token with
+`anti_cheat.create_debug_token(player_id, expires_at, secret)`. Configure the
+same `ANTI_CHEAT_DEBUG_SECRET` on the host and pass it as `debug_token` in the
+WebSocket query. Tokens are bound to the player id, expire, and never come
+from the browser.
+
 The client sends input intent. The server clamps movement, owns presence, assigns region state, broadcasts snapshots, and persists player profiles. This is a prototype region host—not yet a horizontally scaled MMO service.

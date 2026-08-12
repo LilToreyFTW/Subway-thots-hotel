@@ -1,6 +1,12 @@
 const LOBBY_PATTERN = /^[A-Z0-9][A-Z0-9_-]{0,23}$/;
 const ZONES = new Set(['city', 'hotel', 'room']);
 
+export function normalizeLobbySize(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 16;
+  return Math.max(2, Math.min(32, Math.trunc(parsed)));
+}
+
 export function normalizeLobbyCode(value) {
   const normalized = String(value || 'PUBLIC').trim().toUpperCase();
   if (!LOBBY_PATTERN.test(normalized)) throw new TypeError('Invalid lobby code');
