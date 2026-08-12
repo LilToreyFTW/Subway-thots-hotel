@@ -270,6 +270,7 @@ function startGame(role) {
   let nearby = null;
   let toastTimer;
   let worldSocket = null;
+  let pendingActionContext = null;
   let voiceClient = null;
   let reconnectTimer = null;
   let reconnectAttempts = 0;
@@ -1755,8 +1756,9 @@ function startGame(role) {
     worldSocket.send(JSON.stringify({ type: 'room:layout', layout: roomLayoutDraft }));
   }
 
-  function requestGameAction(action) {
+  function requestGameAction(action, context = null) {
     if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) { toast('Connect to the secure world before completing this action.'); return false; }
+    pendingActionContext = { action, context };
     worldSocket.send(JSON.stringify({ type: 'game:action', action, role }));
     return true;
   }
@@ -2199,9 +2201,9 @@ function startGame(role) {
     if (item.type === 'reception') {
       if (role === 'manager') {
         if (frontDeskReviewed) return toast('The front desk log is already reviewed for this shift.');
-        if (requestGameAction('front_desk_review')) { frontDeskReviewed = true; toast('Front desk review sent to the secure world.'); }
+        if (requestGameAction('front_desk_review', { kind: 'frontDesk' })) toast('Front desk review sent to the secure world.');
       } else if (!checkedIn) {
-        if (requestGameAction('check_in')) { checkedIn = true; setObjective('Use the guest elevator and choose a suite', 0.56); toast('Check-in sent to the secure world.'); }
+        if (requestGameAction('check_in', { kind: 'checkIn' })) toast('Check-in sent to the secure world.');
       } else toast('Your room key remains active until noon.');
       return;
     }
@@ -2211,29 +2213,25 @@ function startGame(role) {
         return;
       }
       if (item.completed) return;
-      if (!requestGameAction('inspect_task')) return;
-      item.completed = true;
-      if (item.object) item.object.visible = false;
+      if (!requestGameAction('inspect_task', { kind: 'inspectionTask', item })) return;
+      /* Completion is applied only after the host acknowledges the action. */
+      if (item.object) item.object.visible = true;
       if (taskCount >= 3) {
-        setObjective('Opening inspection complete · greet hotel guests', 1, 'SHIFT COMPLETE');
-        toast('Hotel inspection complete. The property is ready for guests. +$90 total');
+        toast(`${item.label} sent to the secure world for confirmation.`);
       } else {
-        setObjective(`Complete the opening inspection · ${taskCount}/3`, taskCount / 3, 'SHIFT 01');
-        toast(`${item.label} complete. +$30 · +2 reputation`);
+        toast(`${item.label} sent to the secure world for confirmation.`);
       }
       return;
     }
     if (item.type === 'sleep') {
       if (role === 'manager') {
         if (inspectedSuites.has(currentRoom)) return toast(`Suite ${String(currentRoom).padStart(2, '0')} is already inspected.`);
-        inspectedSuites.add(currentRoom);
-        if (!requestGameAction('inspect_suite')) return;
+        if (!requestGameAction('inspect_suite', { kind: 'inspectionSuite', room: currentRoom })) return;
         toast('Suite inspection sent to the secure world.');
         setObjective('Return to the lobby and continue the shift', 0.92);
       } else if (!slept) {
-        slept = true;
         transition('6:42 AM', 'A NEW MORNING', () => {
-          if (!requestGameAction('sleep')) return;
+          if (!requestGameAction('sleep', { kind: 'sleep' })) return;
           setObjective('Night complete · return to the city when ready', 1, 'NIGHT COMPLETE');
           toast('Well rested. Night one complete. +$60 · +3 reputation');
         });
@@ -2458,8 +2456,22 @@ function startGame(role) {
           if (message.profile) applyAuthoritativeProfile(message.profile);
           if (message.kind === 'weapon') { equippedWeaponKey = message.key; saveWeaponLoadout(); renderWeaponShop(); toast('Weapon purchase confirmed by the secure world.'); }
         } else if (message.type === 'action:result') {
-          if (!message.success) return toast(`The secure world rejected that action: ${message.reason}.`);
+          const pending = pendingActionContext;
+          pendingActionContext = null;
+          if (!message.success) {
+            if (pending?.context?.kind === 'inspectionTask' && pending.context.item) pending.context.item.completed = false;
+            return toast(`The secure world rejected that action: ${message.reason}.`);
+          }
           if (message.profile) applyAuthoritativeProfile(message.profile);
+          if (pending?.context?.kind === 'checkIn') { checkedIn = true; setObjective('Use the guest elevator and choose a suite', 0.56); }
+          if (pending?.context?.kind === 'frontDesk') frontDeskReviewed = true;
+          if (pending?.context?.kind === 'inspectionSuite') inspectedSuites.add(pending.context.room);
+          if (pending?.context?.kind === 'inspectionTask' && pending.context.item) {
+            pending.context.item.completed = true;
+            if (pending.context.item.object) pending.context.item.object.visible = false;
+            setObjective(taskCount >= 3 ? 'Opening inspection complete · greet hotel guests' : `Complete the opening inspection · ${taskCount}/3`, taskCount / 3, taskCount >= 3 ? 'SHIFT COMPLETE' : 'SHIFT 01');
+          }
+          if (pending?.context?.kind === 'sleep') slept = true;
           const labels = { drink: 'Drink served.', meal: 'Meal served.', host: 'Private hosting completed.', adult_club: 'Venue visit recorded.', courier_drop: 'Courier drop confirmed.', inspect_task: 'Inspection task confirmed.', inspect_suite: 'Suite inspection confirmed.', sleep: 'Rest completed.', front_desk_review: 'Front desk review confirmed.', check_in: 'Check-in confirmed.' };
           toast(labels[message.action] || 'Action confirmed by the secure world.');
         } else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
