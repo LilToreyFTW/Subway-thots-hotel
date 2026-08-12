@@ -42,4 +42,4 @@ Stable runtime keys live in `src/content/WorldContent.js`. The catalog is intent
 - [x] Remodel hotel surfaces while preserving room count and suite flow
 - [x] Add venue-focused NPC routes and activity states
 - [x] Add representative authored/generated GLB asset pack and automated manifest validation
-- [ ] Run a fresh browser visual playtest and performance pass
+- [x] Run a fresh browser visual smoke playtest and production bundle performance pass
