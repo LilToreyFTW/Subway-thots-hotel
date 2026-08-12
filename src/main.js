@@ -40,6 +40,7 @@ import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import { VehicleController } from './vehicles/VehicleController.js';
 import { CharacterPreview } from './ui/CharacterPreview.js';
 import { normalizeRoomLayout, ROOM_DECORATION_CATALOG } from './world/RoomDecorationCatalog.js';
+import { advanceWaypointNavigator, createWaypointNavigator } from './npc/NpcNavigation.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -1449,6 +1450,7 @@ function startGame(role) {
       npc.userData.roamSpeed = .72 + seeded() * .28;
       npc.userData.roamTarget = npc.userData.base.clone();
       npc.userData.roamPause = seeded() * 1.2;
+      npc.userData.navigation = createWaypointNavigator({ base: { x, z }, waypoints: [[-10, -7], [10, -5], [12, 8], [-12, 9]].map(([waypointX, waypointZ]) => ({ x: waypointX, z: waypointZ })) });
       hotel.add(npc);
       npcs.push(npc);
       interactables.push({ mode: 'hotel', type: 'person', object: npc, label: `Meet ${name} · ${socialRole}` });
@@ -2719,6 +2721,18 @@ function startGame(role) {
     for (let index = 0; index < npcs.length; index++) {
       const npc = npcs[index];
       if (!npc.parent?.visible) continue;
+      const resting = npc.userData.activityState === 'resting';
+      if (npc.userData.navigation && !resting) {
+        const navigation = advanceWaypointNavigator(npc.userData.navigation, npc.position, delta, { colliders: hotelColliders, speed: npc.userData.roamSpeed || 1, radius: .35, bounds: { minX: -20, maxX: 20, minZ: -12, maxZ: 14 } });
+        const navDx = navigation.target.x - npc.position.x;
+        const navDz = navigation.target.z - npc.position.z;
+        if (navigation.moving && Math.hypot(navDx, navDz) > .01) npc.rotation.y = Math.atan2(navDx, navDz);
+        const npcWalk = navigation.moving ? Math.sin(elapsed * 8 + (npc.userData.walkPhase || index)) * 0.26 : 0;
+        npcModelLibrary.update(npc, delta, navigation.moving);
+        if (npc.userData.legs?.[0]) npc.userData.legs[0].rotation.x = npcWalk;
+        if (npc.userData.legs?.[1]) npc.userData.legs[1].rotation.x = -npcWalk;
+        continue;
+      }
       const base = npc.userData.base;
       if (!base) continue;
       const target = npc.userData.roamTarget || (npc.userData.roamTarget = base.clone());
@@ -2738,7 +2752,6 @@ function startGame(role) {
       const dx = target.x - npc.position.x;
       const dz = target.z - npc.position.z;
       const length = Math.hypot(dx, dz);
-      const resting = npc.userData.activityState === 'resting';
       const moving = !resting && npc.userData.roamPause <= 0 && length > .08;
       if (moving) {
         const step = Math.min(length, (npc.userData.roamSpeed || 1) * delta * (npc.userData.activityState === 'working' ? 1.08 : 1));
