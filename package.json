@@ -8,6 +8,8 @@
     "build": "vite build && node scripts/prepare-hosting.js",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test test/*.test.js",
+    "generate:audio": "node scripts/generate-game-audio.mjs",
+    "generate:weapons": "node scripts/generate-weapon-glbs.mjs",
     "test:server": "npm test --prefix multiplayer-server",
     "desktop:dev": "node desktop-client/scripts/dev.js",
     "desktop:build": "npm run build --prefix desktop-client",

@@ -41,6 +41,7 @@ import { VehicleController } from './vehicles/VehicleController.js';
 import { CharacterPreview } from './ui/CharacterPreview.js';
 import { normalizeRoomLayout, ROOM_DECORATION_CATALOG } from './world/RoomDecorationCatalog.js';
 import { advanceWaypointNavigator, createWaypointNavigator } from './npc/NpcNavigation.js';
+import { GameAudio } from './audio/GameAudio.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -181,6 +182,7 @@ function startGame(role) {
   const cameraController = new ThirdPersonCameraController(camera, GameConfig.camera);
   const audioListener = new THREE.AudioListener();
   camera.add(audioListener);
+  const gameAudio = new GameAudio();
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -923,6 +925,17 @@ function startGame(role) {
     display.userData.camoIndex = weaponDisplays.length % CAMO_CATALOG.length;
     parent.add(display);
     weaponDisplays.push(display);
+    new GLTFLoader().load(`/assets/models/weapons/${category}.glb`, (gltf) => {
+      const model = gltf.scene;
+      model.scale.setScalar(category === 'minigun' || category === 'rpg' ? .72 : .88);
+      model.rotation.set(0, 0, 0);
+      model.traverse((node) => {
+        if (!node.isMesh) return;
+        node.castShadow = true; node.receiveShadow = true;
+        if (node.material?.name === 'weapon-accent') { node.material = node.material.clone(); (display.userData.camoMaterials ||= []).push(node.material); }
+      });
+      display.clear(); display.add(model);
+    }, undefined, (error) => console.error(`[weapon-display] ${category} model failed`, error));
   }
 
   function addCityVenue(venue) {
@@ -1630,6 +1643,26 @@ function startGame(role) {
   const playerModel = new PlayerModel(player, { clothing: 0x5d8197, shoes: 0x303940, accessory: 0xe0b96d });
   playerModel.load('/assets/models/soldier.glb').catch((error) => console.error('[asset] Failed to load /assets/models/soldier.glb; keeping fallback avatar.', error));
   const playerController = new PlayerController(GameConfig.player, playerModel);
+  let equippedWeaponModel = null;
+  let weaponLoadRevision = 0;
+  async function attachEquippedWeapon() {
+    const weapon = WEAPON_CATALOG.find((item) => item.key === equippedWeaponKey);
+    if (equippedWeaponModel) { player.remove(equippedWeaponModel); equippedWeaponModel = null; }
+    if (!weapon) return;
+    const revision = ++weaponLoadRevision;
+    try {
+      const loaded = await new GLTFLoader().loadAsync(`/assets/models/weapons/${weapon.category}.glb`);
+      if (revision !== weaponLoadRevision) return;
+      const model = loaded.scene;
+      const longWeapon = ['smg', 'ar', 'rifle', 'sniper', 'shotgun', 'minigun', 'rpg'].includes(weapon.category);
+      model.scale.setScalar(longWeapon ? .38 : .5);
+      model.position.set(.38, longWeapon ? 1.25 : 1.12, -.42);
+      model.rotation.set(longWeapon ? -.16 : -.35, Math.PI, longWeapon ? -.08 : -.18);
+      model.traverse((node) => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
+      player.add(model); equippedWeaponModel = model;
+    } catch (error) { console.error(`[weapon-equip] ${weapon.category} model failed`, error); }
+  }
+  attachEquippedWeapon();
   const npcModelLibrary = new NpcModelLibrary();
   npcModelLibrary.load('/assets/models/soldier.glb')
     .then(() => npcs.forEach((npc) => npcModelLibrary.attach(npc, npc.userData.appearance)))
@@ -1791,6 +1824,7 @@ function startGame(role) {
         }
         equippedWeaponKey = weapon.key;
         saveWeaponLoadout();
+        attachEquippedWeapon();
         updateStats();
         renderWeaponShop();
         toast(`${weapon.name} equipped. Fictional loadout updated.`);
@@ -2250,6 +2284,7 @@ function startGame(role) {
       return;
     }
     if (item.type === 'person') {
+      ambience?.npcGreeting();
       const name = item.object.userData.name;
       const socialRole = item.object.userData.socialRole || 'nightlife guest';
       const firstConversation = !item.object.userData.spokeToPlayer;
@@ -2307,49 +2342,27 @@ function startGame(role) {
     }
   }
 
-  function startAmbience() {
+  async function startAmbience() {
     if (ambience) {
-      ambience.context.close();
+      ambience.stop();
       ambience = null;
       $('#sound-toggle').textContent = 'SOUND: OFF';
       return;
     }
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return toast('Audio ambience is unavailable in this browser.');
-    const context = new AudioContext();
-    const master = context.createGain();
-    master.gain.value = 0.07;
-    master.connect(context.destination);
-    const hum = context.createOscillator();
-    hum.type = 'sine';
-    hum.frequency.value = 52;
-    const humGain = context.createGain();
-    humGain.gain.value = 0.12;
-    hum.connect(humGain).connect(master);
-    hum.start();
-    const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.18;
-    const rain = context.createBufferSource();
-    rain.buffer = buffer;
-    rain.loop = true;
-    const filter = context.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 1400;
-    rain.connect(filter).connect(master);
-    rain.start();
-    ambience = { context, hum, rain, filter, humGain, master };
-    updateAmbienceProfile();
-    $('#sound-toggle').textContent = 'SOUND: ON';
+    try {
+      await gameAudio.start();
+      ambience = gameAudio;
+      $('#sound-toggle').textContent = 'SOUND: ON';
+      $('#pause-sound-label').textContent = 'SOUND: ON';
+      toast('Layered city, traffic, vehicle, NPC and character audio enabled.');
+    } catch (error) {
+      console.error('[audio] failed to start', error);
+      toast('Game audio could not load.');
+    }
   }
 
   function updateAmbienceProfile() {
-    if (!ambience) return;
-    const profile = mode === 'room' ? { hum: 66, filter: 850, level: .055 } : mode === 'hotel' ? { hum: 58, filter: 1050, level: .06 } : { hum: 52, filter: 1450, level: .07 };
-    const now = ambience.context.currentTime;
-    ambience.hum.frequency.linearRampToValueAtTime(profile.hum, now + .4);
-    ambience.filter.frequency.linearRampToValueAtTime(profile.filter, now + .4);
-    ambience.master.gain.linearRampToValueAtTime(profile.level, now + .4);
+    if (ambience) ambience.update({ mode, driving, speed: Math.abs(activeVehicleController?.speed || 0) * 3.6 });
   }
 
   function appendChat(displayName, text, system = false) {
@@ -2465,7 +2478,7 @@ function startGame(role) {
         else if (message.type === 'shop:result') {
           if (!message.success) return toast(message.reason === 'INSUFFICIENT_FUNDS' ? 'The secure world rejected the purchase: insufficient funds.' : 'The secure world rejected that purchase.');
           if (message.profile) applyAuthoritativeProfile(message.profile);
-          if (message.kind === 'weapon') { equippedWeaponKey = message.key; saveWeaponLoadout(); renderWeaponShop(); toast('Weapon purchase confirmed by the secure world.'); }
+          if (message.kind === 'weapon') { equippedWeaponKey = message.key; saveWeaponLoadout(); attachEquippedWeapon(); renderWeaponShop(); toast('Weapon purchase confirmed by the secure world.'); }
           if (message.kind === 'vehicle') { equippedVehicleKey = message.key; saveVehicleGarage(); renderVehicleShop('dealership'); toast('Vehicle purchase confirmed by the secure world.'); }
           if (message.kind === 'upgrade') { renderVehicleShop('mods'); toast('Vehicle upgrade confirmed by the secure world.'); }
         } else if (message.type === 'action:result') {
@@ -2705,11 +2718,13 @@ function startGame(role) {
       if (!material) {
         display.traverse((node) => { if (node.isMesh && node.material?.metalness > .5 && !display.userData.camoMaterial) display.userData.camoMaterial = node.material; });
       }
-      const target = display.userData.camoMaterial || material;
-      if (target?.color) target.color.setHSL(drift, .72, .39 + Math.sin(elapsed * camo.speed * 1.7) * .05);
-      if (target?.emissive) {
-        target.emissive.setHSL((camo.accentHue - wave + 1) % 1, .72, .16);
-        target.emissiveIntensity = camo.glow * (.72 + Math.sin(elapsed * camo.speed * 2.2) * .22);
+      const targets = display.userData.camoMaterials?.length ? display.userData.camoMaterials : [display.userData.camoMaterial || material].filter(Boolean);
+      for (const target of targets) {
+        if (target?.color) target.color.setHSL(drift, .72, .39 + Math.sin(elapsed * camo.speed * 1.7) * .05);
+        if (target?.emissive) {
+          target.emissive.setHSL((camo.accentHue - wave + 1) % 1, .72, .16);
+          target.emissiveIntensity = camo.glow * (.72 + Math.sin(elapsed * camo.speed * 2.2) * .22);
+        }
       }
     }
   }
@@ -2866,7 +2881,7 @@ function startGame(role) {
     }
     keys[event.key.toLowerCase()] = true;
     if (event.key === 'Enter' && !event.repeat) { event.preventDefault(); openChat(); return; }
-    if (event.key === ' ' && !event.repeat) jumpQueued = true;
+    if (event.key === ' ' && !event.repeat) { jumpQueued = true; ambience?.playerEffort(); }
     if (event.key.toLowerCase() === 'e' && !event.repeat) interact();
     if (event.key.toLowerCase() === 'v' && !event.repeat) spawnEquippedVehicle();
     if (event.key.toLowerCase() === 'x' && !event.repeat) exitActiveVehicle();
@@ -2902,7 +2917,7 @@ function startGame(role) {
   $('#interact').addEventListener('click', interact);
   $('#close-rooms').addEventListener('click', () => $('#room-panel').classList.remove('open'));
   $('#resume-btn').addEventListener('click', () => togglePause(false));
-  $('#pause-sound-btn').addEventListener('click', () => { startAmbience(); $('#pause-sound-label').textContent = ambience ? 'SOUND: ON' : 'SOUND: OFF'; });
+  $('#pause-sound-btn').addEventListener('click', async () => { await startAmbience(); $('#pause-sound-label').textContent = ambience ? 'SOUND: ON' : 'SOUND: OFF'; });
   $('#pause-world-btn').addEventListener('click', () => { togglePause(false); $('#world-map-toggle')?.click(); });
   $('#pause-title-btn').addEventListener('click', () => { if (confirm('Return to the title screen? Unsaved moment-to-moment progress will be lost.')) location.reload(); });
   $('#sound-toggle').addEventListener('click', startAmbience);
@@ -2951,6 +2966,7 @@ function startGame(role) {
     update(delta, elapsed) {
       updateCamera(delta);
       voiceClient?.update();
+      ambience?.update({ mode, driving, moving: latestMovement.moving, sprinting: Boolean(keys.shift && latestMovement.moving), speed: Math.abs(activeVehicleController?.speed || 0) * 3.6, nearbyNpc: nearby?.item?.type === 'person', energy: needs.energy });
       if (worldSocket?.readyState === WebSocket.OPEN && elapsed - lastNetworkSend > 0.08) {
         worldSocket.send(JSON.stringify({
           type: 'input',
@@ -2968,6 +2984,6 @@ function startGame(role) {
     },
     render: () => composer.render(),
   });
-  addEventListener('beforeunload', () => { gameLoop.stop(); inputController.dispose(); worldStreamer.dispose(); }, { once: true });
+  addEventListener('beforeunload', () => { gameLoop.stop(); inputController.dispose(); worldStreamer.dispose(); gameAudio.stop(); }, { once: true });
   gameLoop.start();
 }

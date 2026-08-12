@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "generatedBy": "scripts/generate-game-audio.mjs",
+  "format": "PCM WAV 44.1 kHz mono",
+  "assets": [
+    "public/assets/audio/car-idle.wav",
+    "public/assets/audio/car-acceleration.wav",
+    "public/assets/audio/traffic-loop.wav",
+    "public/assets/audio/city-night-loop.wav",
+    "public/assets/audio/player-footstep.wav",
+    "public/assets/audio/player-breath.wav",
+    "public/assets/audio/player-effort.wav",
+    "public/assets/audio/npc-greeting-a.wav",
+    "public/assets/audio/npc-greeting-b.wav",
+    "public/assets/audio/npc-chatter-loop.wav"
+  ]
+}
