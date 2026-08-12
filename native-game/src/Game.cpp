@@ -6,7 +6,7 @@
 namespace sth {
 
 Game::Game()
-    : player_{"Player", {0.0f, 0.0f, -27.0f}, 2500, {}, ""},
+    : player_{"Player", {WorldLayout::PlayerSpawnX, WorldLayout::PlayerSpawnY, WorldLayout::PlayerSpawnZ}, 2500, {}, ""},
       weapons_{
           {"velvet-9", "Velvet 9", "pistol", 420},
           {"afterglow-45", "Afterglow .45", "pistol", 760},
@@ -20,7 +20,7 @@ Game::Game()
           {"flash-charge", "Flash Charge", "explosive", 650},
       },
       venues_{
-          {"neon-arsenal", "Neon Arsenal", "gun-shop", {10.0f, 0.0f, -36.0f}, 18.0f, 16.0f, true},
+          {"neon-arsenal", "Neon Arsenal", "gun-shop", {WorldLayout::NeonArsenalX, 0.0f, WorldLayout::NeonArsenalZ}, 18.0f, 16.0f, true},
           {"diamond-lane-motors", "Diamond Lane Motors", "car-dealership", {55.0f, 0.0f, -40.0f}, 16.0f, 12.0f, false},
           {"blacktop-customs", "Blacktop Customs", "car-mod-shop", {88.0f, 0.0f, -40.0f}, 16.0f, 12.0f, false},
           {"velvet-stage", "Velvet Stage", "adult-club", {38.0f, 0.0f, 36.0f}, 12.0f, 8.0f, false},
@@ -34,7 +34,7 @@ const std::vector<Venue>& Game::venues() const noexcept { return venues_; }
 
 bool Game::movePlayer(float dx, float dz) {
     const Vec3 next{player_.position.x + dx, player_.position.y, player_.position.z + dz};
-    if (next.x < -150.0f || next.x > 150.0f || next.z < -150.0f || next.z > 150.0f) return false;
+    if (next.x < WorldLayout::WorldMin || next.x > WorldLayout::WorldMax || next.z < WorldLayout::WorldMin || next.z > WorldLayout::WorldMax) return false;
 
     // Venue lots are navigable outdoor spaces; enclosed venue shells remain blocked.
     for (const Venue& venue : venues_) {

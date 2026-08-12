@@ -6,6 +6,16 @@
 
 namespace sth {
 
+namespace WorldLayout {
+inline constexpr float WorldMin = -150.0f;
+inline constexpr float WorldMax = 150.0f;
+inline constexpr float PlayerSpawnX = 0.0f;
+inline constexpr float PlayerSpawnY = 0.0f;
+inline constexpr float PlayerSpawnZ = 9.0f;
+inline constexpr float NeonArsenalX = 10.0f;
+inline constexpr float NeonArsenalZ = -36.0f;
+} // namespace WorldLayout
+
 struct Vec3 {
     float x = 0.0f;
     float y = 0.0f;

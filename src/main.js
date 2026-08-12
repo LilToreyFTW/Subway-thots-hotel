@@ -33,6 +33,7 @@ import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import { InteractionSystem } from './interaction/InteractionSystem.js';
 import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
+import { WORLD_LAYOUT } from './content/WorldLayout.js';
 import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from './content/VehicleCatalog.js';
 import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import { VehicleController } from './vehicles/VehicleController.js';
@@ -303,8 +304,8 @@ function startGame(role) {
   const structuralGrid = new StructuralGrid(2, .25);
   const geometryCache = new Map();
   const cityFootprints = [];
-  const roadwayCenters = [-120, -72, -24, 24, 72, 120];
-  const venueFootprintSizes = { 'gun-shop': [18, 16], 'adult-club': [12, 8], bar: [14, 10], 'car-dealership': [16, 12], 'car-mod-shop': [16, 12] };
+  const roadwayCenters = WORLD_LAYOUT.roads;
+  const venueFootprintSizes = Object.fromEntries(Object.entries(WORLD_LAYOUT.venueFootprints).map(([type, size]) => [type, [size.width, size.depth]]));
   const roadGraph = new RoadGraph();
   window.sthRoadGraph = roadGraph;
 
@@ -976,7 +977,7 @@ function startGame(role) {
     decals.floor(city, 7, .03, -23, 8, 4, { kind: 'water', rotation: .35 });
     decals.floor(city, -32, .03, 18, 5, 3, { kind: 'grime', rotation: -.5 });
     decals.floor(city, -45, .04, 7.8, 3.6, 1.2, { kind: 'marking', label: '24' });
-    const roadPositions = [-120, -72, -24, 24, 72, 120];
+    const roadPositions = WORLD_LAYOUT.roads;
     const roadMaterial = material(0x171c20, 0.34, 0.06);
     for (const p of roadPositions) {
       box(city, p, -0.02, 0, 13, 0.08, 320, roadMaterial, false);
@@ -1555,12 +1556,12 @@ function startGame(role) {
   });
   if (role === 'manager') {
     hotel.add(player);
-    player.position.set(0, 0, 9);
+    player.position.set(WORLD_LAYOUT.playerSpawn.x, WORLD_LAYOUT.playerSpawn.y, WORLD_LAYOUT.playerSpawn.z);
     city.visible = false;
     hotel.visible = true;
   } else {
     city.add(player);
-    player.position.set(-24, 0, -24);
+    player.position.set(WORLD_LAYOUT.cityStartSpawn.x, WORLD_LAYOUT.cityStartSpawn.y, WORLD_LAYOUT.cityStartSpawn.z);
     player.rotation.y = Math.PI;
     city.visible = true;
     hotel.visible = false;

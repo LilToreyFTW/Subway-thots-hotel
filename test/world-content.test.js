@@ -8,6 +8,7 @@ import { GameLoop } from '../src/core/GameLoop.js';
 import * as THREE from 'three';
 import { VehicleController, VehicleState } from '../src/vehicles/VehicleController.js';
 import { RoadGraph } from '../src/world/RoadGraph.js';
+import { WORLD_LAYOUT } from '../src/content/WorldLayout.js';
 
 test('weapon catalog covers the requested fictional equipment categories', () => {
   const categories = new Set(WEAPON_CATALOG.map((weapon) => weapon.category));
@@ -19,9 +20,19 @@ test('venue catalog contains the shop, adult club, distant bar, and hotel hostin
   assert.deepEqual(new Set(VENUE_CATALOG.map((venue) => venue.type)), new Set(['gun-shop', 'car-dealership', 'car-mod-shop', 'adult-club', 'bar', 'hotel-hosting']));
 });
 
+test('gameplay offsets are centralized and venue footprints match the catalog', () => {
+  assert.deepEqual([...WORLD_LAYOUT.roads], [-120, -72, -24, 24, 72, 120]);
+  assert.deepEqual(WORLD_LAYOUT.playerSpawn, { x: 0, y: 0, z: 9 });
+  for (const venue of VENUE_CATALOG.filter((item) => item.type !== 'hotel-hosting')) {
+    assert.equal(venue.footprint.width, WORLD_LAYOUT.venueFootprints[venue.type].width);
+    assert.equal(venue.footprint.depth, WORLD_LAYOUT.venueFootprints[venue.type].depth);
+  }
+  assert.equal(VENUE_CATALOG.find((venue) => venue.type === 'gun-shop').footprint.outdoor, true);
+});
+
 test('street venues clear the 13 meter roadway bands', () => {
-  const widths = { 'gun-shop': 12, 'adult-club': 12, bar: 14, 'car-dealership': 16, 'car-mod-shop': 16 };
-  const depths = { 'gun-shop': 8, 'adult-club': 8, bar: 10, 'car-dealership': 12, 'car-mod-shop': 12 };
+  const widths = Object.fromEntries(Object.entries(WORLD_LAYOUT.venueFootprints).map(([type, footprint]) => [type, footprint.width]));
+  const depths = Object.fromEntries(Object.entries(WORLD_LAYOUT.venueFootprints).map(([type, footprint]) => [type, footprint.depth]));
   const roads = [-120, -72, -24, 24, 72, 120];
   for (const venue of VENUE_CATALOG.filter((item) => item.type !== 'hotel-hosting')) {
     const [x, , z] = venue.position;
