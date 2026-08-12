@@ -1,7 +1,8 @@
 {
   "name": "subway-thots-hotel-desktop-client",
   "productName": "Subway Thots Hotel",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "buildVersion": "1.0.0.0",
   "description": "Subway Thots Hotel Windows desktop client",
   "author": "LilToreyFTW",
   "main": "electron/main.js",
@@ -26,12 +27,51 @@
     "productName": "Subway Thots Hotel",
     "executableName": "SubwayThotsHotel",
     "asar": true,
-    "directories": { "output": "dist" },
-    "files": ["electron/**/*", "launcher/**/*", "game-runtime/**/*", "package.json"],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "launcher/**/*",
+      "game-runtime/**/*",
+      "package.json"
+    ],
     "icon": "build/icon.ico",
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }], "artifactName": "Subway-Thots-Hotel-${version}-${arch}.${ext}" },
-    "portable": { "artifactName": "Subway-Thots-Hotel-${version}-${arch}-portable.${ext}" },
-    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "Subway Thots Hotel", "runAfterFinish": true, "artifactName": "Subway-Thots-Hotel-Setup-${version}-x64.exe" },
-    "publish": { "provider": "github", "owner": "LilToreyFTW", "repo": "Subway-thots-hotel", "releaseType": "release" }
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Subway-Thots-Hotel-1.0.0.0-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Subway-Thots-Hotel-1.0.0.0-${arch}-portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Subway Thots Hotel",
+      "runAfterFinish": true,
+      "artifactName": "Subway-Thots-Hotel-Setup-1.0.0.0-x64.exe"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "LilToreyFTW",
+      "repo": "Subway-thots-hotel",
+      "releaseType": "release"
+    }
   }
 }

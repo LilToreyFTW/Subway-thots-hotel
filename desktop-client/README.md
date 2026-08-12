@@ -21,7 +21,7 @@ npm run desktop:dist
 
 ## Release workflow
 
-`.github/workflows/desktop-release.yml` runs on successful `main` pushes and manual dispatch. It installs both lockfiles, runs root and desktop tests, assigns semantic version `0.1.<GitHub run number>`, builds/verifies the game, builds NSIS + portable artifacts, verifies `latest.yml`, and publishes only after all prior steps succeed.
+`.github/workflows/desktop-release.yml` runs on successful `main` pushes and manual dispatch. It installs both lockfiles, runs root and desktop tests, reads the committed package and Windows build versions, builds/verifies the game, builds NSIS + portable artifacts, verifies `latest.yml`, and publishes only after all prior steps succeed.
 
 GitHub Actions uses its built-in `GITHUB_TOKEN` for release publishing. No GitHub token is embedded in the client. Optional Windows signing uses electron-builder's `CSC_LINK` and `CSC_KEY_PASSWORD` secrets; when absent, the artifacts are unsigned and SmartScreen may warn.
 
@@ -43,8 +43,8 @@ The stable app ID is `com.liltoreyftw.subwaythotshotel`. Electron keeps localSto
 
 ## Output files
 
-- Installer: `Subway-Thots-Hotel-Setup-<version>-x64.exe`
-- Portable build: `Subway-Thots-Hotel-<version>-x64.exe`
+- Installer: `Subway-Thots-Hotel-Setup-1.0.0.0-x64.exe`
+- Portable build: `Subway-Thots-Hotel-1.0.0.0-x64-portable.exe`
 - Updater metadata: `latest.yml` and `.blockmap`
 - Application executable: `SubwayThotsHotel.exe`
 
