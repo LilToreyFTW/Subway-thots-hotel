@@ -10,7 +10,7 @@ const { installSecurity } = require('./security');
 const { setupPermissions } = require('./permissions');
 protocol.registerSchemesAsPrivileged([{ scheme: 'sth', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
 const isDev = !app.isPackaged; let launcher; let game; let update; let logFile; let worldRelay; let worldRelayPort;
-const UPSTREAM_WORLD_URL = process.env.STH_UPSTREAM_WORLD_URL || 'ws://147.189.172.104:7076';
+const UPSTREAM_WORLD_URL = process.env.STH_UPSTREAM_WORLD_URL || 'wss://world.subwaythotshotel.com';
 function log(message) { try { fs.appendFileSync(logFile, `${new Date().toISOString()} ${message}\n`); } catch {} }
 function runtimeRoot() { return isDev ? path.join(__dirname, '..', 'game-runtime') : path.join(app.getAppPath(), 'game-runtime'); }
 function buildInfo() { try { return readBuildInfo(runtimeRoot()); } catch { return { version: app.getVersion(), shortCommit: 'unknown', buildNumber: 'unknown' }; } }
