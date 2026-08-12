@@ -36,10 +36,10 @@ Stable runtime keys live in `src/content/WorldContent.js`. The catalog is intent
 
 - [x] Establish content catalog and architectural direction
 - [x] Commit every implementation step to the current repository branch
-- [ ] Wire shop purchase/equip state into cash, inventory, and save data
-- [ ] Build Neon Arsenal geometry and shop overlay
-- [ ] Build Velvet Stage and Midnight Mile Bar 28 geometry/interactions
-- [ ] Remodel hotel surfaces while preserving room count and suite flow
-- [ ] Add venue-focused NPC routes and activity states
-- [ ] Add representative authored/generated GLB asset pack after the procedural slice is verified
+- [x] Wire Neon Arsenal fictional weapon purchase/equip state into server-owned cash, inventory, and profile persistence
+- [x] Build Neon Arsenal geometry and shop overlay
+- [x] Build Velvet Stage and Midnight Mile Bar 28 geometry/interactions
+- [x] Remodel hotel surfaces while preserving room count and suite flow
+- [x] Add venue-focused NPC routes and activity states
+- [x] Add representative authored/generated GLB asset pack and automated manifest validation
 - [ ] Run a fresh browser visual playtest and performance pass

@@ -266,7 +266,9 @@ async def lifespan(_: FastAPI):
         "weapons_json": "VARCHAR(8192) DEFAULT '[]'", "vehicles_json": "VARCHAR(8192) DEFAULT '[]'",
         "room_layout_json": "VARCHAR(32768) DEFAULT '{}'", "home_room_id": "INTEGER DEFAULT 1",
         "room_access_json": "VARCHAR(8192) DEFAULT '[]'",
-        "needs_json": "VARCHAR(2048) DEFAULT '{\"energy\":100,\"hunger\":100,\"hygiene\":100}'", "job_step": "INTEGER DEFAULT 0", "task_count": "INTEGER DEFAULT 0",
+        # JSON defaults contain colons, which SQLAlchemy text() treats as bind
+        # markers during ALTER TABLE. Existing rows are normalized by load_profile.
+        "needs_json": "VARCHAR(2048)", "job_step": "INTEGER DEFAULT 0", "task_count": "INTEGER DEFAULT 0",
     }
     with engine.begin() as connection:
         for name, definition in missing_columns.items():
@@ -333,9 +335,9 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
             except Exception:
                 pass
         regions[region_id][player_id] = live
-        if region_id not in region_tasks or region_tasks[region_id].done():
-            region_tasks[region_id] = asyncio.create_task(region_loop(region_id))
     await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode, "profile": {**profile_snapshot(live), "homeRoomId": live.home_room_id}})
+    if region_id not in region_tasks or region_tasks[region_id].done():
+        region_tasks[region_id] = asyncio.create_task(region_loop(region_id))
     await broadcast_visible(region_id, live, {"type": "presence", "action": "join", "playerId": player_id, "displayName": live.display_name})
     try:
         while True:
