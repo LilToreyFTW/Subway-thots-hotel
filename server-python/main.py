@@ -26,6 +26,7 @@ from profile_state import profile_snapshot
 from social_visibility import can_share_presence
 from room_access import can_enter, can_manage, grant_access, revoke_access
 from world_activity import world_activity_snapshot
+from room_layout import validate_room_layout
 
 load_dotenv()
 
@@ -322,7 +323,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
         if region_id not in region_tasks or region_tasks[region_id].done():
             region_tasks[region_id] = asyncio.create_task(region_loop(region_id))
     await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode, "profile": {**profile_snapshot(live), "homeRoomId": live.home_room_id}})
-    await broadcast(region_id, {"type": "presence", "action": "join", "playerId": player_id, "displayName": live.display_name})
+    await broadcast_visible(region_id, live, {"type": "presence", "action": "join", "playerId": player_id, "displayName": live.display_name})
     try:
         while True:
             try:
@@ -416,6 +417,13 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 await websocket.send_json({"type": "room:access", "action": "granted" if message_type == "room:invite" else "revoked", "roomId": room_id, "targetPlayerId": target_id, "changed": changed})
                 if changed and target.websocket is not None:
                     await target.websocket.send_json({"type": "room:access", "action": "granted" if message_type == "room:invite" else "revoked", "roomId": room_id, "ownerPlayerId": player_id})
+            elif message_type == "room:layout":
+                if live.zone != "room" or live.room_id != str(live.home_room_id):
+                    await websocket.send_json({"type": "error", "code": "ROOM_PERMISSION_DENIED", "message": "Only the owner can edit a home suite."})
+                    continue
+                live.room_layout = validate_room_layout(message.get("layout"))
+                save_profile(live, region_id)
+                await websocket.send_json({"type": "room:layout", "roomId": live.room_id, "layout": live.room_layout})
             elif anti_cheat.forbidden_message(str(message_type)):
                 should_close = anti_cheat.violation(player_id, live.anti_cheat, "FORBIDDEN_STATE_MUTATION", {"type": message_type})
                 await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "This state is server-authoritative."})
@@ -452,7 +460,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 removed_current = True
         if removed_current:
             save_profile(live, region_id)
-            await broadcast(region_id, {"type": "presence", "action": "leave", "playerId": player_id, "displayName": live.display_name})
+            await broadcast_visible(region_id, live, {"type": "presence", "action": "leave", "playerId": player_id, "displayName": live.display_name})
 
 
 # ---------------------------------------------------------------------------

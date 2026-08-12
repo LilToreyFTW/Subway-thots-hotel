@@ -39,6 +39,7 @@ import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from './content/Vehicle
 import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import { VehicleController } from './vehicles/VehicleController.js';
 import { CharacterPreview } from './ui/CharacterPreview.js';
+import { normalizeRoomLayout, ROOM_DECORATION_CATALOG } from './world/RoomDecorationCatalog.js';
 import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
@@ -237,6 +238,9 @@ function startGame(role) {
   let cameraDragging = false;
   let jumpQueued = false;
   let currentRoom = null;
+  let homeRoomId = null;
+  let authoritativeRoomLayout = normalizeRoomLayout(null);
+  let roomLayoutDraft = normalizeRoomLayout(null);
   let paused = false;
   const progression = loadProgression(localStorage, { cash: role === 'manager' ? 420 : 240, reputation: 12 });
   let rep = progression.reputation;
@@ -1512,6 +1516,7 @@ function startGame(role) {
     art.position.set(8.54, 3.7, 1.2);
     art.rotation.y = -Math.PI / 2;
     suite.add(art);
+    applyCustomRoomLayout();
 
     const door = box(suite, 0, 2.4, 8.55, 2.4, 4.8, 0.25, materials.wood);
     door.castShadow = true;
@@ -1523,6 +1528,33 @@ function startGame(role) {
     interactables.push({ mode: 'room', type: 'roomExit', position: new THREE.Vector3(0, 0, 6.7), label: 'Return to the hotel lobby' });
     interactables.push({ mode: 'room', type: 'sleep', position: new THREE.Vector3(-3.2, 0, 0.5), label: role === 'guest' ? 'Sleep until morning' : 'Inspect and refresh the suite' });
     interactables.push({ mode: 'room', type: 'roomHosting', position: new THREE.Vector3(2.8, 0, 1.7), label: 'Host a private consenting adult guest' });
+    interactables.push({ mode: 'room', type: 'roomEditor', position: new THREE.Vector3(6.4, 0, -5.8), label: 'Customize your private suite' });
+  }
+
+  function applyCustomRoomLayout() {
+    for (const item of authoritativeRoomLayout.items) {
+      let object = null;
+      if (item.type === 'sofa') object = addFurniture(suite, item.x, item.z, item.rotation);
+      if (item.type === 'lamp') object = addFloorLamp(suite, item.x, item.z);
+      if (item.type === 'table') object = addCafeTable(suite, item.x, item.z);
+      if (item.type === 'art') {
+        object = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.2), new THREE.MeshBasicMaterial({ map: labelTexture('CUSTOM ART', '#d2ad6d', '#22272a', 320, 220) }));
+        object.position.set(item.x, Math.max(1.2, item.y), item.z); suite.add(object);
+      }
+      if (item.type === 'plant') {
+        object = new THREE.Group();
+        cylinder(object, 0, .35, 0, .28, .7, materials.hotelStone, 12);
+        const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(.7, 1), material(0x285a46, .82)); crown.position.y = 1.05; object.add(crown);
+        object.position.set(item.x, item.y, item.z); suite.add(object);
+      }
+      if (item.type === 'bar') object = box(suite, item.x, Math.max(.5, item.y), item.z, 2.8, 1.1, .75, materials.wood);
+      if (item.type === 'rug') object = box(suite, item.x, .025, item.z, 3.2, .04, 2.1, material(0x4b2e48, .9));
+      if (object) {
+        object.rotation.y = item.rotation;
+        object.scale.multiplyScalar(item.scale);
+        object.userData.creatorDecoration = item.id;
+      }
+    }
   }
 
   function addRain() {
@@ -1670,10 +1702,49 @@ function startGame(role) {
       profile.vehicles.forEach((key) => ownedVehicles.add(String(key)));
       saveVehicleGarage();
     }
+    if (profile.homeRoomId != null) homeRoomId = String(profile.homeRoomId);
+    if (profile.roomLayout) {
+      authoritativeRoomLayout = normalizeRoomLayout(profile.roomLayout);
+      roomLayoutDraft = normalizeRoomLayout(profile.roomLayout);
+      renderRoomEditor();
+      if (mode === 'room' && currentRoom != null) buildSuite(currentRoom);
+    }
     updateStats();
     appendChat('WORLD', 'Authoritative profile synchronized.', true);
   }
   window.addEventListener('sth-profile-sync', (event) => applyAuthoritativeProfile(event.detail));
+
+  function renderRoomEditor() {
+    const root = $('#room-editor-items');
+    if (!root) return;
+    root.innerHTML = '';
+    ROOM_DECORATION_CATALOG.forEach((entry) => {
+      const button = document.createElement('button');
+      button.textContent = `ADD ${entry.name.toUpperCase()}`;
+      button.title = `${entry.category} · approved creator decoration`;
+      button.addEventListener('click', () => {
+        const index = roomLayoutDraft.items.length;
+        const angle = index * 2.399;
+        roomLayoutDraft = normalizeRoomLayout({ items: [...roomLayoutDraft.items, { id: `${entry.type}-${Date.now()}`, type: entry.type, x: Math.cos(angle) * 4.8, y: entry.type === 'art' ? 2.8 : 0, z: Math.sin(angle) * 4.8, rotation: angle, scale: 1 }] });
+        if (mode === 'room' && currentRoom != null) buildSuite(currentRoom);
+        renderRoomEditor();
+      });
+      root.appendChild(button);
+    });
+  }
+
+  function openRoomEditor() {
+    if (mode !== 'room' || currentRoom == null) return toast('Enter your private suite before opening the editor.');
+    if (homeRoomId && String(currentRoom) !== homeRoomId) return toast('Only your owned suite can be customized.');
+    $('#room-editor').hidden = false;
+    $('#room-panel').classList.remove('open');
+    renderRoomEditor();
+  }
+
+  function saveRoomLayout() {
+    if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) return toast('Connect to the secure world before saving your suite.');
+    worldSocket.send(JSON.stringify({ type: 'room:layout', layout: roomLayoutDraft }));
+  }
 
   function saveWeaponLoadout() {
     localStorage.setItem('sth-owned-weapons', JSON.stringify([...ownedWeapons]));
@@ -2075,6 +2146,7 @@ function startGame(role) {
       return;
     }
     if (item.type === 'roomExit') return exitRoom();
+    if (item.type === 'roomEditor') return openRoomEditor();
     if (item.type === 'rooms') {
       $('#room-panel').classList.add('open');
       toast('Select a secured floor and suite.');
@@ -2224,6 +2296,10 @@ function startGame(role) {
     }
   }
   makeRoomDirectory();
+  $('#close-room-editor').addEventListener('click', () => { $('#room-editor').hidden = true; });
+  $('#room-editor-save').addEventListener('click', saveRoomLayout);
+  $('#room-editor-reset').addEventListener('click', () => { roomLayoutDraft = normalizeRoomLayout(null); if (mode === 'room' && currentRoom != null) buildSuite(currentRoom); renderRoomEditor(); });
+  renderRoomEditor();
 
   function togglePause(force) {
     paused = typeof force === 'boolean' ? force : !paused;
@@ -2384,6 +2460,12 @@ function startGame(role) {
             localStorage.setItem('sth-session-token', sessionToken);
           }
           if (message.profile) window.dispatchEvent(new CustomEvent('sth-profile-sync', { detail: message.profile }));
+        } else if (message.type === 'room:layout') {
+          authoritativeRoomLayout = normalizeRoomLayout(message.layout);
+          roomLayoutDraft = normalizeRoomLayout(message.layout);
+          renderRoomEditor();
+          if (mode === 'room' && currentRoom != null) buildSuite(currentRoom);
+          toast('Suite layout saved to the secure world.');
         } else if (message.type === 'snapshot') {
           syncRemotePlayers(message.players || []);
           applyWorldActivity(message.worldActivity);
@@ -2761,7 +2843,9 @@ function startGame(role) {
     if (event.key.toLowerCase() === 'v' && !event.repeat) spawnEquippedVehicle();
     if (event.key.toLowerCase() === 'x' && !event.repeat) exitActiveVehicle();
     if (event.key.toLowerCase() === 'r' && !event.repeat && mode !== 'city') $('#room-panel').classList.toggle('open');
+    if (event.key.toLowerCase() === 'b' && !event.repeat && mode === 'room') openRoomEditor();
     if (event.key === 'Escape' && !event.repeat) {
+      if (!$('#room-editor').hidden) { $('#room-editor').hidden = true; return; }
       if ($('#room-panel').classList.contains('open')) $('#room-panel').classList.remove('open');
       else togglePause();
     }

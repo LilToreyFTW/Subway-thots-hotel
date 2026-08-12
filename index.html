@@ -76,6 +76,13 @@
         <div id="room-list"></div>
       </aside>
 
+      <aside id="room-editor" aria-label="Private suite editor" hidden>
+        <div class="room-head"><div><small>OWNER TOOLS</small><strong>SUITE EDITOR</strong></div><button id="close-room-editor" aria-label="Close suite editor">×</button></div>
+        <p>Place approved decor in your private suite. Saves are server-validated and owner-only.</p>
+        <div id="room-editor-items"></div>
+        <div class="room-editor-actions"><button id="room-editor-save">SAVE SUITE</button><button id="room-editor-reset">CLEAR DECOR</button></div>
+      </aside>
+
       <aside id="world-panel" aria-label="World streamer" hidden>
         <div class="room-head"><div><small>GEOSPATIAL WORLD</small><strong>TRAVEL &amp; STREAMING</strong></div><button id="world-panel-close" aria-label="Close world map">×</button></div>
         <p>Regions use real WGS84 anchors. Nearby chunks stream continuously; detail data can be published region by region.</p>
