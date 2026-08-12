@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import math
 import os
 import re
@@ -20,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from anti_cheat import AntiCheat, AntiCheatState
+from profile_state import profile_snapshot
 
 load_dotenv()
 
@@ -45,6 +47,11 @@ class PlayerProfile(Base):
     z: Mapped[float] = mapped_column(Float, default=8.0)
     region_id: Mapped[str] = mapped_column(String(80), default="sth-city-01")
     auth_token: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    cash: Mapped[int] = mapped_column(Integer, default=240)
+    reputation: Mapped[int] = mapped_column(Integer, default=12)
+    weapons_json: Mapped[str] = mapped_column(String(8192), default='[]')
+    vehicles_json: Mapped[str] = mapped_column(String(8192), default='[]')
+    room_layout_json: Mapped[str] = mapped_column(String(32768), default='{}')
 
 
 class GamertagRegistry(Base):
@@ -76,6 +83,9 @@ class LivePlayer:
     health: int = 100
     money: int = 0
     weapons: set[str] = field(default_factory=set)
+    reputation: int = 12
+    vehicles: set[str] = field(default_factory=set)
+    room_layout: dict[str, Any] = field(default_factory=dict)
 
 
 regions: dict[str, dict[str, LivePlayer]] = defaultdict(dict)
@@ -98,7 +108,14 @@ def load_profile(player_id: str, display_name: str, region_id: str, presented_to
             profile.display_name = display_name[:80] or profile.display_name
             profile.region_id = region_id
             db.commit()
-        live = LivePlayer(player_id=profile.player_id, display_name=profile.display_name, websocket=None, x=profile.x, y=profile.y, z=profile.z)
+        live = LivePlayer(
+            player_id=profile.player_id, display_name=profile.display_name, websocket=None,
+            x=profile.x, y=profile.y, z=profile.z,
+            money=max(0, int(profile.cash or 0)), reputation=max(0, int(profile.reputation or 0)),
+            weapons=set(_load_json_list(profile.weapons_json)),
+            vehicles=set(_load_json_list(profile.vehicles_json)),
+            room_layout=_load_json_object(profile.room_layout_json),
+        )
         return live, profile.auth_token
 
 
@@ -110,7 +127,28 @@ def save_profile(player: LivePlayer, region_id: str) -> None:
             db.add(profile)
         profile.display_name = player.display_name
         profile.x, profile.y, profile.z, profile.region_id = player.x, player.y, player.z, region_id
+        profile.cash = max(0, int(player.money))
+        profile.reputation = max(0, int(player.reputation))
+        profile.weapons_json = json.dumps(sorted(player.weapons), separators=(',', ':'))
+        profile.vehicles_json = json.dumps(sorted(player.vehicles), separators=(',', ':'))
+        profile.room_layout_json = json.dumps(player.room_layout, separators=(',', ':'))
         db.commit()
+
+
+def _load_json_list(value: str | None) -> list[str]:
+    try:
+        parsed = json.loads(value or '[]')
+        return [str(item)[:80] for item in parsed] if isinstance(parsed, list) else []
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
+
+
+def _load_json_object(value: str | None) -> dict[str, Any]:
+    try:
+        parsed = json.loads(value or '{}')
+        return parsed if isinstance(parsed, dict) else {}
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
 
 
 def snapshot(region_id: str) -> dict[str, Any]:
@@ -172,9 +210,15 @@ region_tasks: dict[str, asyncio.Task] = {}
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
     columns = {column["name"] for column in inspect(engine).get_columns("player_profiles")}
-    if "auth_token" not in columns:
-        with engine.begin() as connection:
-            connection.execute(text("ALTER TABLE player_profiles ADD COLUMN auth_token VARCHAR(128)"))
+    missing_columns = {
+        "auth_token": "VARCHAR(128)", "cash": "INTEGER DEFAULT 240", "reputation": "INTEGER DEFAULT 12",
+        "weapons_json": "VARCHAR(8192) DEFAULT '[]'", "vehicles_json": "VARCHAR(8192) DEFAULT '[]'",
+        "room_layout_json": "VARCHAR(32768) DEFAULT '{}'",
+    }
+    with engine.begin() as connection:
+        for name, definition in missing_columns.items():
+            if name not in columns:
+                connection.execute(text(f"ALTER TABLE player_profiles ADD COLUMN {name} {definition}"))
     yield
     for task in region_tasks.values():
         task.cancel()
@@ -238,7 +282,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
         regions[region_id][player_id] = live
         if region_id not in region_tasks or region_tasks[region_id].done():
             region_tasks[region_id] = asyncio.create_task(region_loop(region_id))
-    await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode})
+    await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode, "profile": profile_snapshot(live)})
     await broadcast(region_id, {"type": "presence", "action": "join", "playerId": player_id, "displayName": live.display_name})
     try:
         while True:

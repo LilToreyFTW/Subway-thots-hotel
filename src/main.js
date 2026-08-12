@@ -1651,6 +1651,25 @@ function startGame(role) {
     saveProgression(localStorage, { cash, reputation: rep });
   }
 
+  function applyAuthoritativeProfile(profile) {
+    if (!profile || typeof profile !== 'object') return;
+    if (Number.isFinite(profile.cash)) cash = Math.max(0, Math.trunc(profile.cash));
+    if (Number.isFinite(profile.reputation)) rep = Math.max(0, Math.trunc(profile.reputation));
+    if (Array.isArray(profile.weapons)) {
+      ownedWeapons.clear();
+      profile.weapons.forEach((key) => ownedWeapons.add(String(key)));
+      saveWeaponLoadout();
+    }
+    if (Array.isArray(profile.vehicles)) {
+      ownedVehicles.clear();
+      profile.vehicles.forEach((key) => ownedVehicles.add(String(key)));
+      saveVehicleGarage();
+    }
+    updateStats();
+    appendChat('WORLD', 'Authoritative profile synchronized.', true);
+  }
+  window.addEventListener('sth-profile-sync', (event) => applyAuthoritativeProfile(event.detail));
+
   function saveWeaponLoadout() {
     localStorage.setItem('sth-owned-weapons', JSON.stringify([...ownedWeapons]));
     if (equippedWeaponKey) localStorage.setItem('sth-equipped-weapon', equippedWeaponKey);
@@ -2343,6 +2362,7 @@ function startGame(role) {
             sessionToken = message.sessionToken;
             localStorage.setItem('sth-session-token', sessionToken);
           }
+          if (message.profile) window.dispatchEvent(new CustomEvent('sth-profile-sync', { detail: message.profile }));
         } else if (message.type === 'snapshot') syncRemotePlayers(message.players || []);
         else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
         else if (message.type === 'presence') {
