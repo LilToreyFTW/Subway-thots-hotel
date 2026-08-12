@@ -24,6 +24,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sess
 from anti_cheat import AntiCheat, AntiCheatState
 from profile_state import profile_snapshot
 from social_visibility import can_share_presence
+from room_access import can_enter, can_manage, grant_access, revoke_access
 
 load_dotenv()
 
@@ -368,7 +369,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 if requested_zone == "room" and requested_room is None:
                     requested_zone = "hotel"
                 if requested_zone != live.zone or requested_room != live.room_id:
-                    if requested_zone == "room" and requested_room not in {str(live.home_room_id), *live.room_access} and not live.anti_cheat.debug_mode:
+                    if requested_zone == "room" and not can_enter(live, requested_room) and not live.anti_cheat.debug_mode:
                         await websocket.send_json({"type": "error", "code": "ROOM_ACCESS_DENIED", "message": "That private suite is not yours or shared with you."})
                         continue
                     valid_transition = ((live.zone, requested_zone) in {("city", "hotel"), ("hotel", "city"), ("hotel", "room"), ("room", "hotel")})
@@ -396,6 +397,22 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 live.last_input = time.monotonic()
             elif message_type == "state":
                 await websocket.send_json({"type": "error", "code": "STATE_NOT_ALLOWED", "message": "Send movement input instead of absolute position state."})
+            elif message_type in {"room:invite", "room:revoke"}:
+                try:
+                    room_id = str(message.get("roomId", ""))
+                    target_id = str(message.get("targetPlayerId", ""))
+                except Exception:
+                    room_id, target_id = "", ""
+                target = regions[region_id].get(target_id)
+                if not room_id.isdigit() or not 1 <= int(room_id) <= 50 or not target or not can_manage(live, room_id):
+                    await websocket.send_json({"type": "error", "code": "ROOM_PERMISSION_DENIED", "message": "Only a suite owner can manage access to that room."})
+                    continue
+                changed = grant_access(target, room_id) if message_type == "room:invite" else revoke_access(target, room_id)
+                if changed:
+                    save_profile(target, region_id)
+                await websocket.send_json({"type": "room:access", "action": "granted" if message_type == "room:invite" else "revoked", "roomId": room_id, "targetPlayerId": target_id, "changed": changed})
+                if changed and target.websocket is not None:
+                    await target.websocket.send_json({"type": "room:access", "action": "granted" if message_type == "room:invite" else "revoked", "roomId": room_id, "ownerPlayerId": player_id})
             elif anti_cheat.forbidden_message(str(message_type)):
                 should_close = anti_cheat.violation(player_id, live.anti_cheat, "FORBIDDEN_STATE_MUTATION", {"type": message_type})
                 await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "This state is server-authoritative."})
