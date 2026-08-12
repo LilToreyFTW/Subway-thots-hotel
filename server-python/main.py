@@ -27,6 +27,7 @@ from social_visibility import can_share_presence
 from room_access import can_enter, can_manage, grant_access, revoke_access
 from world_activity import world_activity_snapshot
 from room_layout import validate_room_layout
+from economy import purchase_weapon
 
 load_dotenv()
 
@@ -424,6 +425,13 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 live.room_layout = validate_room_layout(message.get("layout"))
                 save_profile(live, region_id)
                 await websocket.send_json({"type": "room:layout", "roomId": live.room_id, "layout": live.room_layout})
+            elif message_type == "shop:weapon":
+                success, reason, price = purchase_weapon(live, message.get("key", ""))
+                if not success:
+                    await websocket.send_json({"type": "shop:result", "success": False, "reason": reason, "price": price})
+                    continue
+                save_profile(live, region_id)
+                await websocket.send_json({"type": "shop:result", "success": True, "kind": "weapon", "key": str(message.get("key", ""))[:80], "reason": reason, "profile": profile_snapshot(live)})
             elif anti_cheat.forbidden_message(str(message_type)):
                 should_close = anti_cheat.violation(player_id, live.anti_cheat, "FORBIDDEN_STATE_MUTATION", {"type": message_type})
                 await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "This state is server-authoritative."})

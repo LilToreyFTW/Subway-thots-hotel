@@ -1766,8 +1766,9 @@ function startGame(role) {
       card.querySelector('button').onclick = () => {
         if (!owned) {
           if (cash < weapon.price) return toast(`You need $${weapon.price} for the ${weapon.name}.`);
-          cash -= weapon.price;
-          ownedWeapons.add(weapon.key);
+          if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) return toast('Connect to the secure world before buying equipment.');
+          worldSocket.send(JSON.stringify({ type: 'shop:weapon', key: weapon.key }));
+          return toast('Purchase sent to the secure world for validation.');
         }
         equippedWeaponKey = weapon.key;
         saveWeaponLoadout();
@@ -2472,7 +2473,11 @@ function startGame(role) {
           syncRemotePlayers(message.players || []);
           applyWorldActivity(message.worldActivity);
         }
-        else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
+        else if (message.type === 'shop:result') {
+          if (!message.success) return toast(message.reason === 'INSUFFICIENT_FUNDS' ? 'The secure world rejected the purchase: insufficient funds.' : 'The secure world rejected that purchase.');
+          if (message.profile) applyAuthoritativeProfile(message.profile);
+          if (message.kind === 'weapon') { equippedWeaponKey = message.key; saveWeaponLoadout(); renderWeaponShop(); toast('Weapon purchase confirmed by the secure world.'); }
+        } else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
         else if (message.type === 'presence') {
           if (message.playerId !== localPlayerId) appendChat('WORLD', `${message.displayName} ${message.action === 'join' ? 'entered' : 'left'} the district.`, true);
           if (message.action === 'leave') removeRemotePlayer(message.playerId);
