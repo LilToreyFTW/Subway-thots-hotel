@@ -8,7 +8,7 @@ import { GameLoop } from '../src/core/GameLoop.js';
 import * as THREE from 'three';
 import { VehicleController, VehicleState } from '../src/vehicles/VehicleController.js';
 import { RoadGraph } from '../src/world/RoadGraph.js';
-import { WORLD_LAYOUT } from '../src/content/WorldLayout.js';
+import { WORLD_LAYOUT, isHotelWalkIn } from '../src/content/WorldLayout.js';
 
 test('weapon catalog covers the requested fictional equipment categories', () => {
   const categories = new Set(WEAPON_CATALOG.map((weapon) => weapon.category));
@@ -28,6 +28,24 @@ test('gameplay offsets are centralized and venue footprints match the catalog', 
     assert.equal(venue.footprint.depth, WORLD_LAYOUT.venueFootprints[venue.type].depth);
   }
   assert.equal(VENUE_CATALOG.find((venue) => venue.type === 'gun-shop').footprint.outdoor, true);
+});
+
+test('the hotel approach stays clear of the Night Bites stand', () => {
+  const stand = WORLD_LAYOUT.nightBites;
+  const approach = WORLD_LAYOUT.hotel.approach;
+  const standBounds = {
+    minX: stand.x - stand.width / 2,
+    maxX: stand.x + stand.width / 2,
+    minZ: stand.z - stand.depth / 2,
+    maxZ: stand.z + stand.depth / 2,
+  };
+  const overlapsEntranceApproach = standBounds.maxX > approach.minX && standBounds.minX < approach.maxX
+    && standBounds.maxZ > approach.minZ && standBounds.minZ < approach.maxZ;
+  assert.equal(overlapsEntranceApproach, false);
+  assert.ok(Math.hypot(stand.x - WORLD_LAYOUT.hotel.x, stand.interactionZ - WORLD_LAYOUT.hotel.entranceZ) > 3.15);
+  assert.ok(WORLD_LAYOUT.hotel.walkInTriggerZ < WORLD_LAYOUT.hotel.entranceZ);
+  assert.equal(isHotelWalkIn({ x: 0, z: WORLD_LAYOUT.hotel.walkInTriggerZ }), true);
+  assert.equal(isHotelWalkIn({ x: 4, z: WORLD_LAYOUT.hotel.walkInTriggerZ }), false);
 });
 
 test('street venues clear the 13 meter roadway bands', () => {

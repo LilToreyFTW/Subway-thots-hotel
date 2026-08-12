@@ -4,7 +4,13 @@ export const WORLD_LAYOUT = Object.freeze({
   bounds: Object.freeze({ min: -150, max: 150 }),
   playerSpawn: Object.freeze({ x: 0, y: 0, z: 9 }),
   cityStartSpawn: Object.freeze({ x: -24, y: 0, z: -24 }),
-  hotel: Object.freeze({ x: 0, y: 0, z: -46, entranceZ: -34.5 }),
+  hotel: Object.freeze({
+    x: 0, y: 0, z: -46, entranceZ: -34.5,
+    doorwayHalfWidth: 2.7,
+    walkInTriggerZ: -35.15,
+    approach: Object.freeze({ minX: -4, maxX: 4, minZ: -39, maxZ: -27 }),
+  }),
+  nightBites: Object.freeze({ x: -10, y: 0, z: -33, width: 3.8, depth: 1.8, interactionZ: -31.7 }),
   roads: Object.freeze([-120, -72, -24, 24, 72, 120]),
   venueFootprints: Object.freeze({
     'gun-shop': Object.freeze({ width: 18, depth: 16, outdoor: true }),
@@ -17,4 +23,10 @@ export const WORLD_LAYOUT = Object.freeze({
 
 export function layoutPosition(x, y, z) {
   return Object.freeze({ x, y, z });
+}
+
+export function isHotelWalkIn(position) {
+  return Math.abs(position.x - WORLD_LAYOUT.hotel.x) <= WORLD_LAYOUT.hotel.doorwayHalfWidth
+    && position.z <= WORLD_LAYOUT.hotel.walkInTriggerZ
+    && position.z >= WORLD_LAYOUT.hotel.walkInTriggerZ - 2;
 }

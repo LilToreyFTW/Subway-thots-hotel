@@ -34,7 +34,7 @@ import { DoorController } from './world/DoorController.js';
 import { InputController } from './input/InputController.js';
 import { InteractionSystem } from './interaction/InteractionSystem.js';
 import { WEAPON_CATALOG, VENUE_CATALOG } from './content/WorldContent.js';
-import { WORLD_LAYOUT } from './content/WorldLayout.js';
+import { WORLD_LAYOUT, isHotelWalkIn } from './content/WorldLayout.js';
 import { VEHICLE_CATALOG, VEHICLE_UPGRADES, getVehicle } from './content/VehicleCatalog.js';
 import { CAMO_CATALOG, getCamo } from './content/CamoCatalog.js';
 import { VehicleController } from './vehicles/VehicleController.js';
@@ -307,6 +307,7 @@ function startGame(role) {
   const remotePlayers = new Map();
   const rainDrops = [];
   const doors = [];
+  const hotelEntranceDoorLeaves = [];
   const nightLights = [];
   const targetCamera = new THREE.Vector3();
   const cameraLook = new THREE.Vector3();
@@ -871,8 +872,19 @@ function startGame(role) {
     box(group, 0, 6.85, 9.5, 15, 0.45, 4.6, materials.darkMetal);
     box(group, 0, 6.58, 11.4, 14.5, 0.12, 3.9, materials.gold);
 
-    const entranceGlass = box(group, 0, 2.9, 9.62, 6.8, 5.6, 0.18, materials.glass);
-    entranceGlass.castShadow = false;
+    for (const x of [-2.58, 2.58]) {
+      const entranceGlass = box(group, x, 2.9, 9.62, 1.65, 5.6, 0.18, materials.glass);
+      entranceGlass.castShadow = false;
+    }
+    for (const side of [-1, 1]) {
+      const leaf = box(group, side * .86, 2.9, 9.69, 1.62, 5.35, .12, materials.glass);
+      leaf.castShadow = false;
+      leaf.userData.closedX = side * .86;
+      leaf.userData.openX = side * 1.68;
+      box(leaf, 0, 0, .07, .07, 5.35, .08, materials.gold, false);
+      box(leaf, side * -.6, 0, .11, .055, .72, .055, materials.gold, false);
+      hotelEntranceDoorLeaves.push(leaf);
+    }
     box(group, 0, 5.85, 9.58, 8.1, 0.28, 0.3, materials.gold);
     box(group, -3.45, 2.9, 9.58, 0.24, 5.8, 0.32, materials.gold);
     box(group, 3.45, 2.9, 9.58, 0.24, 5.8, 0.32, materials.gold);
@@ -893,7 +905,7 @@ function startGame(role) {
       group.add(plant);
     }
     cityColliders.push({ minX: -15.3, maxX: 15.3, minZ: -55.5, maxZ: -37.2 });
-    interactables.push({ mode: 'city', type: 'hotelEntrance', object: group, position: new THREE.Vector3(0, 0, -34.5), label: 'Enter Subway Thots Hotel' });
+    interactables.push({ mode: 'city', type: 'hotelEntrance', position: new THREE.Vector3(WORLD_LAYOUT.hotel.x, 0, WORLD_LAYOUT.hotel.entranceZ), label: 'Enter Subway Thots Hotel' });
   }
 
   function addWeaponDisplay(parent, x, y, z, category, accent, weaponKey) {
@@ -1115,7 +1127,7 @@ function startGame(role) {
     interactables.push({ mode: 'city', type: 'subwayInfo', position: new THREE.Vector3(-45, 0, 0), label: 'Explore 24th Street Station' });
 
     const foodStand = new THREE.Group();
-    foodStand.position.set(0, 0, -36);
+    foodStand.position.set(WORLD_LAYOUT.nightBites.x, WORLD_LAYOUT.nightBites.y, WORLD_LAYOUT.nightBites.z);
     city.add(foodStand);
     box(foodStand, 0, 0.75, 0, 3.4, 1.5, 1.8, material(0x6f3035, 0.55, 0.2));
     box(foodStand, 0, .78, .93, 3.05, .95, .08, material(0x272324, .4, .35), false);
@@ -1126,8 +1138,13 @@ function startGame(role) {
     const foodSign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.72), new THREE.MeshBasicMaterial({ map: labelTexture('NIGHT BITES', '#ffe0a0', '#681e2b'), transparent: false }));
     foodSign.position.set(0, 2.75, 0.02);
     foodStand.add(foodSign);
-    cityColliders.push({ minX: -1.9, maxX: 1.9, minZ: -36.9, maxZ: -35.1 });
-    interactables.push({ mode: 'city', type: 'foodStand', position: new THREE.Vector3(0, 0, -34.6), label: 'Buy a hot meal · $18' });
+    cityColliders.push({
+      minX: WORLD_LAYOUT.nightBites.x - WORLD_LAYOUT.nightBites.width / 2,
+      maxX: WORLD_LAYOUT.nightBites.x + WORLD_LAYOUT.nightBites.width / 2,
+      minZ: WORLD_LAYOUT.nightBites.z - WORLD_LAYOUT.nightBites.depth / 2,
+      maxZ: WORLD_LAYOUT.nightBites.z + WORLD_LAYOUT.nightBites.depth / 2,
+    });
+    interactables.push({ mode: 'city', type: 'foodStand', position: new THREE.Vector3(WORLD_LAYOUT.nightBites.x, 0, WORLD_LAYOUT.nightBites.interactionZ), label: 'Buy a hot meal · $18' });
 
     const neonWords = ['OPEN LATE', 'CITY CLUB', 'VINYL', '24 HOUR'];
     [[-69,-39,0],[69,9,Math.PI],[9,69,-Math.PI/2],[-39,69,Math.PI/2]].forEach(([x,z,rotation], index) => {
@@ -2056,15 +2073,19 @@ function startGame(role) {
   window.sthRestoreNeed = restoreNeed;
   updateNeedsUI();
 
+  let transitionActive = false;
   function transition(kicker, title, callback) {
+    if (transitionActive) return false;
+    transitionActive = true;
     const fade = $('#fade');
     $('#fade-kicker').textContent = kicker;
     $('#fade-title').textContent = title;
     fade.classList.add('show');
     setTimeout(() => {
-      callback();
-      setTimeout(() => fade.classList.remove('show'), 380);
+      try { callback(); }
+      finally { setTimeout(() => { fade.classList.remove('show'); transitionActive = false; }, 380); }
     }, 520);
+    return true;
   }
 
   function switchMode(nextMode, position, parent) {
@@ -2645,6 +2666,7 @@ function startGame(role) {
     if (mode === 'city') {
       player.position.x = THREE.MathUtils.clamp(nextX, -100000, 100000);
       player.position.z = THREE.MathUtils.clamp(nextZ, -100000, 100000);
+      if (isHotelWalkIn(player.position) && !transitionActive) enterHotel();
     } else if (mode === 'hotel') {
       player.position.x = THREE.MathUtils.clamp(nextX, -22, 22);
       player.position.z = THREE.MathUtils.clamp(nextZ, -18, 18);
@@ -2740,6 +2762,12 @@ function startGame(role) {
       environmentLighting.apply(inServiceWing ? LightingProfile.SERVICE : LightingProfile.HOTEL_LOBBY);
     }
     doors.forEach((door) => door.controller.update(delta));
+    const hotelDoorDistance = Math.hypot(player.position.x - WORLD_LAYOUT.hotel.x, player.position.z - WORLD_LAYOUT.hotel.entranceZ);
+    const hotelDoorsOpen = mode === 'city' && hotelDoorDistance < 6;
+    hotelEntranceDoorLeaves.forEach((leaf) => {
+      const targetX = hotelDoorsOpen ? leaf.userData.openX : leaf.userData.closedX;
+      leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, targetX, 1 - Math.pow(.0005, delta));
+    });
     if (mode === 'city' && Math.max(Math.abs(player.position.x), Math.abs(player.position.z)) > 96) {
       const rebase = worldStreamer.update(player.position);
       diagnostics.syncRendererStats();
