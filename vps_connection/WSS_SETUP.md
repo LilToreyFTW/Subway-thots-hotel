@@ -1,117 +1,77 @@
-# WSS endpoint setup — fix the "SECURE HOST REQUIRED" error
+# Secure multiplayer endpoint
 
-The game client is served over HTTPS (Vercel / any HTTPS host). Browsers block
-mixed content, so it refuses the hardcoded plaintext `ws://147.189.172.104:7076`.
-`src/main.js` therefore leaves `WORLD_URL` null on HTTPS pages and shows:
+The Vercel site is served over HTTPS, so browsers require a secure WebSocket
+(`wss://`) connection. Production is configured as follows:
 
-    WORLD - This HTTPS build needs a trusted wss:// endpoint configured by the host.
+- Public health: `https://cyan-squirrel-97200.zap.cloud/health`
+- Public game socket: `wss://cyan-squirrel-97200.zap.cloud/ws/sth-city-01`
+- Private world process: `http://127.0.0.1:7076`
 
-Fix: put the world host behind TLS so the client can use `wss://`.
+## Install or repair the Windows VPS host
 
-====================================================================
-STEP 1 — Point a domain at the VPS
-====================================================================
-In your DNS provider, add an A record:
+Open PowerShell as Administrator in:
 
-    world.YOURDOMAIN.com   A   147.189.172.104
+```text
+C:\Users\Administrator\Desktop\vps_connection
+```
 
-(Replace YOURDOMAIN.com with whatever domain you control. The game only needs
-the subdomain; it does not need to match the Vercel frontend domain.)
+Then run:
 
-====================================================================
-STEP 2 — Terminate TLS in front of the world host
-====================================================================
-The world host (Host.py -> world_server.py) already runs on 127.0.0.1:7076
-(plaintext). Put a TLS terminator in front of it. Two options:
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\Install-Production-Host.ps1
+```
 
---- OPTION A: Caddy (recommended, Windows VPS, auto-TLS) ---
-1. Download caddy.exe (https://caddyserver.com) onto the VPS.
-2. Save the included `Caddyfile` (edit the domain) next to it.
-3. Open firewall: TCP 80 + TCP 443 (provider + Windows Firewall).
-4. Run:  `caddy run --config Caddyfile`
-   (or `caddy start` for background; wrap in NSSM/Task Scheduler for boot.)
-Caddy issues + renews the cert automatically. Done.
+The installer creates a Python environment, installs dependencies, downloads
+Caddy, opens inbound TCP 443 in Windows Firewall, and installs these automatic
+startup tasks:
 
---- OPTION B: nginx (alt) ---
-1. Use the included `nginx-wss.conf` (edit domain + cert paths).
-2. Issue certs with certbot (Linux) or win-acme (Windows).
-3. Open firewall: TCP 80 + TCP 443.
-4. `nginx -s reload`.
-Remember to renew certs (certbot renew cron / win-acme task).
+- `STH-Multiplayer-World`
+- `STH-Multiplayer-TLS`
 
---- OPTION C: native uvicorn TLS (no proxy, needs 443 OR custom port) ---
-If you'd rather not run a proxy, enable TLS directly in the world host by adding
-to its `.env` (see step 4) and restarting Host.py:
+Caddy obtains and renews the TLS certificate over port 443, then proxies secure
+WebSocket traffic to the world process on localhost. Port 80 remains available
+to the other application already using it on this VPS.
 
-    SSL_CERTFILE=/path/to/fullchain.pem
-    SSL_KEYFILE=/path/to/privkey.pem
+## Frontend configuration
 
-Then clients connect to `wss://world.YOURDOMAIN.com:7076` (port 7076 already open).
-Let's Encrypt still needs port 80 reachable for the cert challenge.
+The production URL is built into the Vercel and EXE clients. The equivalent Vite
+environment variable is:
 
-====================================================================
-STEP 3 — Tell the game client the wss:// URL
-====================================================================
-Set this build environment variable wherever you build/deploy the frontend:
+```env
+VITE_STH_WORLD_URL=wss://cyan-squirrel-97200.zap.cloud
+```
 
-    VITE_STH_WORLD_URL=wss://world.YOURDOMAIN.com
+If Vercel already has `VITE_STH_WORLD_URL`, set it to that exact value or remove
+it so the built-in production value is used, then redeploy. Keep
+`VITE_STH_AUTH` unset or set to `off` until the separate Discord authentication
+service is intentionally deployed.
 
-- Vercel: Project → Settings → Environment Variables → add it, then redeploy.
-- Local build: add it to a `.env` / `.env.production` file at the repo root
-  (Vite reads VITE_-prefixed vars at build time), then `npm run build`.
+## Verify production
 
-After deploy, the client reads it via `import.meta.env.VITE_STH_WORLD_URL` and
-shows `ONLINE WORLD` instead of `SECURE HOST REQUIRED`.
+Health check:
 
-NOTE: changing VITE_ vars requires a REBUILD + REDEPLOY. They are baked in at
-build time, not read at runtime.
+```powershell
+Invoke-RestMethod https://cyan-squirrel-97200.zap.cloud/health
+```
 
-====================================================================
-STEP 4 — World host .env (and the NEXT error you'll hit)
-====================================================================
-The deploy bundle copies `.env.example` -> `.env` on first start. Contents:
+WebSocket check with `wscat`:
 
-    WORLD_HOST=0.0.0.0
-    WORLD_PORT=7076
-    REGION_TICK_RATE=20
-    DATABASE_URL=sqlite:///./subway_thots_hotel.db
+```powershell
+wscat -c "wss://cyan-squirrel-97200.zap.cloud/ws/sth-city-01?player_id=test&display_name=HERMES"
+```
 
-If you use Caddy/nginx (Options A/B), LEAVE SSL_* unset — the proxy does TLS and
-talks plaintext to 127.0.0.1:7076. Only set SSL_* for Option C.
+The socket should return a `welcome` message and the game should display
+`ONLINE WORLD`.
 
-IMPORTANT — the live VPS host currently answers the socket with:
-    {"type":"auth_failed","reason":"invalid_ticket"}
-That means the RUNNING world server has auth-ticket enforcement on
-(STH_REQUIRE_AUTH_TICKET). The repo's vps_connection/world_server.py does NOT
-have that gate, so restarting the host from this repo removes it. If you are
-running the server-python/main.py variant instead, add to the world host .env:
+## Local development
 
-    STH_REQUIRE_AUTH_TICKET=false
+Start the world host locally, run the Vite development server from the repository
+root, and open the local override:
 
-...then restart the host, or players will connect via wss:// but get kicked
-with "SESSION AUTH FAILED".
+```text
+http://localhost:5173/?world=ws://127.0.0.1:7076
+```
 
-====================================================================
-STEP 5 — Verify
-====================================================================
-From any machine (the proxy must be up):
-
-    # TLS handshake + WebSocket upgrade over wss://
-    # (use wscat, or the browser console once the game is deployed)
-    wscat -c "wss://world.YOURDOMAIN.com/ws/sth-city-01?player_id=test&display_name=HERMES"
-
-Expected: a `{"type":"welcome",...}` frame (if ticket enforcement is off) or a
-clean `auth_failed` only if STEP 4 wasn't applied. The game's bottom-left status
-will read `ONLINE WORLD`.
-
-====================================================================
-QUICK LOCAL PROOF (no TLS, no domain) — dev only
-====================================================================
-Run the game over plain HTTP on localhost and pass the override:
-
-    npm run dev
-    # open:
-    http://localhost:5173/?world=ws://147.189.172.104:7076
-
-On http:// the insecure ws:// fallback is allowed, so it connects to the live
-VPS host — proving reachability. This override is BLOCKED on HTTPS builds.
+The plaintext override is accepted only on localhost and is blocked on public
+HTTPS builds.

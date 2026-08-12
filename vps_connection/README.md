@@ -6,8 +6,9 @@ Public world endpoint:
 
 - IP: `147.189.172.104`
 - TCP port: `7076`
-- Health: `http://147.189.172.104:7076/health`
-- WebSocket: `ws://147.189.172.104:7076/ws/sth-city-01`
+- Production health: `https://cyan-squirrel-97200.zap.cloud/health`
+- Production WebSocket: `wss://cyan-squirrel-97200.zap.cloud/ws/sth-city-01`
+- Internal world host: `http://127.0.0.1:7076`
 
 ## Windows VPS (recommended for the current RDP-accessible host)
 
@@ -21,9 +22,9 @@ Public world endpoint:
    .\Open-Firewall-7076.ps1
    ```
 
-5. Run `Setup-Host.bat` once, then double-click `Start-Host.bat`.
-6. Leave the window running, or configure Task Scheduler/NSSM to start `Start-Host.bat` at boot.
-7. In the VPS provider firewall or port-forward panel, also allow inbound **TCP 7076**.
+5. Run `Setup-Host.bat` once.
+6. Run `Install-Production-Host.ps1` as Administrator. It installs the world and TLS startup tasks.
+7. In the VPS provider firewall, allow inbound **TCP 443**. Port 7076 remains private.
 
 ## Linux VPS
 
@@ -52,7 +53,7 @@ sudo ufw allow 7076/tcp
 On first start, `.env.example` is copied to `.env`. Defaults:
 
 ```env
-WORLD_HOST=0.0.0.0
+WORLD_HOST=127.0.0.1
 WORLD_PORT=7076
 REGION_TICK_RATE=20
 DATABASE_URL=sqlite:///./subway_thots_hotel.db
@@ -63,7 +64,7 @@ SQLite works immediately. Set `DATABASE_URL` to PostgreSQL later for production 
 ## Verify from another computer
 
 ```text
-http://147.189.172.104:7076/health
+https://cyan-squirrel-97200.zap.cloud/health
 ```
 
 Expected response includes:
@@ -81,7 +82,7 @@ A game page loaded over HTTPS cannot connect to plain `ws://` because browsers b
 Configure the secure endpoint during the Vite/Vercel build:
 
 ```env
-VITE_STH_WORLD_URL=wss://world.your-domain.example
+VITE_STH_WORLD_URL=wss://cyan-squirrel-97200.zap.cloud
 ```
 
 The `?world=` override is accepted only on localhost for development and cannot redirect public players to an arbitrary server.

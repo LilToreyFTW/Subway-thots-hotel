@@ -81,7 +81,7 @@ if not AUTH_SECRET:
 # Where the VPS-hosted multiplayer world server listens (health endpoint).
 # Used by the bot to detect when the VPS is hosting the game. Default is the
 # project VPS IP on the world port; override for local/dev.
-WORLD_HOST_URL = os.getenv("WORLD_HOST_URL", "http://147.189.172.104:7076")
+WORLD_HOST_URL = os.getenv("WORLD_HOST_URL", "https://cyan-squirrel-97200.zap.cloud")
 
 # Comma-separated list of Staff/owner reserved words that players may not claim.
 RESERVED_NAMES = [w.strip().lower() for w in os.getenv(

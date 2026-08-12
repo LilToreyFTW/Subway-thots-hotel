@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 echo ================================================
 echo  SubwayThotsHotel Online - VPS World Host
-echo  Public endpoint: 147.189.172.104:7076
+echo  Local endpoint: 127.0.0.1:7076
 echo ================================================
 
 if not exist ".venv\Scripts\python.exe" (

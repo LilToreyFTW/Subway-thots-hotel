@@ -21,7 +21,7 @@ cp .env.example .env
 ./.venv/bin/uvicorn main:app --host 0.0.0.0 --port 7076
 ```
 
-The multiplayer client uses the secure `wss://world.subwaythotshotel.com` endpoint for HTTPS/Vercel builds and the Windows EXE, displaying `ONLINE WORLD` when connected. Local HTTP development may use the local or explicitly supplied `ws://` endpoint. The game server remains external to Vercel—the Vercel site only serves the client.
+The multiplayer client uses the secure `wss://cyan-squirrel-97200.zap.cloud` endpoint for HTTPS/Vercel builds and the Windows EXE, displaying `ONLINE WORLD` when connected. Local HTTP development may use the local or explicitly supplied `ws://` endpoint. The game server remains external to Vercel—the Vercel site only serves the client.
 
 For authenticated production multiplayer, set `VITE_STH_AUTH=on` and `VITE_AUTH_API=https://auth.subwaythotshotel.com` in the Vercel build environment. The `/api` prefix is only the local Vite proxy; the deployed auth service exposes `/auth` and `/account` at its root. Players sign in with Discord, receive a short-lived single-use world ticket, and the client sends that ticket to the authoritative WebSocket host. The EXE uses the same flow when built with those production variables.
 

@@ -46,7 +46,7 @@ import './style.css?v=5';
 
 const $ = (selector) => document.querySelector(selector);
 const PUBLIC_WORLD_HOST = '147.189.172.104:7076';
-const PRODUCTION_WORLD_URL = 'wss://world.subwaythotshotel.com';
+const PRODUCTION_WORLD_URL = 'wss://cyan-squirrel-97200.zap.cloud';
 const AUTH_REQUIRED = import.meta.env.VITE_STH_AUTH === 'on';
 const localDevelopment = ['localhost', '127.0.0.1'].includes(location.hostname);
 const desktopRuntime = location.protocol === 'sth:';

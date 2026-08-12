@@ -4,9 +4,11 @@ import os
 from pathlib import Path
 
 import uvicorn
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
 os.chdir(BASE_DIR)
+load_dotenv(BASE_DIR / ".env")
 
 from world_server import app  # noqa: E402
 
@@ -25,7 +27,7 @@ def main() -> None:
         }
 
     print(f"SubwayThotsHotel Online world starting on {host}:{port}")
-    print(f"Health check: {'https' if ssl_args else 'http'}://147.189.172.104:{port}/health")
+    print(f"Health check: {'https' if ssl_args else 'http'}://{host}:{port}/health")
     uvicorn.run(
         app,
         host=host,

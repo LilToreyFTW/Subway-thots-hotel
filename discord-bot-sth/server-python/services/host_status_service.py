@@ -2,7 +2,7 @@
 
 The bot uses this to know whether the VPS-hosted multiplayer world
 (E:\\Subway-thots-hotel\\vps_connection) is online. It polls the world host's
-/health endpoint (the same host the game connects to: 147.189.172.104:7076) and
+/health endpoint (the same host the game connects to: cyan-squirrel-97200.zap.cloud) and
 detects online/offline transitions so the bot can announce them in Discord.
 
 No secrets are logged. Network errors are treated as "offline" (fail-closed).

@@ -6,7 +6,7 @@
 
 Production game files are served through the secure `sth://game/` protocol. The renderer has `nodeIntegration: false`, `contextIsolation: true`, sandboxing, a narrow preload bridge, navigation filtering, controlled external links, and microphone permission restricted to the packaged game origin.
 
-The packaged client relays multiplayer through the local loopback socket and connects that relay to `wss://world.subwaythotshotel.com`. For a private development host, set `STH_UPSTREAM_WORLD_URL` before launching Electron; do not ship a plaintext public `ws://` endpoint.
+The packaged client relays multiplayer through the local loopback socket and connects that relay to `wss://cyan-squirrel-97200.zap.cloud`. For a private development host, set `STH_UPSTREAM_WORLD_URL` before launching Electron; do not ship a plaintext public `ws://` endpoint.
 
 ## Commands
 
