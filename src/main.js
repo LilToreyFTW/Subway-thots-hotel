@@ -304,7 +304,7 @@ function startGame(role) {
   const geometryCache = new Map();
   const cityFootprints = [];
   const roadwayCenters = [-120, -72, -24, 24, 72, 120];
-  const venueFootprintSizes = { 'gun-shop': [12, 8], 'adult-club': [12, 8], bar: [14, 10], 'car-dealership': [16, 12], 'car-mod-shop': [16, 12] };
+  const venueFootprintSizes = { 'gun-shop': [18, 16], 'adult-club': [12, 8], bar: [14, 10], 'car-dealership': [16, 12], 'car-mod-shop': [16, 12] };
   const roadGraph = new RoadGraph();
   window.sthRoadGraph = roadGraph;
 
@@ -908,27 +908,46 @@ function startGame(role) {
   function addCityVenue(venue) {
     if (!venue) return;
     const [x, , z] = venue.position;
+    const isGunShop = venue.type === 'gun-shop';
     const accent = venue.type === 'gun-shop' ? 0x6fd7e4 : venue.type === 'adult-club' ? 0xf04fb8 : venue.type === 'car-dealership' ? 0xf0c05a : venue.type === 'car-mod-shop' ? 0x91d8e8 : 0xd8a95f;
-    const width = venue.type === 'bar' ? 14 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 16 : 12;
-    const depth = venue.type === 'bar' ? 10 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 12 : 8;
+    const width = isGunShop ? 18 : venue.type === 'bar' ? 14 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 16 : 12;
+    const depth = isGunShop ? 16 : venue.type === 'bar' ? 10 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 12 : 8;
     const building = new THREE.Group();
     building.position.set(x, 0, z);
-    box(building, 0, 2.65, depth / 2, width, 5.3, .35, material(0x151a20, .42, .38));
-    box(building, -width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
-    box(building, width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
-    box(building, 0, 5.3, 0, width, .35, depth, material(0x0b1015, .34, .48));
-    box(building, 0, .35, 0, width - .7, .35, depth - .7, material(0x242a31, .32, .25), false);
+    if (isGunShop) {
+      // Neon Arsenal is a dedicated outdoor lot, separate from the city's generic buildings.
+      box(building, 0, .08, 0, width, .16, depth, material(0x202a30, .46, .36), false);
+      box(building, 0, .18, 2.7, width - 1.2, .08, 5.6, material(0x34464d, .38, .3), false);
+      for (const lineX of [-6, -2, 2, 6]) box(building, lineX, .24, 2.7, .09, .03, 5.2, material(0x6fd7e4, .24, .5), false);
+      for (const markerX of [-8.1, 8.1]) {
+        for (const markerZ of [-6.8, 6.8]) {
+          cylinder(building, markerX, 1.1, markerZ, .18, 2.2, material(0x6fd7e4, .32, .62), 12);
+          const beacon = new THREE.PointLight(accent, 2.5, 7, 2);
+          beacon.position.set(markerX, 2.2, markerZ); building.add(beacon);
+        }
+      }
+      // A roofed sales canopy keeps the shop readable without enclosing it in a building.
+      box(building, 0, 4.8, -1.5, 14.5, .28, 6.8, material(0x101a20, .28, .62));
+      for (const postX of [-6.8, 6.8]) for (const postZ of [-4.5, 1.5]) cylinder(building, postX, 2.4, postZ, .12, 4.6, material(0x6fd7e4, .25, .72), 10);
+      box(building, 0, 4.45, -4.95, 14.5, .9, .22, material(0x15252c, .25, .7));
+    } else {
+      box(building, 0, 2.65, depth / 2, width, 5.3, .35, material(0x151a20, .42, .38));
+      box(building, -width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
+      box(building, width / 2, 2.65, 0, .35, 5.3, depth, material(0x151a20, .42, .38));
+      box(building, 0, 5.3, 0, width, .35, depth, material(0x0b1015, .34, .48));
+      box(building, 0, .35, 0, width - .7, .35, depth - .7, material(0x242a31, .32, .25), false);
+    }
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(width * .72, 1.15), new THREE.MeshBasicMaterial({ map: labelTexture(venue.name, venue.type === 'gun-shop' ? '#b9f4ff' : venue.type === 'adult-club' ? '#ffd0f0' : venue.type === 'car-mod-shop' ? '#b8f5ff' : '#ffe1a2', '#17121c') }));
-    sign.position.set(0, 4.35, -depth / 2 - .22);
+    sign.position.set(0, isGunShop ? 4.9 : 4.35, isGunShop ? -5.08 : -depth / 2 - .22);
     sign.rotation.y = Math.PI;
     building.add(sign);
     const light = new THREE.PointLight(accent, 7, 18, 2);
     light.position.set(0, 3.4, -depth / 2 - 1.2);
     building.add(light);
     if (venue.type === 'gun-shop') {
-      for (const itemX of [-3.7, -1.2, 1.2, 3.7]) box(building, itemX, 1.7, .3, 1.3, 1.9, .55, material(0x303940, .26, .72));
-      WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -4.2 + (index % 5) * 2.1, 2.35 + Math.floor(index / 5) * .48, .04, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3], weapon.key));
-      box(building, 0, 1.25, -depth / 2 + .8, width * .7, 1.2, .4, material(0x27343a, .24, .66));
+      for (const itemX of [-5.4, -1.8, 1.8, 5.4]) box(building, itemX, 1.25, -.8, 1.5, 1.5, .55, material(0x303940, .26, .72));
+      WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -6.3 + (index % 5) * 3.15, 2.08 + Math.floor(index / 5) * .48, -.78, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3], weapon.key));
+      box(building, 0, 1.0, -3.9, width * .72, 1.2, .42, material(0x27343a, .24, .66));
     } else if (venue.type === 'car-dealership') {
       box(building, 0, 1.1, -depth / 2 + .8, width * .75, 1.5, .45, material(0x2a3036, .42, .28));
       VEHICLE_CATALOG.forEach((vehicle, index) => addVehicleDisplay(building, -5.1 + (index % 3) * 5.1, -2.2 + Math.floor(index / 3) * 3.1, vehicle));
@@ -947,7 +966,7 @@ function startGame(role) {
       for (const px of [-4.4, 4.4]) addFloorLamp(building, px, -1.2);
     }
     city.add(building);
-    cityColliders.push({ minX: x - width / 2 - 0.55, maxX: x + width / 2 + 0.55, minZ: z - depth / 2 - 0.55, maxZ: z + depth / 2 + 0.55 });
+    if (!isGunShop) cityColliders.push({ minX: x - width / 2 - 0.55, maxX: x + width / 2 + 0.55, minZ: z - depth / 2 - 0.55, maxZ: z + depth / 2 + 0.55 });
     interactables.push({ mode: 'city', type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'car-dealership' ? 'carDealership' : venue.type === 'car-mod-shop' ? 'carModShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'car-dealership' ? 'Shop Diamond Lane Motors' : venue.type === 'car-mod-shop' ? 'Enter Blacktop Customs' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
   }
 
