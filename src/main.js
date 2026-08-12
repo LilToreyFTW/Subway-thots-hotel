@@ -1895,7 +1895,7 @@ function startGame(role) {
       topSpeed: base + 18,
       acceleration: category === 'SPORT' ? 88 : base - 5,
       handling: category === 'SPORT' ? 86 : category === 'SUV' ? 68 : 64,
-      description: `${vehicle.displayName} · original stylized ${vehicle.brand} game interpretation.`,
+      description: `${vehicle.displayName} · high-detail ${vehicle.brand} game interpretation.`,
       modelPath: `/${vehicle.file}`,
       brand: vehicle.brand,
       dimensionsMeters: vehicle.dimensionsMeters,
@@ -1939,7 +1939,8 @@ function startGame(role) {
       model.traverse((node) => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
       city.add(model);
       const wheelNodes = [];
-      model.traverse((node) => { if (node.name.includes('wheel')) wheelNodes.push(node); });
+      const expectedWheelNodes = new Set(vehicle.wheelNodes || ['front_left_wheel', 'front_right_wheel', 'rear_left_wheel', 'rear_right_wheel']);
+      model.traverse((node) => { if (expectedWheelNodes.has(node.name)) wheelNodes.push(node); });
       activeVehicle = model;
       activeVehicleController = new VehicleController({ vehicle: model, stats: vehicleStats(vehicle), dimensions });
       activeVehicleController.wheelNodes = wheelNodes;
@@ -1994,6 +1995,15 @@ function startGame(role) {
     box(display, .88, .7, 2.5, .38, .18, .06, material(0xff4f6e, .1, .2), false);
     display.position.set(x, .15, z); display.rotation.y = Math.PI / 2;
     parent.add(display);
+    if (vehicle.modelPath) {
+      new GLTFLoader().load(vehicle.modelPath, (loaded) => {
+        const model = loaded.scene;
+        model.scale.setScalar(.82);
+        model.traverse((node) => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
+        display.clear();
+        display.add(model);
+      }, undefined, (error) => console.error(`[vehicle-display] ${vehicle.key} model failed`, error));
+    }
   }
 
   function renderVehicleShop(shopMode = 'dealership') {

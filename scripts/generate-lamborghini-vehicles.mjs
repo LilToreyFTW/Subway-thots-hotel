@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { buildDetailedVehicle } from './vehicle-model-kit.mjs';
 
 globalThis.self = globalThis;
 globalThis.FileReader = class { readAsArrayBuffer(blob) { blob.arrayBuffer().then((result) => { this.result = result; this.onloadend?.(); }).catch((error) => this.onerror?.(error)); } };
@@ -34,7 +35,7 @@ const names = [
 const mat = (color, metalness = .4, roughness = .28) => new THREE.MeshStandardMaterial({ color, metalness, roughness });
 const box = (root, name, x, y, z, sx, sy, sz, material) => { const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material); mesh.name = name; mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); return mesh; };
 function wheel(root, name, x, y, z, radius) { const group = new THREE.Group(); group.name = name; const tire = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, .22, 20), mat(0x101215, .78, .32)); tire.rotation.z = Math.PI / 2; group.add(tire); const rim = new THREE.Mesh(new THREE.CylinderGeometry(radius * .55, radius * .55, .24, 16), mat(0xb6bdc0, .84, .18)); rim.rotation.z = Math.PI / 2; group.add(rim); group.position.set(x, y, z); root.add(group); return group; }
-function buildCar(id, name, category, length, width, height, color, years) {
+function legacyBuildCar(id, name, category, length, width, height, color, years) {
   const root = new THREE.Group(); root.name = `${id}_root`;
   const body = mat(color, .68, .22); const trim = mat(0x15191e, .78, .2); const glass = mat(0x263d48, .34, .12); const light = new THREE.MeshStandardMaterial({ color: 0xe9f5ff, emissive: 0x79c4dc, emissiveIntensity: 1.8, metalness: .1, roughness: .12 }); const red = new THREE.MeshStandardMaterial({ color: 0xcc3041, emissive: 0x520914, emissiveIntensity: 1.3 });
   const suv = category === 'suv'; const roadster = category === 'roadster'; const roofZ = suv ? -0.15 : -.25;
@@ -53,6 +54,9 @@ function buildCar(id, name, category, length, width, height, color, years) {
   root.userData = { assetId: id, displayName: name, brand: 'Lamborghini', category, years, scale: '1 unit = 1 meter', wheelNodes: ['front_left_wheel', 'front_right_wheel', 'rear_left_wheel', 'rear_right_wheel'] };
   return root;
 }
+function buildCar(id, name, category, length, width, height, color, years) {
+  return buildDetailedVehicle({ id, name, brand: 'Lamborghini', category, length, width, height, color, years });
+}
 const manifest = [];
 for (const [id, name, category, length, width, height, color, years] of names) {
   const scene = new THREE.Scene(); scene.add(buildCar(id, name, category, length, width, height, color, years));
@@ -62,4 +66,4 @@ for (const [id, name, category, length, width, height, color, years] of names) {
   manifest.push({ id, displayName: name, brand: 'Lamborghini', category, years, file, lods: ['lod0'], drivable: true, trafficEligible: category !== 'hypercar', parkedEligible: true, colorOptions: ['black', 'white', 'silver', 'gray', 'red', 'blue', 'yellow'], dimensionsMeters: { length, width, height }, collision: { type: 'box', size: [length, height, width] }, wheelNodes: ['front_left_wheel', 'front_right_wheel', 'rear_left_wheel', 'rear_right_wheel'], polycountNote: 'Procedural real-time mesh; inspect GLB for exact primitive counts.' });
   console.log(`${id}.glb ${binary.byteLength} bytes`);
 }
-await writeFile(path.resolve('assets/manifests/lamborghini-vehicles.json'), JSON.stringify({ version: 1, source: 'original stylized game interpretations', brand: 'Lamborghini', vehicles: manifest }, null, 2));
+await writeFile(path.resolve('assets/manifests/lamborghini-vehicles.json'), JSON.stringify({ version: 2, source: 'high-detail original game interpretations', brand: 'Lamborghini', vehicles: manifest }, null, 2));

@@ -87,6 +87,17 @@ test('standalone weapon model pack contains valid GLB headers', () => {
   }
 });
 
+test('starter vehicle pack contains detailed drivable GLBs', () => {
+  for (const vehicle of VEHICLE_CATALOG) {
+    assert.ok(vehicle.modelPath, `${vehicle.name} needs a model path`);
+    const path = `public${vehicle.modelPath}`;
+    const model = readFileSync(path);
+    assert.equal(model.subarray(0, 4).toString('ascii'), 'glTF', vehicle.key);
+    assert.ok(model.byteLength > 500000, `${vehicle.name} model lacks expected detail`);
+    assert.ok(vehicle.dimensionsMeters.length > vehicle.dimensionsMeters.width);
+  }
+});
+
 test('venue model pack contains valid GLB headers', () => {
   for (const name of ['luxury-hotel-lobby', 'hotel-suite-hosting', 'neon-arsenal-shop', 'velvet-stage-club', 'midnight-mile-bar-28']) {
     const header = readFileSync(`public/assets/models/venues/${name}.glb`).subarray(0, 4).toString('ascii');
@@ -101,7 +112,9 @@ test('Lamborghini vehicle batch has 20 validated manifest entries', () => {
     assert.equal(vehicle.brand, 'Lamborghini');
     assert.equal(vehicle.wheelNodes.length, 4);
     assert.equal(vehicle.drivable, true);
-    assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
+    const model = readFileSync(vehicle.file);
+    assert.equal(model.subarray(0, 4).toString('ascii'), 'glTF');
+    assert.ok(model.byteLength > 500000, vehicle.displayName);
   }
 });
 
@@ -111,7 +124,9 @@ test('Rolls-Royce vehicle batch has 27 validated manifest entries', () => {
   for (const vehicle of manifest.vehicles) {
     assert.equal(vehicle.brand, 'Rolls-Royce');
     assert.equal(vehicle.wheelNodes.length, 4);
-    assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
+    const model = readFileSync(vehicle.file);
+    assert.equal(model.subarray(0, 4).toString('ascii'), 'glTF');
+    assert.ok(model.byteLength > 500000, vehicle.displayName);
   }
 });
 
@@ -121,7 +136,9 @@ test('Chevrolet vehicle batch has 65 validated manifest entries', () => {
   for (const vehicle of manifest.vehicles) {
     assert.equal(vehicle.brand, 'Chevrolet');
     assert.equal(vehicle.wheelNodes.length, 4);
-    assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
+    const model = readFileSync(vehicle.file);
+    assert.equal(model.subarray(0, 4).toString('ascii'), 'glTF');
+    assert.ok(model.byteLength > 500000, vehicle.displayName);
   }
 });
 
@@ -131,7 +148,9 @@ test('Ford vehicle batch has 55 validated manifest entries', () => {
   for (const vehicle of manifest.vehicles) {
     assert.equal(vehicle.brand, 'Ford');
     assert.equal(vehicle.wheelNodes.length, 4);
-    assert.equal(readFileSync(vehicle.file).subarray(0, 4).toString('ascii'), 'glTF');
+    const model = readFileSync(vehicle.file);
+    assert.equal(model.subarray(0, 4).toString('ascii'), 'glTF');
+    assert.ok(model.byteLength > 500000, vehicle.displayName);
   }
 });
 

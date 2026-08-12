@@ -10,6 +10,7 @@
     "test": "node --test test/*.test.js",
     "generate:audio": "node scripts/generate-game-audio.mjs",
     "generate:weapons": "node scripts/generate-weapon-glbs.mjs",
+    "generate:vehicles": "node scripts/generate-starter-vehicles.mjs && node scripts/generate-lamborghini-vehicles.mjs && node scripts/generate-rolls-royce-vehicles.mjs && node scripts/generate-chevrolet-vehicles.mjs && node scripts/generate-ford-vehicles.mjs",
     "test:server": "npm test --prefix multiplayer-server",
     "desktop:dev": "node desktop-client/scripts/dev.js",
     "desktop:build": "npm run build --prefix desktop-client",
