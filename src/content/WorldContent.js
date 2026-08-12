@@ -14,7 +14,7 @@ export const WEAPON_CATALOG = Object.freeze([
 ]);
 
 export const VENUE_CATALOG = Object.freeze([
-  { key: 'neon-arsenal', name: 'Neon Arsenal', type: 'gun-shop', district: 'station', position: [10, 0, -36], footprint: WORLD_LAYOUT.venueFootprints['gun-shop'], tagline: 'Licensed fictional equipment for city contracts.' },
+  { key: 'neon-arsenal', name: 'Neon Arsenal', type: 'gun-shop', district: 'station', position: [42, 0, -42], footprint: WORLD_LAYOUT.venueFootprints['gun-shop'], tagline: 'Licensed fictional equipment for city contracts.' },
   { key: 'diamond-lane-motors', name: 'Diamond Lane Motors', type: 'car-dealership', district: 'station', position: [55, 0, -40], footprint: WORLD_LAYOUT.venueFootprints['car-dealership'], tagline: 'Buy original fictional cars for your city garage.' },
   { key: 'blacktop-customs', name: 'Blacktop Customs', type: 'car-mod-shop', district: 'station', position: [88, 0, -40], footprint: WORLD_LAYOUT.venueFootprints['car-mod-shop'], tagline: 'Upgrade engines, drivetrains, stopping power, and stance.' },
   { key: 'velvet-stage', name: 'Velvet Stage', type: 'adult-club', district: 'station', position: [38, 0, 36], footprint: WORLD_LAYOUT.venueFootprints['adult-club'], tagline: 'Adults-only nightlife, performances, and host bookings.' },

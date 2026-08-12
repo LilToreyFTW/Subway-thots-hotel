@@ -10,6 +10,7 @@ import { ProximityVoiceClient } from './multiplayer/ProximityVoiceClient.js';
 import { resolveVoiceServerUrl } from './multiplayer/voiceConfig.js';
 import { GameConfig } from './config/GameConfig.js';
 import { GameLoop } from './core/GameLoop.js';
+import { loadProgression, saveProgression } from './core/ProgressionStore.js';
 import { PerformanceDiagnostics } from './core/PerformanceDiagnostics.js';
 import { DebugVisuals } from './debug/DebugVisuals.js';
 import { ThirdPersonCameraController } from './camera/ThirdPersonCameraController.js';
@@ -227,8 +228,9 @@ function startGame(role) {
   let jumpQueued = false;
   let currentRoom = null;
   let paused = false;
-  let rep = 12;
-  let cash = role === 'manager' ? 420 : 240;
+  const progression = loadProgression(localStorage, { cash: role === 'manager' ? 420 : 240, reputation: 12 });
+  let rep = progression.reputation;
+  let cash = progression.cash;
   const ownedWeapons = new Set(JSON.parse(localStorage.getItem('sth-owned-weapons') || '[]'));
   let equippedWeaponKey = localStorage.getItem('sth-equipped-weapon') || null;
   const ownedVehicles = new Set(JSON.parse(localStorage.getItem('sth-owned-vehicles') || '[]'));
@@ -1636,6 +1638,7 @@ function startGame(role) {
   function updateStats() {
     $('#rep').textContent = rep;
     $('#cash').textContent = cash;
+    saveProgression(localStorage, { cash, reputation: rep });
   }
 
   function saveWeaponLoadout() {
