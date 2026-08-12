@@ -1711,6 +1711,13 @@ function startGame(role) {
       renderRoomEditor();
       if (mode === 'room' && currentRoom != null) buildSuite(currentRoom);
     }
+    if (profile.needs && typeof profile.needs === 'object') {
+      for (const key of ['energy', 'hunger', 'hygiene']) if (Number.isFinite(profile.needs[key])) needs[key] = THREE.MathUtils.clamp(Number(profile.needs[key]), 0, 100);
+      updateNeedsUI();
+      localStorage.setItem('sth-needs', JSON.stringify(needs));
+    }
+    if (Number.isFinite(profile.jobStep)) jobStep = THREE.MathUtils.clamp(Math.trunc(profile.jobStep), 0, 3);
+    if (Number.isFinite(profile.taskCount)) taskCount = THREE.MathUtils.clamp(Math.trunc(profile.taskCount), 0, 3);
     updateStats();
     appendChat('WORLD', 'Authoritative profile synchronized.', true);
   }
@@ -1746,6 +1753,12 @@ function startGame(role) {
   function saveRoomLayout() {
     if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) return toast('Connect to the secure world before saving your suite.');
     worldSocket.send(JSON.stringify({ type: 'room:layout', layout: roomLayoutDraft }));
+  }
+
+  function requestGameAction(action) {
+    if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) { toast('Connect to the secure world before completing this action.'); return false; }
+    worldSocket.send(JSON.stringify({ type: 'game:action', action, role }));
+    return true;
   }
 
   function saveWeaponLoadout() {
@@ -2130,16 +2143,13 @@ function startGame(role) {
     if (item.type === 'gunShop') return openWeaponShop();
     if (item.type === 'carDealership') return openVehicleShop('dealership');
     if (item.type === 'carModShop') return openVehicleShop('mods');
-    if (item.type === 'adultClub') { rep += 1; updateStats(); return toast('Velvet Stage is open to adults 21+. Host bookings are private, optional, and consent-first.'); }
+    if (item.type === 'adultClub') { if (requestGameAction('adult_club')) toast('Velvet Stage visit sent to the secure world.'); return; }
     if (item.type === 'cityBar') {
-      if (cash < 14) return toast('You need $14 for a house drink.');
-      cash -= 14; restoreNeed('hunger', 8); rep += 1; updateStats();
-      return toast('House drink served at Midnight Mile Bar 28. -$14 · +1 reputation');
+      if (requestGameAction('drink')) toast('Drink order sent to the secure world.'); return;
     }
     if (item.type === 'roomHosting') {
       if (role !== 'guest' || !checkedIn) return toast('Check in first. Private hosting is optional and consent-first.');
-      cash += 80; rep += 4; updateStats();
-      return toast(`Suite ${String(currentRoom).padStart(2, '0')} hosting completed privately. +$80 · +4 reputation`);
+      if (requestGameAction('host')) toast('Private hosting result sent to the secure world.'); return;
     }
     if (item.type === 'subwayInfo') { toast('24th Street Station: ticket concourse, platform, service rooms, active tunnel, and a sealed abandoned spur.'); return; }
     if (item.type === 'hotelExit') return exitHotel();
@@ -2167,52 +2177,31 @@ function startGame(role) {
     }
     if (item.type === 'courierStop') {
       if (activeJob !== 'courier' || item.stopIndex !== jobStep) return;
+      if (!requestGameAction('courier_drop')) return;
       item.active = false;
       item.object.visible = false;
-      jobStep += 1;
-      cash += 20;
-      rep += 1;
-      restoreNeed('energy', -6);
-      updateStats();
-      const next = interactables.find((entry) => entry.type === 'courierStop' && entry.stopIndex === jobStep);
+      const next = interactables.find((entry) => entry.type === 'courierStop' && entry.stopIndex === jobStep + 1);
       if (next) {
         next.active = true;
         next.object.visible = true;
-        setObjective(`Deliver package ${jobStep + 1}/3`, (jobStep + 0.2) / 3, 'COURIER SHIFT');
         toast(`Package delivered. +$20 · next drop marked.`);
       } else {
-        cash += 60;
-        rep += 5;
         activeJob = null;
         setObjective('Courier route complete · find another job', 1, 'SHIFT COMPLETE');
         toast('Route complete. +$120 total · +8 reputation');
       }
-      updateStats();
       return;
     }
     if (item.type === 'foodStand') {
-      if (cash < 18) return toast('You need $18 for a hot meal.');
-      cash -= 18;
-      restoreNeed('hunger', 46);
-      updateStats();
-      toast('Hot meal finished. Hunger restored. -$18');
+      if (requestGameAction('meal')) toast('Meal order sent to the secure world.');
       return;
     }
     if (item.type === 'reception') {
       if (role === 'manager') {
         if (frontDeskReviewed) return toast('The front desk log is already reviewed for this shift.');
-        frontDeskReviewed = true;
-        cash += 35;
-        rep += 1;
-        updateStats();
-        toast('Front desk log reviewed. VIP arrival noted. +$35');
+        if (requestGameAction('front_desk_review')) { frontDeskReviewed = true; toast('Front desk review sent to the secure world.'); }
       } else if (!checkedIn) {
-        if (cash < 40) return toast('You need $40 to check in for the night.');
-        checkedIn = true;
-        cash -= 40;
-        updateStats();
-        setObjective('Use the guest elevator and choose a suite', 0.56);
-        toast('Checked in for the night. Your room key is active. -$40');
+        if (requestGameAction('check_in')) { checkedIn = true; setObjective('Use the guest elevator and choose a suite', 0.56); toast('Check-in sent to the secure world.'); }
       } else toast('Your room key remains active until noon.');
       return;
     }
@@ -2222,12 +2211,9 @@ function startGame(role) {
         return;
       }
       if (item.completed) return;
+      if (!requestGameAction('inspect_task')) return;
       item.completed = true;
-      taskCount += 1;
-      cash += 30;
-      rep += 2;
       if (item.object) item.object.visible = false;
-      updateStats();
       if (taskCount >= 3) {
         setObjective('Opening inspection complete · greet hotel guests', 1, 'SHIFT COMPLETE');
         toast('Hotel inspection complete. The property is ready for guests. +$90 total');
@@ -2241,19 +2227,13 @@ function startGame(role) {
       if (role === 'manager') {
         if (inspectedSuites.has(currentRoom)) return toast(`Suite ${String(currentRoom).padStart(2, '0')} is already inspected.`);
         inspectedSuites.add(currentRoom);
-        taskCount = Math.max(taskCount, 3);
-        cash += 45;
-        updateStats();
-        toast('Suite inspected, amenities replenished and linens refreshed. +$45');
+        if (!requestGameAction('inspect_suite')) return;
+        toast('Suite inspection sent to the secure world.');
         setObjective('Return to the lobby and continue the shift', 0.92);
       } else if (!slept) {
         slept = true;
         transition('6:42 AM', 'A NEW MORNING', () => {
-          cash += 60;
-          rep += 3;
-          restoreNeed('energy', 100);
-          restoreNeed('hygiene', 45);
-          updateStats();
+          if (!requestGameAction('sleep')) return;
           setObjective('Night complete · return to the city when ready', 1, 'NIGHT COMPLETE');
           toast('Well rested. Night one complete. +$60 · +3 reputation');
         });
@@ -2477,6 +2457,11 @@ function startGame(role) {
           if (!message.success) return toast(message.reason === 'INSUFFICIENT_FUNDS' ? 'The secure world rejected the purchase: insufficient funds.' : 'The secure world rejected that purchase.');
           if (message.profile) applyAuthoritativeProfile(message.profile);
           if (message.kind === 'weapon') { equippedWeaponKey = message.key; saveWeaponLoadout(); renderWeaponShop(); toast('Weapon purchase confirmed by the secure world.'); }
+        } else if (message.type === 'action:result') {
+          if (!message.success) return toast(`The secure world rejected that action: ${message.reason}.`);
+          if (message.profile) applyAuthoritativeProfile(message.profile);
+          const labels = { drink: 'Drink served.', meal: 'Meal served.', host: 'Private hosting completed.', adult_club: 'Venue visit recorded.', courier_drop: 'Courier drop confirmed.', inspect_task: 'Inspection task confirmed.', inspect_suite: 'Suite inspection confirmed.', sleep: 'Rest completed.', front_desk_review: 'Front desk review confirmed.', check_in: 'Check-in confirmed.' };
+          toast(labels[message.action] || 'Action confirmed by the secure world.');
         } else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
         else if (message.type === 'presence') {
           if (message.playerId !== localPlayerId) appendChat('WORLD', `${message.displayName} ${message.action === 'join' ? 'entered' : 'left'} the district.`, true);

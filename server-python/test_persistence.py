@@ -23,6 +23,8 @@ def test_profile_snapshot_exposes_authoritative_progression_only():
         'cash': 1250, 'reputation': 31,
         'weapons': ['velvet-9'], 'vehicles': ['violet-vandal'],
         'roomLayout': {'theme': 'teal'},
+        'needs': {'energy': 100, 'hunger': 100, 'hygiene': 100},
+        'jobStep': 0, 'taskCount': 0,
     }
 
 

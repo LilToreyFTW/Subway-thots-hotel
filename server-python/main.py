@@ -28,6 +28,7 @@ from room_access import can_enter, can_manage, grant_access, revoke_access
 from world_activity import world_activity_snapshot
 from room_layout import validate_room_layout
 from economy import purchase_weapon
+from game_actions import apply_action
 
 load_dotenv()
 
@@ -60,6 +61,9 @@ class PlayerProfile(Base):
     room_layout_json: Mapped[str] = mapped_column(String(32768), default='{}')
     home_room_id: Mapped[int] = mapped_column(Integer, default=1)
     room_access_json: Mapped[str] = mapped_column(String(8192), default='[]')
+    needs_json: Mapped[str] = mapped_column(String(2048), default='{"energy":100,"hunger":100,"hygiene":100}')
+    job_step: Mapped[int] = mapped_column(Integer, default=0)
+    task_count: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class GamertagRegistry(Base):
@@ -96,6 +100,9 @@ class LivePlayer:
     room_layout: dict[str, Any] = field(default_factory=dict)
     home_room_id: int = 1
     room_access: set[str] = field(default_factory=set)
+    needs: dict[str, int] = field(default_factory=lambda: {'energy': 100, 'hunger': 100, 'hygiene': 100})
+    job_step: int = 0
+    task_count: int = 0
 
 
 regions: dict[str, dict[str, LivePlayer]] = defaultdict(dict)
@@ -130,6 +137,8 @@ def load_profile(player_id: str, display_name: str, region_id: str, presented_to
             room_layout=_load_json_object(profile.room_layout_json),
             home_room_id=max(1, min(50, int(profile.home_room_id or 1))),
             room_access=set(_load_json_list(profile.room_access_json)),
+            needs=_load_json_object(profile.needs_json) or {'energy': 100, 'hunger': 100, 'hygiene': 100},
+            job_step=max(0, min(3, int(profile.job_step or 0))), task_count=max(0, min(3, int(profile.task_count or 0))),
         )
         return live, profile.auth_token
 
@@ -149,6 +158,9 @@ def save_profile(player: LivePlayer, region_id: str) -> None:
         profile.room_layout_json = json.dumps(player.room_layout, separators=(',', ':'))
         profile.home_room_id = max(1, min(50, int(player.home_room_id)))
         profile.room_access_json = json.dumps(sorted(player.room_access), separators=(',', ':'))
+        profile.needs_json = json.dumps(player.needs, separators=(',', ':'))
+        profile.job_step = max(0, min(3, int(player.job_step)))
+        profile.task_count = max(0, min(3, int(player.task_count)))
         db.commit()
 
 
@@ -255,6 +267,7 @@ async def lifespan(_: FastAPI):
         "weapons_json": "VARCHAR(8192) DEFAULT '[]'", "vehicles_json": "VARCHAR(8192) DEFAULT '[]'",
         "room_layout_json": "VARCHAR(32768) DEFAULT '{}'", "home_room_id": "INTEGER DEFAULT 1",
         "room_access_json": "VARCHAR(8192) DEFAULT '[]'",
+        "needs_json": "VARCHAR(2048) DEFAULT '{\"energy\":100,\"hunger\":100,\"hygiene\":100}'", "job_step": "INTEGER DEFAULT 0", "task_count": "INTEGER DEFAULT 0",
     }
     with engine.begin() as connection:
         for name, definition in missing_columns.items():
@@ -432,6 +445,13 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                     continue
                 save_profile(live, region_id)
                 await websocket.send_json({"type": "shop:result", "success": True, "kind": "weapon", "key": str(message.get("key", ""))[:80], "reason": reason, "profile": profile_snapshot(live)})
+            elif message_type == "game:action":
+                ok, reason, details = apply_action(live, message.get("action", ""), zone=live.zone, room_id=live.room_id, role=str(message.get("role", "guest")))
+                if not ok:
+                    await websocket.send_json({"type": "action:result", "success": False, "action": str(message.get("action", ""))[:40], "reason": reason})
+                    continue
+                save_profile(live, region_id)
+                await websocket.send_json({"type": "action:result", "success": True, "action": str(message.get("action", ""))[:40], "reason": reason, "details": details, "profile": profile_snapshot(live)})
             elif anti_cheat.forbidden_message(str(message_type)):
                 should_close = anti_cheat.violation(player_id, live.anti_cheat, "FORBIDDEN_STATE_MUTATION", {"type": message_type})
                 await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "This state is server-authoritative."})
