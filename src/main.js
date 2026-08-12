@@ -289,6 +289,7 @@ function startGame(role) {
   const interactables = [];
   const interactionSystem = new InteractionSystem({ items: interactables, range: 3.15 });
   const npcs = [];
+  const venueObjects = new Map();
   const weaponDisplays = [];
   const vehicles = [];
   let activeVehicle = null;
@@ -926,6 +927,8 @@ function startGame(role) {
     const width = isGunShop ? 18 : venue.type === 'bar' ? 14 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 16 : 12;
     const depth = isGunShop ? 16 : venue.type === 'bar' ? 10 : venue.type === 'car-dealership' || venue.type === 'car-mod-shop' ? 12 : 8;
     const building = new THREE.Group();
+    building.userData.venueKey = venue.key;
+    building.userData.activity = { open: true, state: 'open', crowdLevel: .5 };
     building.position.set(x, 0, z);
     if (isGunShop) {
       // Neon Arsenal is a dedicated outdoor lot, separate from the city's generic buildings.
@@ -957,6 +960,7 @@ function startGame(role) {
     const light = new THREE.PointLight(accent, 7, 18, 2);
     light.position.set(0, 3.4, -depth / 2 - 1.2);
     building.add(light);
+    building.userData.activityLight = light;
     if (venue.type === 'gun-shop') {
       for (const itemX of [-5.4, -1.8, 1.8, 5.4]) box(building, itemX, 1.25, -.8, 1.5, 1.5, .55, material(0x303940, .26, .72));
       WEAPON_CATALOG.forEach((weapon, index) => addWeaponDisplay(building, -6.3 + (index % 5) * 3.15, 2.08 + Math.floor(index / 5) * .48, -.78, weapon.category, [0x6fd7e4, 0xd3aa61, 0xe45da8][index % 3], weapon.key));
@@ -979,8 +983,9 @@ function startGame(role) {
       for (const px of [-4.4, 4.4]) addFloorLamp(building, px, -1.2);
     }
     city.add(building);
+    venueObjects.set(venue.key, building);
     if (!isGunShop) cityColliders.push({ minX: x - width / 2 - 0.55, maxX: x + width / 2 + 0.55, minZ: z - depth / 2 - 0.55, maxZ: z + depth / 2 + 0.55 });
-    interactables.push({ mode: 'city', type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'car-dealership' ? 'carDealership' : venue.type === 'car-mod-shop' ? 'carModShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'car-dealership' ? 'Shop Diamond Lane Motors' : venue.type === 'car-mod-shop' ? 'Enter Blacktop Customs' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
+    interactables.push({ mode: 'city', venueKey: venue.key, type: venue.type === 'gun-shop' ? 'gunShop' : venue.type === 'car-dealership' ? 'carDealership' : venue.type === 'car-mod-shop' ? 'carModShop' : venue.type === 'adult-club' ? 'adultClub' : 'cityBar', position: new THREE.Vector3(x, 0, z - depth / 2 - 1.8), label: venue.type === 'gun-shop' ? 'Browse Neon Arsenal' : venue.type === 'car-dealership' ? 'Shop Diamond Lane Motors' : venue.type === 'car-mod-shop' ? 'Enter Blacktop Customs' : venue.type === 'adult-club' ? 'Enter Velvet Stage · adults 21+' : 'Buy a drink · Midnight Mile Bar 28' });
   }
 
   function addCity() {
@@ -2045,6 +2050,8 @@ function startGame(role) {
       toast(`${item.style.toUpperCase()} door ${item.controller.state === 'opening' ? 'opening' : 'closing'}.`);
       return;
     }
+    const venueActivity = item.venueKey && venueObjects.get(item.venueKey)?.userData.activity;
+    if (venueActivity && venueActivity.open === false) return toast('This venue is closed right now. Check back during its active hours.');
     if (item.type === 'hotelEntrance') return enterHotel();
     if (item.type === 'gunShop') return openWeaponShop();
     if (item.type === 'carDealership') return openVehicleShop('dealership');
@@ -2325,6 +2332,20 @@ function startGame(role) {
     reconnectTimer = setTimeout(() => { reconnectTimer = null; connectWorld(); }, delay);
   }
 
+  function applyWorldActivity(activity) {
+    if (!activity || typeof activity !== 'object') return;
+    for (const [venueKey, state] of Object.entries(activity.venues || {})) {
+      const venue = venueObjects.get(venueKey);
+      if (!venue || !state) continue;
+      venue.userData.activity = state;
+      if (venue.userData.activityLight) venue.userData.activityLight.intensity = state.open ? 7 * (0.8 + Number(state.crowdLevel || 0) * .25) : .35;
+    }
+    for (const [name, state] of Object.entries(activity.npcs || {})) {
+      const npc = npcs.find((candidate) => candidate.userData.name === name);
+      if (npc) npc.userData.activityState = state.state;
+    }
+  }
+
   function connectWorld() {
     const base = WORLD_URL;
     if (!base) {
@@ -2363,7 +2384,10 @@ function startGame(role) {
             localStorage.setItem('sth-session-token', sessionToken);
           }
           if (message.profile) window.dispatchEvent(new CustomEvent('sth-profile-sync', { detail: message.profile }));
-        } else if (message.type === 'snapshot') syncRemotePlayers(message.players || []);
+        } else if (message.type === 'snapshot') {
+          syncRemotePlayers(message.players || []);
+          applyWorldActivity(message.worldActivity);
+        }
         else if (message.type === 'chat') appendChat(message.displayName || 'Player', message.text || '');
         else if (message.type === 'presence') {
           if (message.playerId !== localPlayerId) appendChat('WORLD', `${message.displayName} ${message.action === 'join' ? 'entered' : 'left'} the district.`, true);
@@ -2632,9 +2656,10 @@ function startGame(role) {
       const dx = target.x - npc.position.x;
       const dz = target.z - npc.position.z;
       const length = Math.hypot(dx, dz);
-      const moving = npc.userData.roamPause <= 0 && length > .08;
+      const resting = npc.userData.activityState === 'resting';
+      const moving = !resting && npc.userData.roamPause <= 0 && length > .08;
       if (moving) {
-        const step = Math.min(length, (npc.userData.roamSpeed || 1) * delta);
+        const step = Math.min(length, (npc.userData.roamSpeed || 1) * delta * (npc.userData.activityState === 'working' ? 1.08 : 1));
         npc.position.x += (dx / length) * step;
         npc.position.z += (dz / length) * step;
         npc.rotation.y = Math.atan2(dx, dz);

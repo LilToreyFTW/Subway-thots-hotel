@@ -25,6 +25,7 @@ from anti_cheat import AntiCheat, AntiCheatState
 from profile_state import profile_snapshot
 from social_visibility import can_share_presence
 from room_access import can_enter, can_manage, grant_access, revoke_access
+from world_activity import world_activity_snapshot
 
 load_dotenv()
 
@@ -180,10 +181,12 @@ async def broadcast_visible(region_id: str, source: LivePlayer, payload: dict[st
 
 
 def snapshot(region_id: str, observer: LivePlayer | None = None) -> dict[str, Any]:
+    activity = world_activity_snapshot()
     return {
         "type": "snapshot",
         "regionId": region_id,
         "serverTime": time.time(),
+        "worldActivity": activity,
         "players": [
             {
                 "id": p.player_id,
