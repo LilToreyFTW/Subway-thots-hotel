@@ -25,6 +25,7 @@ def test_profile_snapshot_exposes_authoritative_progression_only():
         'roomLayout': {'theme': 'teal'},
         'needs': {'energy': 100, 'hunger': 100, 'hygiene': 100},
         'jobStep': 0, 'taskCount': 0,
+        'upgrades': {},
     }
 
 

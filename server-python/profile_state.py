@@ -14,4 +14,5 @@ def profile_snapshot(player: Any) -> dict[str, Any]:
         'needs': getattr(player, 'needs', {'energy': 100, 'hunger': 100, 'hygiene': 100}),
         'jobStep': max(0, min(3, int(getattr(player, 'job_step', 0)))),
         'taskCount': max(0, min(3, int(getattr(player, 'task_count', 0)))),
+        'upgrades': getattr(player, 'upgrades', {}) if isinstance(getattr(player, 'upgrades', {}), dict) else {},
     }

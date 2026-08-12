@@ -1705,6 +1705,10 @@ function startGame(role) {
       profile.vehicles.forEach((key) => ownedVehicles.add(String(key)));
       saveVehicleGarage();
     }
+    if (profile.upgrades && typeof profile.upgrades === 'object') {
+      vehicleUpgrades = profile.upgrades;
+      saveVehicleGarage();
+    }
     if (profile.homeRoomId != null) homeRoomId = String(profile.homeRoomId);
     if (profile.roomLayout) {
       authoritativeRoomLayout = normalizeRoomLayout(profile.roomLayout);
@@ -1962,7 +1966,9 @@ function startGame(role) {
         card.innerHTML = `<div class="vehicle-card-head"><span>${config.label.toUpperCase()}</span><b>${current >= 3 ? 'MAXED' : next.name}</b><small>LEVEL ${current}/3</small></div><p>${current >= 3 ? 'This system is fully tuned.' : `+${next.value} ${config.stat.replace('topSpeed', 'top speed').replace('acceleration', 'accel')}`}</p><button>${current >= 3 ? 'MAXED' : `INSTALL · $${next.price}`}</button>`;
         card.querySelector('button').onclick = () => {
           if (!next || cash < next.price) return toast(`You need $${next?.price || 0} for the ${config.label.toLowerCase()} upgrade.`);
-          cash -= next.price; vehicleUpgrades[vehicle.key] = { ...(vehicleUpgrades[vehicle.key] || {}), [slot]: current + 1 }; saveVehicleGarage(); updateStats(); renderVehicleShop('mods'); toast(`${config.label} upgraded on ${vehicle.name}.`);
+          if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) return toast('Connect to the secure world before installing upgrades.');
+          worldSocket.send(JSON.stringify({ type: 'shop:upgrade', vehicleKey: vehicle.key, slot }));
+          toast(`${config.label} upgrade sent to the secure world.`);
         }; root.appendChild(card);
       }
       return;
@@ -1972,7 +1978,12 @@ function startGame(role) {
       const card = document.createElement('article'); card.className = `vehicle-card${equipped ? ' equipped' : ''}`;
       card.innerHTML = `<div class="vehicle-card-head"><span>${vehicle.class}</span><b>${vehicle.name}</b><small>${owned ? 'OWNED' : `$${vehicle.price}`}</small></div><p>${vehicle.description}</p><div class="vehicle-stats"><span>TOP <b>${stats.topSpeed}</b></span><span>ACCEL <b>${stats.acceleration}</b></span><span>GRIP <b>${stats.handling}</b></span></div><button>${equipped ? 'EQUIPPED' : owned ? 'EQUIP VEHICLE' : `BUY + EQUIP · $${vehicle.price}`}</button>`;
       card.querySelector('button').onclick = () => {
-        if (!owned) { if (cash < vehicle.price) return toast(`You need $${vehicle.price} for the ${vehicle.name}.`); cash -= vehicle.price; ownedVehicles.add(vehicle.key); }
+        if (!owned) {
+          if (cash < vehicle.price) return toast(`You need $${vehicle.price} for the ${vehicle.name}.`);
+          if (!worldSocket || worldSocket.readyState !== WebSocket.OPEN) return toast('Connect to the secure world before buying a vehicle.');
+          worldSocket.send(JSON.stringify({ type: 'shop:vehicle', key: vehicle.key }));
+          return toast('Vehicle purchase sent to the secure world for validation.');
+        }
         equippedVehicleKey = vehicle.key; saveVehicleGarage(); updateStats(); renderVehicleShop('dealership'); toast(`${vehicle.name} is now your active garage vehicle.`);
       }; root.appendChild(card);
     }
@@ -2455,6 +2466,8 @@ function startGame(role) {
           if (!message.success) return toast(message.reason === 'INSUFFICIENT_FUNDS' ? 'The secure world rejected the purchase: insufficient funds.' : 'The secure world rejected that purchase.');
           if (message.profile) applyAuthoritativeProfile(message.profile);
           if (message.kind === 'weapon') { equippedWeaponKey = message.key; saveWeaponLoadout(); renderWeaponShop(); toast('Weapon purchase confirmed by the secure world.'); }
+          if (message.kind === 'vehicle') { equippedVehicleKey = message.key; saveVehicleGarage(); renderVehicleShop('dealership'); toast('Vehicle purchase confirmed by the secure world.'); }
+          if (message.kind === 'upgrade') { renderVehicleShop('mods'); toast('Vehicle upgrade confirmed by the secure world.'); }
         } else if (message.type === 'action:result') {
           const pending = pendingActionContext;
           pendingActionContext = null;

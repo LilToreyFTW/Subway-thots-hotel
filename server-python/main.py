@@ -30,6 +30,7 @@ from room_layout import validate_room_layout
 from economy import purchase_weapon
 from game_actions import apply_action
 from movement_rules import bounds_for, clamp_position, validate_input, validate_transition
+from vehicle_economy import purchase_vehicle, upgrade_vehicle
 
 load_dotenv()
 
@@ -65,6 +66,7 @@ class PlayerProfile(Base):
     needs_json: Mapped[str] = mapped_column(String(2048), default='{"energy":100,"hunger":100,"hygiene":100}')
     job_step: Mapped[int] = mapped_column(Integer, default=0)
     task_count: Mapped[int] = mapped_column(Integer, default=0)
+    upgrades_json: Mapped[str] = mapped_column(String(8192), default='{}')
 
 
 class GamertagRegistry(Base):
@@ -104,6 +106,7 @@ class LivePlayer:
     needs: dict[str, int] = field(default_factory=lambda: {'energy': 100, 'hunger': 100, 'hygiene': 100})
     job_step: int = 0
     task_count: int = 0
+    upgrades: dict[str, dict[str, int]] = field(default_factory=dict)
 
 
 regions: dict[str, dict[str, LivePlayer]] = defaultdict(dict)
@@ -140,6 +143,7 @@ def load_profile(player_id: str, display_name: str, region_id: str, presented_to
             room_access=set(_load_json_list(profile.room_access_json)),
             needs=_load_json_object(profile.needs_json) or {'energy': 100, 'hunger': 100, 'hygiene': 100},
             job_step=max(0, min(3, int(profile.job_step or 0))), task_count=max(0, min(3, int(profile.task_count or 0))),
+            upgrades=_load_json_object(profile.upgrades_json),
         )
         return live, profile.auth_token
 
@@ -162,6 +166,7 @@ def save_profile(player: LivePlayer, region_id: str) -> None:
         profile.needs_json = json.dumps(player.needs, separators=(',', ':'))
         profile.job_step = max(0, min(3, int(player.job_step)))
         profile.task_count = max(0, min(3, int(player.task_count)))
+        profile.upgrades_json = json.dumps(player.upgrades, separators=(',', ':'))
         db.commit()
 
 
@@ -268,7 +273,7 @@ async def lifespan(_: FastAPI):
         "room_access_json": "VARCHAR(8192) DEFAULT '[]'",
         # JSON defaults contain colons, which SQLAlchemy text() treats as bind
         # markers during ALTER TABLE. Existing rows are normalized by load_profile.
-        "needs_json": "VARCHAR(2048)", "job_step": "INTEGER DEFAULT 0", "task_count": "INTEGER DEFAULT 0",
+        "needs_json": "VARCHAR(2048)", "job_step": "INTEGER DEFAULT 0", "task_count": "INTEGER DEFAULT 0", "upgrades_json": "VARCHAR(8192)",
     }
     with engine.begin() as connection:
         for name, definition in missing_columns.items():
@@ -449,6 +454,20 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                     continue
                 save_profile(live, region_id)
                 await websocket.send_json({"type": "shop:result", "success": True, "kind": "weapon", "key": str(message.get("key", ""))[:80], "reason": reason, "profile": profile_snapshot(live)})
+            elif message_type in {"shop:vehicle", "shop:upgrade"}:
+                if message_type == "shop:vehicle":
+                    success, reason, price = purchase_vehicle(live, message.get("key", ""))
+                    kind, key = "vehicle", str(message.get("key", ""))[:80]
+                else:
+                    key = str(message.get("vehicleKey", ""))[:80]
+                    slot = str(message.get("slot", ""))[:40]
+                    success, reason, price = upgrade_vehicle(live, key, slot)
+                    kind = "upgrade"
+                if not success:
+                    await websocket.send_json({"type": "shop:result", "success": False, "kind": kind, "reason": reason, "price": price})
+                    continue
+                save_profile(live, region_id)
+                await websocket.send_json({"type": "shop:result", "success": True, "kind": kind, "key": key, "slot": str(message.get("slot", ""))[:40], "reason": reason, "profile": profile_snapshot(live)})
             elif message_type == "game:action":
                 ok, reason, details = apply_action(live, message.get("action", ""), zone=live.zone, room_id=live.room_id, role=str(message.get("role", "guest")))
                 if not ok:
