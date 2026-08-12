@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -22,6 +23,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sess
 
 from anti_cheat import AntiCheat, AntiCheatState
 from profile_state import profile_snapshot
+from social_visibility import can_share_presence
 
 load_dotenv()
 
@@ -52,6 +54,8 @@ class PlayerProfile(Base):
     weapons_json: Mapped[str] = mapped_column(String(8192), default='[]')
     vehicles_json: Mapped[str] = mapped_column(String(8192), default='[]')
     room_layout_json: Mapped[str] = mapped_column(String(32768), default='{}')
+    home_room_id: Mapped[int] = mapped_column(Integer, default=1)
+    room_access_json: Mapped[str] = mapped_column(String(8192), default='[]')
 
 
 class GamertagRegistry(Base):
@@ -86,6 +90,8 @@ class LivePlayer:
     reputation: int = 12
     vehicles: set[str] = field(default_factory=set)
     room_layout: dict[str, Any] = field(default_factory=dict)
+    home_room_id: int = 1
+    room_access: set[str] = field(default_factory=set)
 
 
 regions: dict[str, dict[str, LivePlayer]] = defaultdict(dict)
@@ -97,7 +103,8 @@ def load_profile(player_id: str, display_name: str, region_id: str, presented_to
     with SessionLocal() as db:
         profile = db.get(PlayerProfile, player_id)
         if profile is None:
-            profile = PlayerProfile(player_id=player_id, display_name=display_name[:80], region_id=region_id, auth_token=secrets.token_urlsafe(32))
+            home_room_id = (int.from_bytes(hashlib.sha256(player_id.encode()).digest()[:4], 'big') % 50) + 1
+            profile = PlayerProfile(player_id=player_id, display_name=display_name[:80], region_id=region_id, auth_token=secrets.token_urlsafe(32), home_room_id=home_room_id)
             db.add(profile)
             db.commit()
         else:
@@ -107,6 +114,8 @@ def load_profile(player_id: str, display_name: str, region_id: str, presented_to
                 profile.auth_token = secrets.token_urlsafe(32)
             profile.display_name = display_name[:80] or profile.display_name
             profile.region_id = region_id
+            if not profile.home_room_id:
+                profile.home_room_id = (int.from_bytes(hashlib.sha256(player_id.encode()).digest()[:4], 'big') % 50) + 1
             db.commit()
         live = LivePlayer(
             player_id=profile.player_id, display_name=profile.display_name, websocket=None,
@@ -115,6 +124,8 @@ def load_profile(player_id: str, display_name: str, region_id: str, presented_to
             weapons=set(_load_json_list(profile.weapons_json)),
             vehicles=set(_load_json_list(profile.vehicles_json)),
             room_layout=_load_json_object(profile.room_layout_json),
+            home_room_id=max(1, min(50, int(profile.home_room_id or 1))),
+            room_access=set(_load_json_list(profile.room_access_json)),
         )
         return live, profile.auth_token
 
@@ -132,6 +143,8 @@ def save_profile(player: LivePlayer, region_id: str) -> None:
         profile.weapons_json = json.dumps(sorted(player.weapons), separators=(',', ':'))
         profile.vehicles_json = json.dumps(sorted(player.vehicles), separators=(',', ':'))
         profile.room_layout_json = json.dumps(player.room_layout, separators=(',', ':'))
+        profile.home_room_id = max(1, min(50, int(player.home_room_id)))
+        profile.room_access_json = json.dumps(sorted(player.room_access), separators=(',', ':'))
         db.commit()
 
 
@@ -151,7 +164,21 @@ def _load_json_object(value: str | None) -> dict[str, Any]:
         return {}
 
 
-def snapshot(region_id: str) -> dict[str, Any]:
+def players_can_see(observer: LivePlayer, subject: LivePlayer) -> bool:
+    return can_share_presence(observer, subject)
+
+
+async def broadcast_visible(region_id: str, source: LivePlayer, payload: dict[str, Any]) -> None:
+    for player in list(regions[region_id].values()):
+        if player.websocket is None or not players_can_see(player, source):
+            continue
+        try:
+            await player.websocket.send_json(payload)
+        except Exception:
+            pass
+
+
+def snapshot(region_id: str, observer: LivePlayer | None = None) -> dict[str, Any]:
     return {
         "type": "snapshot",
         "regionId": region_id,
@@ -169,6 +196,7 @@ def snapshot(region_id: str) -> dict[str, Any]:
                 "moving": p.moving,
             }
             for p in regions[region_id].values()
+            if observer is None or players_can_see(observer, p)
         ],
     }
 
@@ -199,7 +227,13 @@ async def region_loop(region_id: str) -> None:
                 if time.monotonic() - player.last_input > 0.75:
                     player.dx = player.dz = 0.0
             if regions[region_id]:
-                await broadcast(region_id, snapshot(region_id))
+                for viewer in list(regions[region_id].values()):
+                    if viewer.websocket is None:
+                        continue
+                    try:
+                        await viewer.websocket.send_json(snapshot(region_id, viewer))
+                    except Exception:
+                        pass
         await asyncio.sleep(max(0.0, step - (time.monotonic() - started)))
 
 
@@ -213,7 +247,8 @@ async def lifespan(_: FastAPI):
     missing_columns = {
         "auth_token": "VARCHAR(128)", "cash": "INTEGER DEFAULT 240", "reputation": "INTEGER DEFAULT 12",
         "weapons_json": "VARCHAR(8192) DEFAULT '[]'", "vehicles_json": "VARCHAR(8192) DEFAULT '[]'",
-        "room_layout_json": "VARCHAR(32768) DEFAULT '{}'",
+        "room_layout_json": "VARCHAR(32768) DEFAULT '{}'", "home_room_id": "INTEGER DEFAULT 1",
+        "room_access_json": "VARCHAR(8192) DEFAULT '[]'",
     }
     with engine.begin() as connection:
         for name, definition in missing_columns.items():
@@ -282,7 +317,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
         regions[region_id][player_id] = live
         if region_id not in region_tasks or region_tasks[region_id].done():
             region_tasks[region_id] = asyncio.create_task(region_loop(region_id))
-    await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode, "profile": profile_snapshot(live)})
+    await websocket.send_json({"type": "welcome", "playerId": player_id, "sessionToken": issued_token, "regionId": region_id, "serverTickRate": TICK_RATE, "debugMode": live.anti_cheat.debug_mode, "profile": {**profile_snapshot(live), "homeRoomId": live.home_room_id}})
     await broadcast(region_id, {"type": "presence", "action": "join", "playerId": player_id, "displayName": live.display_name})
     try:
         while True:
@@ -333,6 +368,9 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                 if requested_zone == "room" and requested_room is None:
                     requested_zone = "hotel"
                 if requested_zone != live.zone or requested_room != live.room_id:
+                    if requested_zone == "room" and requested_room not in {str(live.home_room_id), *live.room_access} and not live.anti_cheat.debug_mode:
+                        await websocket.send_json({"type": "error", "code": "ROOM_ACCESS_DENIED", "message": "That private suite is not yours or shared with you."})
+                        continue
                     valid_transition = ((live.zone, requested_zone) in {("city", "hotel"), ("hotel", "city"), ("hotel", "room"), ("room", "hotel")})
                     if not valid_transition and not live.anti_cheat.debug_mode:
                         should_close = anti_cheat.violation(player_id, live.anti_cheat, "INVALID_ZONE_TRANSITION", {"from": live.zone, "to": requested_zone})
@@ -381,7 +419,7 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                         await websocket.send_json({"type": "error", "code": "CHAT_RATE_LIMIT", "message": "Please wait before sending another message."})
                         continue
                     live.last_chat = now
-                    await broadcast(region_id, {"type": "chat", "playerId": player_id, "displayName": live.display_name, "text": text, "messageId": str(uuid.uuid4()), "serverTime": time.time()})
+                    await broadcast_visible(region_id, live, {"type": "chat", "playerId": player_id, "displayName": live.display_name, "text": text, "messageId": str(uuid.uuid4()), "serverTime": time.time()})
             elif message_type == "ping":
                 await websocket.send_json({"type": "pong", "serverTime": time.time()})
     except WebSocketDisconnect:
