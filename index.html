@@ -28,6 +28,12 @@
           </label>
         </fieldset>
         <button id="enter-btn">BEGIN YOUR NIGHT <span>→</span></button>
+        <div class="gate-features" aria-label="Game features">
+          <span><b>01</b> CITY TO EXPLORE</span>
+          <span><b>02</b> HOTEL TO RUN</span>
+          <span><b>03</b> YOUR NIGHT, YOUR PACE</span>
+        </div>
+        <div class="gate-status"><span class="live-dot"></span><b>LOCAL WORLD READY</b><span>BUILD 0.1 · AFTER DARK</span></div>
         <small class="age-copy">By entering, you confirm you are 21 or older.</small>
       </main>
     </div>
@@ -84,11 +90,13 @@
         <button id="travel-region">TRAVEL TO REGION</button>
       </aside>
 
-      <aside id="pause-panel">
-        <small>QUICK GUIDE</small>
-        <strong id="pause-title">CITY CONTROLS</strong>
-        <div class="controls-grid"><span><kbd>WASD</kbd> Move</span><span><kbd>SHIFT</kbd> Sprint</span><span><kbd>E</kbd> Interact</span><span><kbd>R</kbd> Rooms</span></div>
-        <button id="resume-btn">RESUME</button>
+      <aside id="pause-panel" aria-modal="true" aria-labelledby="pause-title" aria-hidden="true">
+        <div class="pause-topline"><span class="pause-mark">S/T/H</span><small>GAME PAUSED · NIGHT SESSION</small><span class="pause-signal"><i></i> SAFE TO RESUME</span></div>
+        <div class="pause-heading"><div><small id="pause-kicker">STATION DISTRICT</small><strong id="pause-title">PAUSE MENU</strong></div><span class="pause-clock" id="pause-clock">11:48 PM</span></div>
+        <div class="pause-status-grid"><div><small>LOCATION</small><b id="pause-location">STATION DISTRICT</b></div><div><small>OBJECTIVE</small><b id="pause-objective">Walk to the hotel entrance</b></div></div>
+        <section class="pause-section"><div class="pause-section-head"><small>QUICK GUIDE</small><span>KEYBOARD &amp; MOUSE</span></div><div class="controls-grid"><span><kbd>WASD</kbd><b>Move</b></span><span><kbd>SHIFT</kbd><b>Sprint</b></span><span><kbd>SPACE</kbd><b>Jump</b></span><span><kbd>E</kbd><b>Interact</b></span><span><kbd>R</kbd><b>Rooms</b></span><span><kbd>RMB</kbd><b>Look around</b></span><span><kbd>V</kbd><b>Vehicle</b></span><span><kbd>ESC</kbd><b>Pause</b></span></div></section>
+        <div class="pause-actions"><button id="resume-btn" class="pause-primary"><span>RESUME NIGHT</span><kbd>ESC</kbd></button><button id="pause-sound-btn"><span id="pause-sound-label">SOUND: OFF</span><small>AMBIENCE</small></button><button id="pause-world-btn"><span>WORLD MAP</span><small>TRAVEL &amp; REGIONS</small></button></div>
+        <div class="pause-footer"><span>SESSION SAVED LOCALLY</span><button id="pause-title-btn">RETURN TO TITLE</button></div>
       </aside>
 
       <button id="interact" aria-label="Interact with nearby person or object"><span>E</span> INTERACT</button>

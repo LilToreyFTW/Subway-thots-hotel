@@ -2191,7 +2191,16 @@ function startGame(role) {
 
   function togglePause(force) {
     paused = typeof force === 'boolean' ? force : !paused;
-    $('#pause-panel').classList.toggle('open', paused);
+    const panel = $('#pause-panel');
+    panel.classList.toggle('open', paused);
+    panel.setAttribute('aria-hidden', String(!paused));
+    if (paused) {
+      $('#pause-kicker').textContent = mode === 'city' ? 'STATION DISTRICT' : mode === 'hotel' ? 'HOTEL LOBBY' : `SUITE ${String(currentRoom).padStart(2, '0')}`;
+      $('#pause-location').textContent = $('#location')?.textContent || 'CURRENT LOCATION';
+      $('#pause-objective').textContent = $('#objective')?.textContent || 'Explore the world';
+      $('#pause-clock').textContent = $('#clock')?.textContent || 'NIGHT SESSION';
+      $('#resume-btn')?.focus();
+    }
   }
 
   function startAmbience() {
@@ -2715,6 +2724,9 @@ function startGame(role) {
   $('#interact').addEventListener('click', interact);
   $('#close-rooms').addEventListener('click', () => $('#room-panel').classList.remove('open'));
   $('#resume-btn').addEventListener('click', () => togglePause(false));
+  $('#pause-sound-btn').addEventListener('click', () => { startAmbience(); $('#pause-sound-label').textContent = ambience ? 'SOUND: ON' : 'SOUND: OFF'; });
+  $('#pause-world-btn').addEventListener('click', () => { togglePause(false); $('#world-map-toggle')?.click(); });
+  $('#pause-title-btn').addEventListener('click', () => { if (confirm('Return to the title screen? Unsaved moment-to-moment progress will be lost.')) location.reload(); });
   $('#sound-toggle').addEventListener('click', startAmbience);
 
   addEventListener('resize', () => {
