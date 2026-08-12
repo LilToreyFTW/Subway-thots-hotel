@@ -29,6 +29,7 @@ from world_activity import world_activity_snapshot
 from room_layout import validate_room_layout
 from economy import purchase_weapon
 from game_actions import apply_action
+from movement_rules import bounds_for, clamp_position, validate_input, validate_transition
 
 load_dotenv()
 
@@ -239,9 +240,7 @@ async def region_loop(region_id: str) -> None:
         started = time.monotonic()
         async with region_locks[region_id]:
             for player in list(regions[region_id].values()):
-                bounds = 110.0 if player.zone == "city" else 22.0 if player.zone == "hotel" else 12.0
-                player.x = max(-bounds, min(bounds, player.x + player.dx * step * 6.0))
-                player.z = max(-bounds, min(bounds, player.z + player.dz * step * 6.0))
+                player.x, player.z = clamp_position(player.x + player.dx * step * 6.0, player.z + player.dz * step * 6.0, player.zone)
                 if time.monotonic() - player.last_input > 0.75:
                     player.dx = player.dz = 0.0
             if regions[region_id]:
@@ -358,12 +357,15 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                         await websocket.close(code=4003, reason="Anti-cheat violation")
                         break
                     continue
+                input_valid, input_reason = validate_input(message.get("x", 0.0), message.get("z", 0.0))
+                if not input_valid and input_reason == "INVALID_INPUT":
+                    await websocket.send_json({"type": "error", "code": "INVALID_INPUT", "message": "Input axes must be numeric."})
+                    continue
                 try:
                     input_x = float(message.get("x", 0.0))
                     input_z = float(message.get("z", 0.0))
                 except (TypeError, ValueError):
-                    await websocket.send_json({"type": "error", "code": "INVALID_INPUT", "message": "Input axes must be numeric."})
-                    continue
+                    input_x = input_z = 0.0
                 if not math.isfinite(input_x) or not math.isfinite(input_z):
                     should_close = anti_cheat.violation(player_id, live.anti_cheat, "NON_FINITE_INPUT")
                     await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Input axes must be finite."})
@@ -390,8 +392,8 @@ async def region_socket(websocket: WebSocket, region_id: str, player_id: str = Q
                     if requested_zone == "room" and not can_enter(live, requested_room) and not live.anti_cheat.debug_mode:
                         await websocket.send_json({"type": "error", "code": "ROOM_ACCESS_DENIED", "message": "That private suite is not yours or shared with you."})
                         continue
-                    valid_transition = ((live.zone, requested_zone) in {("city", "hotel"), ("hotel", "city"), ("hotel", "room"), ("room", "hotel")})
-                    if not valid_transition and not live.anti_cheat.debug_mode:
+                    valid_transition, transition_reason = validate_transition(live.zone, requested_zone, live.anti_cheat.debug_mode)
+                    if not valid_transition:
                         should_close = anti_cheat.violation(player_id, live.anti_cheat, "INVALID_ZONE_TRANSITION", {"from": live.zone, "to": requested_zone})
                         await websocket.send_json({"type": "error", "code": "CHEAT_DETECTED", "message": "Invalid zone transition."})
                         if should_close:
