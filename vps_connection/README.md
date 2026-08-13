@@ -11,8 +11,6 @@ Public world endpoint:
 - FiveM staff presence: `https://cyan-squirrel-97200.zap.cloud/api/public/loading-roles`
 - Internal world host: `http://127.0.0.1:7076`
 
-The loading feed applies an exclusive `Owner > Admin > Staff` hierarchy, so a Discord member with multiple management roles appears only in their highest section.
-
 ## Windows VPS (recommended for the current RDP-accessible host)
 
 1. Install Python 3.11+ and enable **Add Python to PATH**.
