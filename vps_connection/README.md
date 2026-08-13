@@ -8,6 +8,7 @@ Public world endpoint:
 - TCP port: `7076`
 - Production health: `https://cyan-squirrel-97200.zap.cloud/health`
 - Production WebSocket: `wss://cyan-squirrel-97200.zap.cloud/ws/sth-city-01`
+- FiveM staff presence: `https://cyan-squirrel-97200.zap.cloud/api/public/loading-roles`
 - Internal world host: `http://127.0.0.1:7076`
 
 ## Windows VPS (recommended for the current RDP-accessible host)
@@ -23,7 +24,7 @@ Public world endpoint:
    ```
 
 5. Run `Setup-Host.bat` once.
-6. Run `Install-Production-Host.ps1` as Administrator. It installs the world and TLS startup tasks.
+6. Run `Install-Production-Host.ps1` as Administrator. It installs the world, TLS, and Sinland Discord bot startup tasks. The proxy exposes only the read-only loading-screen presence endpoint from the bot.
 7. In the VPS provider firewall, allow inbound **TCP 443**. Port 7076 remains private.
 
 ## Linux VPS
