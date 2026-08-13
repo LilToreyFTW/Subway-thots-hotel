@@ -7,16 +7,7 @@
 
 cyan-squirrel-97200.zap.cloud {
     encode zstd gzip
-
-    # Public, read-only Discord presence feed used by the FiveM loading screen.
-    # Keep every other Discord bot endpoint private on localhost:3050.
-    handle /api/public/loading-roles {
-        reverse_proxy 127.0.0.1:3050
-    }
-
-    handle {
-        reverse_proxy 127.0.0.1:7076
-    }
+    reverse_proxy 127.0.0.1:7076
 
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"

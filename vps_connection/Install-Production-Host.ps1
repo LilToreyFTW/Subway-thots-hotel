@@ -26,13 +26,10 @@ $startup = New-ScheduledTaskTrigger -AtStartup
 $settings = New-ScheduledTaskSettingsSet -RestartCount 100 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero) -StartWhenAvailable
 $worldAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$hostRoot\Run-World.ps1`"" -WorkingDirectory $hostRoot
 $caddyAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$hostRoot\Run-Caddy.ps1`"" -WorkingDirectory $hostRoot
-$discordBotAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$hostRoot\Run-Sinland-DiscordBOT.ps1`"" -WorkingDirectory $hostRoot
 Register-ScheduledTask -TaskName 'STH-Multiplayer-World' -Action $worldAction -Trigger $startup -Principal $principal -Settings $settings -Force | Out-Null
 Register-ScheduledTask -TaskName 'STH-Multiplayer-TLS' -Action $caddyAction -Trigger $startup -Principal $principal -Settings $settings -Force | Out-Null
-Register-ScheduledTask -TaskName 'Sinland-DiscordBOT' -Action $discordBotAction -Trigger $startup -Principal $principal -Settings $settings -Force | Out-Null
 Start-ScheduledTask -TaskName 'STH-Multiplayer-World'
 Start-ScheduledTask -TaskName 'STH-Multiplayer-TLS'
-Start-ScheduledTask -TaskName 'Sinland-DiscordBOT'
 
-Write-Host 'Production multiplayer and Discord bot tasks installed.'
+Write-Host 'Production multiplayer tasks installed.'
 Write-Host 'Secure endpoint: wss://cyan-squirrel-97200.zap.cloud'
