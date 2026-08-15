@@ -31,6 +31,11 @@ export class WorldChunkManager {
     this.maxChunkCreatesPerUpdate = config.maxChunkCreatesPerUpdate ?? 1;
     this.playerChunk = null;
     this.originOffset = new THREE.Vector3();
+    // Networked players must remain in one shared coordinate frame. The
+    // floating-origin optimization is safe for local exploration, but moving
+    // only the local world would separate remote avatars from the server's
+    // coordinates.
+    this.networked = false;
     this.currentRegion = null;
     this.geo = null;
     this.regionManifest = null;
@@ -48,6 +53,10 @@ export class WorldChunkManager {
   setSeed(seed) {
     this.worldSeed = Math.max(1, Number(seed) >>> 0);
     this.clear();
+  }
+
+  setNetworked(networked) {
+    this.networked = Boolean(networked);
   }
 
   material(color, roughness = 0.76, metalness = 0.04) {
@@ -106,7 +115,7 @@ export class WorldChunkManager {
     for (const [key, item] of this.pendingChunks) {
       if (Math.abs(item.cx - playerChunk.x) > this.config.unloadChunkRadius || Math.abs(item.cz - playerChunk.z) > this.config.unloadChunkRadius) this.pendingChunks.delete(key);
     }
-    if (playerPosition.length() > this.config.floatingOriginThresholdMeters) {
+    if (!this.networked && playerPosition.length() > this.config.floatingOriginThresholdMeters) {
       const rebase = new THREE.Vector3(
         Math.round(playerPosition.x / this.config.chunkSizeMeters) * this.config.chunkSizeMeters,
         0,

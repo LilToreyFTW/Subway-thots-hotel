@@ -2418,7 +2418,19 @@ function startGame(role) {
   function syncRemotePlayers(players) {
     const seen = new Set();
     for (const data of players) {
-      if (data.id === localPlayerId) continue;
+      if (data.id === localPlayerId) {
+        // The world host is authoritative. Correct large divergence so a
+        // client cannot keep rendering itself in a different place than the
+        // location every other player receives from the snapshot.
+        const serverX = Number(data.position?.x);
+        const serverY = Number(data.position?.y || 0);
+        const serverZ = Number(data.position?.z);
+        if (Number.isFinite(serverX) && Number.isFinite(serverZ)) {
+          const drift = Math.hypot(serverX - player.position.x, serverZ - player.position.z);
+          if (drift > 12) player.position.set(serverX, serverY, serverZ);
+        }
+        continue;
+      }
       seen.add(data.id);
       let remote = remotePlayers.get(data.id);
       if (!remote) {
@@ -2478,9 +2490,14 @@ function startGame(role) {
     const url = `${base.replace(/\/$/, '')}/ws/sth-city-01?${params}`;
     $('#server-status').textContent = 'CONNECTING';
     $('#server-status').dataset.endpoint = base;
+    // Reserve the shared coordinate frame before the socket opens; otherwise
+    // a long connection attempt could trigger a local-only floating-origin
+    // rebase while the player is already joining multiplayer.
+    worldStreamer.setNetworked(true);
     try {
       worldSocket = new WebSocket(url);
       worldSocket.addEventListener('open', () => {
+        worldStreamer.setNetworked(true);
         reconnectAttempts = 0;
         $('#server-status').textContent = 'ONLINE WORLD';
         appendChat('WORLD', 'Connected to Station District.', true);
@@ -2538,6 +2555,7 @@ function startGame(role) {
         } else if (message.type === 'error') appendChat('WORLD', message.message || 'The world server rejected that action.', true);
       });
       worldSocket.addEventListener('close', (event) => {
+        worldStreamer.setNetworked(false);
         remotePlayers.forEach((_, id) => removeRemotePlayer(id));
         if (event.code === 4001) {
           $('#server-status').textContent = 'ACTIVE IN ANOTHER TAB';
